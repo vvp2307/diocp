@@ -107,7 +107,11 @@ type
     /// <summary>
     ///   关闭所有连接
     /// </summary>
-    procedure DisconnectAllContext;
+    procedure DisconnectAllClientContext;
+
+
+    //1 等待资源的回归
+    procedure WaiteForResGiveBack;
 
 
     /// <summary>
@@ -176,6 +180,8 @@ type
     procedure DoOnWriteBack; virtual;
 
   public
+    procedure notifyStopWork; virtual;
+
     constructor Create(ASocket: TSocket = 0);
 
 
@@ -382,16 +388,16 @@ begin
   end;
 end;
 
-procedure TIOCPObject.DisconnectAllContext;
+procedure TIOCPObject.DisconnectAllClientContext;
 var
   i:Integer;
 begin
   FCS.Enter;
   try
-    while FContextOnLineList.Count > 0 do
+    for i := FContextOnLineList.Count - 1 downto 0 do
     begin
-      //Free时会删除在线数量
-      TIOCPContextFactory.instance.freeContext(TIOCPClientContext(FContextOnLineList[0]));
+       //通知退出
+       TIOCPClientContext(FContextOnLineList[i]).notifyStopWork;
     end;
   finally
     FCS.Leave;
@@ -696,6 +702,11 @@ begin
    end;
 end;
 
+procedure TIOCPObject.WaiteForResGiveBack;
+begin
+  TIODataMemPool.instance.waiteForGiveBack;
+end;
+
 procedure TIOCPClientContext.close;
 begin
   PostWSAClose;
@@ -744,6 +755,17 @@ end;
 function TIOCPClientContext.AppendBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
 begin
   FBuffers.AddBuffer(buf, len);
+end;
+
+procedure TIOCPClientContext.notifyStopWork;
+begin
+  //禁止进出
+  shutdown(FSocket, SD_BOTH);
+
+  //投递关闭事件
+  postWSAClose;
+  //shutdown(FSocket, SD_BOTH);
+  //CancelIo(FSocket);
 end;
 
 procedure TIOCPClientContext.dataReceived(const pvDataObject:TObject);
