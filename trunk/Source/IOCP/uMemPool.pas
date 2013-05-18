@@ -83,6 +83,8 @@ begin
   FCs := TCriticalSection.Create();
   FUseableCount := 0;
   FUsingCount := 0;
+
+  //创建信号灯,手动控制
   FCanCloseSingle := CreateEvent(nil, True, True, nil);
 end;
 
@@ -139,7 +141,7 @@ begin
       Inc(FUsingCount);
     end;
 
-    //变成没有信号
+    //变成没有信号.
     if FUsingCount > 0 then
       ResetEvent(FCanCloseSingle);
 
