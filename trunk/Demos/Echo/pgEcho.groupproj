@@ -1,0 +1,44 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{7414bf98-3b99-4075-8797-488652bc05d3}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Projects Include="Client\IOCPClientTester.dproj" />
+    <Projects Include="Server\D10_IOCPServer.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="D10_IOCPServer">
+    <MSBuild Projects="Server\D10_IOCPServer.dproj" Targets="" />
+  </Target>
+  <Target Name="D10_IOCPServer:Clean">
+    <MSBuild Projects="Server\D10_IOCPServer.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="D10_IOCPServer:Make">
+    <MSBuild Projects="Server\D10_IOCPServer.dproj" Targets="Make" />
+  </Target>
+  <Target Name="IOCPClientTester">
+    <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="" />
+  </Target>
+  <Target Name="IOCPClientTester:Clean">
+    <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="IOCPClientTester:Make">
+    <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="D10_IOCPServer;IOCPClientTester" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="D10_IOCPServer:Clean;IOCPClientTester:Clean" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="D10_IOCPServer:Make;IOCPClientTester:Make" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>
