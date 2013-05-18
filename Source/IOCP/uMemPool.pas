@@ -9,6 +9,9 @@ uses
 type
   TIODataMemPool = class(TObject)
   private
+    //全部归还的信号灯
+    FCanCloseSingle: THandle;
+
     FCs: TCriticalSection;
 
     //第一个可用的内存块
@@ -52,6 +55,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    function waiteForGiveBack: Boolean;
+
     //借一块内存
     function borrowIOData: POVERLAPPEDEx;
 
@@ -78,10 +83,12 @@ begin
   FCs := TCriticalSection.Create();
   FUseableCount := 0;
   FUsingCount := 0;
+  FCanCloseSingle := CreateEvent(nil, True, True, nil);
 end;
 
 destructor TIODataMemPool.Destroy;
 begin
+  CloseHandle(FCanCloseSingle);
   FreeAllBlock;
   FCs.Free;
   inherited Destroy;
@@ -131,6 +138,11 @@ begin
       //直接借走<增加使用计数器>
       Inc(FUsingCount);
     end;
+
+    //变成没有信号
+    if FUsingCount > 0 then
+      ResetEvent(FCanCloseSingle);
+
   finally
     FCs.Leave;
   end;
@@ -203,6 +215,9 @@ begin
       //减少使用计数器
       Dec(FUsingCount);
     end;
+
+    //有信号
+    if FUsingCount = 0 then SetEvent(FCanCloseSingle);
   finally
     FCs.Leave;
   end;
@@ -251,6 +266,18 @@ end;
 class function TIODataMemPool.instance: TIODataMemPool;
 begin
   Result := __IODATA_instance;
+end;
+
+function TIODataMemPool.waiteForGiveBack: Boolean;
+var
+  lvRet:DWORD;
+begin
+  Result := false;
+  lvRet := WaitForSingleObject(FCanCloseSingle, INFINITE);
+  if lvRet = WAIT_OBJECT_0 then
+  begin
+    Result := true;
+  end;
 end;
 
 

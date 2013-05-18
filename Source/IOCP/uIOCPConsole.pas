@@ -46,6 +46,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure DisconnectAllClientContext;
+
 
     procedure open;
     procedure close;
@@ -72,12 +74,16 @@ begin
   //停止监听
   stopListener;
 
+  //断开所有连接
+  FIOCPObject.DisconnectAllClientContext;
+
+  //等待资源的回归
+  FIOCPObject.WaiteForResGiveBack;
+
   //停止工作线程
   stopWorkers;
 
-  //关闭所有在线连接
-  FIOCPObject.DisconnectAllContext;
-    
+  //标志状态
   FActive := false;
 end;
 
@@ -94,6 +100,11 @@ begin
   FIOCPObject.Free;
   FWorkers.Free;
   inherited Destroy;
+end;
+
+procedure TIOCPConsole.DisconnectAllClientContext;
+begin
+  FIOCPObject.DisconnectAllClientContext;
 end;
 
 function TIOCPConsole.GetWorkerCount: Integer;
