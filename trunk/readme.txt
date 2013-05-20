@@ -8,6 +8,8 @@ https://code.google.com/p/diocp/
 
 superobject 项目主页<一个很好的JSON解析类>
 https://code.google.com/p/superobject/
+SVN可以直接检出
+http://superobject.googlecode.com/svn/trunk
 
 2013年5月20日 14:30:11
   调试XE3可以正常使用感谢网友<无言>，配合测试
