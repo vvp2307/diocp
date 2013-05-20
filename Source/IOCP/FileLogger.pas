@@ -13,11 +13,11 @@ type
     FBasePath: string;
     FLogFile: TextFile;
     FLocker: TCriticalSection;
-    function openLogFile: Boolean;
+    function openLogFile(pvPre: String = ''): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure logMessageWithoutLocker(pvMsg:string);
+    procedure logMessageWithoutLocker(pvMsg: string; pvLogFilePre: string = '');
   public
     /// <summary>
     ///   设置文件名前缀
@@ -35,7 +35,11 @@ type
 
     procedure checkReady();
 
-    procedure logMessage(pvMsg:string);
+    procedure logMessage(pvMsg: string; pvLogFilePre: string = '');
+
+    procedure logErrMessage(pvMsg:String);
+
+    procedure logDebugMessage(pvMsg:String);
 
     class function instance: TFileLogger;
   end;
@@ -75,22 +79,43 @@ begin
   Result := __instance;
 end;
 
-procedure TFileLogger.logMessage(pvMsg:string);
+procedure TFileLogger.logDebugMessage(pvMsg:String);
 begin
   FLocker.Enter;
   try
-    logMessageWithoutLocker(pvMsg);
+    logMessageWithoutLocker(pvMsg, 'DEBUG_');
+  finally
+    FLocker.Leave;
+  end;
+end;
+
+procedure TFileLogger.logErrMessage(pvMsg:String);
+begin
+  FLocker.Enter;
+  try
+    logMessageWithoutLocker(pvMsg, 'ERR_');
+  finally
+    FLocker.Leave;
+  end;
+end;
+
+procedure TFileLogger.logMessage(pvMsg: string; pvLogFilePre: string = '');
+begin
+  FLocker.Enter;
+  try
+    logMessageWithoutLocker(pvMsg, pvLogFilePre);
   finally
     FLocker.Leave;
   end;
 end;
 
 
-procedure TFileLogger.logMessageWithoutLocker(pvMsg:string);
+procedure TFileLogger.logMessageWithoutLocker(pvMsg: string; pvLogFilePre:
+    string = '');
 var
   lvPre:String;
 begin
-  if OpenLogFile then
+  if OpenLogFile(pvLogFilePre) then
   try
     lvPre := FormatDateTime('hh:nn:ss:zzz', Now) + ' ';
     if FAddThreadINfo then
@@ -108,11 +133,20 @@ begin
   end;
 end;
 
-function TFileLogger.OpenLogFile: Boolean;
+function TFileLogger.openLogFile(pvPre: String = ''): Boolean;
 var
   lvFileName:String;
+  lvPre :String;
 begin
-  lvFileName :=FBasePath + '\' + FPre + FormatDateTime('yyyymmdd', Now()) + '.txt';
+  if pvPre <> '' then
+  begin
+    lvPre := pvPre;
+  end else
+  begin
+    lvPre := FPre;
+  end;
+
+  lvFileName :=FBasePath + '\' + lvPre + FormatDateTime('yyyymmddhh', Now()) + '.txt';
   try
     AssignFile(FLogFile, lvFileName);
     if (FileExists(lvFileName)) then
