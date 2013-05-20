@@ -12,7 +12,9 @@ type
   protected
   public
     class procedure checkSocketInitialize;
-    class function getSocketAddr(pvHost: string; pvPort: Integer): TSockAddr;
+
+    //使用AnsiString,避免xe下二义性
+    class function getSocketAddr(pvHost: AnsiString; pvPort: Integer): TSockAddr;
     class function sendBuffer(pvSocket:TSocket; buf:PAnsiChar; len:Cardinal):
         Integer;
     class function recvBuffer(pvSocket:TSocket; buf:PAnsiChar; len:Cardinal):
@@ -86,11 +88,11 @@ begin
   end;
 end;
 
-class function TSocketTools.getSocketAddr(pvHost: string; pvPort: Integer):
+class function TSocketTools.getSocketAddr(pvHost: AnsiString; pvPort: Integer):
     TSockAddr;
 begin
   Result.sin_family := AF_INET;
-  Result.sin_addr.s_addr := inet_addr(pchar(pvHost));
+  Result.sin_addr.s_addr := inet_addr(PAnsiChar(pvHost));
   Result.sin_port := htons(pvPort);
 end;
 

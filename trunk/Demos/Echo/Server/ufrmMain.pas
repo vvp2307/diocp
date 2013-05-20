@@ -80,7 +80,7 @@ procedure TfrmMain.btnIOCPAPIRunClick(Sender: TObject);
 begin
   if not FIOCPConsole.Active then
   begin
-    FIOCPConsole.WorkerCount := 1;
+    //FIOCPConsole.WorkerCount := 1;
     FIOCPConsole.Port := StrToInt(edtPort.Text);
     FIOCPConsole.open;
     tmrTestINfo.Enabled := true;

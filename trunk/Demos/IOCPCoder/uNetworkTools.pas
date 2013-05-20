@@ -37,27 +37,27 @@ type
 
     class function ntohl(v: Integer): Integer; overload;
 
-    class function ansiString2Utf8Bytes(v:string): TBytes;
+    class function ansiString2Utf8Bytes(v:AnsiString): TBytes;
 
-    class function Utf8Bytes2AnsiString(pvData:TBytes): String;
+    class function Utf8Bytes2AnsiString(pvData:TBytes): AnsiString;
 
   end;
 
 implementation
 
 
-class function TNetworkTools.ansiString2Utf8Bytes(v:string): TBytes;
+class function TNetworkTools.ansiString2Utf8Bytes(v:AnsiString): TBytes;
 var
-  lvTemp:String;
+  lvTemp:AnsiString;
 begin
   lvTemp := AnsiToUtf8(v);
   SetLength(Result, Length(lvTemp));
   Move(lvTemp[1], Result[0],  Length(lvTemp));
 end;
 
-class function TNetworkTools.Utf8Bytes2AnsiString(pvData:TBytes): String;
+class function TNetworkTools.Utf8Bytes2AnsiString(pvData:TBytes): AnsiString;
 var
-  lvTemp:String;
+  lvTemp:AnsiString;
 begin
   SetLength(lvTemp, Length(pvData));
   Move(pvData[0], lvTemp[1],  Length(pvData));
