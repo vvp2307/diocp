@@ -115,6 +115,7 @@ begin
         on E:Exception do
         begin
           TFileLogger.instance.logErrMessage(FEchoCode + E.Message);
+          Break;
         end;
       end;
     end;

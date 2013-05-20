@@ -1,8 +1,6 @@
 program IOCPClientTester;
 
 uses
-  FastMM4,
-  FastMM4Messages,
   Forms,
   ufrmMain in 'ufrmMain.pas' {frmMain},
   uSocketTools in '..\..\..\Source\Utils\uSocketTools.pas',
@@ -15,7 +13,11 @@ uses
   uD10ClientSocket in '..\..\..\Source\ClientSocket\uD10ClientSocket.pas',
   uJSonStreamTools in '..\..\Common\uJSonStreamTools.pas',
   uCRCTools in '..\..\Common\uCRCTools.pas',
-  superobject in '..\..\Common\superobject.pas';
+  superobject in '..\..\Common\superobject.pas',
+  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
+  JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
+  JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
+  FileLogger in '..\..\..\Source\IOCP\FileLogger.pas';
 
 {$R *.res}
 

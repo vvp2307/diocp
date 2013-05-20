@@ -1,4 +1,5 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{52b0605b-22ac-46a4-8c57-dc85b7d21943}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -17,10 +18,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Version>7.0</Version>
     <DCC_Define>DEBUG</DCC_Define>
-    <DCC_UnitSearchPath>..\..\..\Source\IOCP;..\..\..\Source\WinSock2</DCC_UnitSearchPath>
-    <DCC_ResourcePath>..\..\..\Source\IOCP;..\..\..\Source\WinSock2</DCC_ResourcePath>
-    <DCC_ObjPath>..\..\..\Source\IOCP;..\..\..\Source\WinSock2</DCC_ObjPath>
-    <DCC_IncludePath>..\..\..\Source\IOCP;..\..\..\Source\WinSock2</DCC_IncludePath>
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
@@ -33,6 +30,22 @@
     <DelphiCompile Include="D10_IOCPServer.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="..\..\..\Source\IOCP\FileLogger.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uBuffer.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPCentre.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPConsole.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPContextPool.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPFileLogger.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPProtocol.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPTools.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPWorker.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uMemPool.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uSocketListener.pas" />
+    <DCCReference Include="..\..\..\Source\Utils\FastMM4.pas" />
+    <DCCReference Include="..\..\..\Source\Utils\FastMM4Messages.pas" />
+    <DCCReference Include="..\..\..\Source\WinSock2\JwaMSWSock.pas" />
+    <DCCReference Include="..\..\..\Source\WinSock2\JwaQos.pas" />
+    <DCCReference Include="..\..\..\Source\WinSock2\JwaWinsock2.pas" />
     <DCCReference Include="..\..\Common\JSonStream.pas" />
     <DCCReference Include="..\..\Common\superobject.pas" />
     <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas" />

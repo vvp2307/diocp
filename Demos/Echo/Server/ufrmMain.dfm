@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
   Left = 0
   Top = 0
-  Caption = 'frmMain'
+  Caption = 'IOCP'#26381#21153#22120
   ClientHeight = 376
   ClientWidth = 719
   Color = clBtnFace
