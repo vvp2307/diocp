@@ -35,9 +35,9 @@
     </DelphiCompile>
     <DCCReference Include="..\..\Common\JSonStream.pas" />
     <DCCReference Include="..\..\Common\superobject.pas" />
-    <DCCReference Include="..\..\Common\uJSonStreamObject.pas" />
     <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas" />
     <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamEncoder.pas" />
+    <DCCReference Include="..\..\IOCPCoder\uNetworkTools.pas" />
     <DCCReference Include="Handler\TesterINfo.pas" />
     <DCCReference Include="Handler\uClientContext.pas" />
     <DCCReference Include="ufrmMain.pas">

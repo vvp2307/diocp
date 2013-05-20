@@ -3,7 +3,7 @@ unit uNetworkTools;
 interface
 
 uses
-  JwaWinsock2, IdGlobal;
+  JwaWinsock2;
 
 
 
@@ -37,35 +37,31 @@ type
 
     class function ntohl(v: Integer): Integer; overload;
 
-    class function ansiString2UnicodeBytes(v:string): TBytes;
     class function ansiString2Utf8Bytes(v:string): TBytes;
+
+    class function Utf8Bytes2AnsiString(pvData:TBytes): String;
+
   end;
 
 implementation
 
-class function TNetworkTools.ansiString2UnicodeBytes(v:string): TBytes;
-var
-  Wide_Str: WideString;
-  WideChar_Byte_Array: Array of Byte;
-  lvPointer : Pointer;
-begin
-  Result := TBytes(ToBytes(v, TIdTextEncoding.Unicode));
-//
-//  //转为Unicode
-//  Wide_Str := v;
-//
-//
-//
-//  //字节数 = Unicode字数 * Unicode单字的字节数
-//  SetLength(Result, Length(Wide_Str) * sizeof(WideChar));
-//
-//  //复制到字节数组当中
-//  Move(PAnsiChar(Wide_Str)^, Result[0], Length(Wide_Str) * sizeof(WideChar));
-end;
 
 class function TNetworkTools.ansiString2Utf8Bytes(v:string): TBytes;
+var
+  lvTemp:String;
 begin
-  Result := TBytes(ToBytes(v, TIdTextEncoding.UTF8));
+  lvTemp := AnsiToUtf8(v);
+  SetLength(Result, Length(lvTemp));
+  Move(lvTemp[1], Result[0],  Length(lvTemp));
+end;
+
+class function TNetworkTools.Utf8Bytes2AnsiString(pvData:TBytes): String;
+var
+  lvTemp:String;
+begin
+  SetLength(lvTemp, Length(pvData));
+  Move(pvData[0], lvTemp[1],  Length(pvData));
+  Result := Utf8ToAnsi(lvTemp);
 end;
 
 class function TNetworkTools.htonl(v:Int64): Int64;
@@ -99,5 +95,7 @@ class function TNetworkTools.ntohl(v: Integer): Integer;
 begin
   Result := Integer(ntohl(LongWord(v)));
 end;
+
+
 
 end.

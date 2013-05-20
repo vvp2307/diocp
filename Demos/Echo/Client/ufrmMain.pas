@@ -43,7 +43,7 @@ implementation
 
 uses
   ComObj, superobject, uMemoLogger,
-  uEchoTester, uSocketTools, JSonStream;
+  uEchoTester, uSocketTools, JSonStream, IdGlobal, uNetworkTools;
 
 {$R *.dfm}
 
