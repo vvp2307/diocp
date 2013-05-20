@@ -20,6 +20,7 @@ type
     lblMemINfo: TLabel;
     tmrTestINfo: TTimer;
     lblClientContextINfo: TLabel;
+    procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnStopSeviceClick(Sender: TObject);
     procedure tmrTestINfoTimer(Sender: TObject);
@@ -51,9 +52,13 @@ begin
   FEncoder := TIOCPJSonStreamEncoder.Create;
   FIOCPConsole := TIOCPConsole.Create();
 
-  
+  //×¢²áÀ©Õ¹¿Í»§¶ËÀà
   TIOCPContextFactory.instance.registerClientContextClass(TClientContext);
+
+  //×¢²á½âÂëÆ÷
   TIOCPContextFactory.instance.registerDecoder(FDecoder);
+
+  //×¢²á±àÂëÆ÷
   TIOCPContextFactory.instance.registerEncoder(FEncoder);
 end;
 
@@ -66,11 +71,16 @@ begin
   inherited Destroy;
 end;
 
+procedure TfrmMain.btnDiscountAllClientClick(Sender: TObject);
+begin
+  FIOCPConsole.DisconnectAllClientContext;
+end;
+
 procedure TfrmMain.btnIOCPAPIRunClick(Sender: TObject);
 begin
   if not FIOCPConsole.Active then
   begin
-    //FIOCPConsole.WorkerCount := 1;
+    FIOCPConsole.WorkerCount := 1;
     FIOCPConsole.Port := StrToInt(edtPort.Text);
     FIOCPConsole.open;
     tmrTestINfo.Enabled := true;
