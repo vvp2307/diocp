@@ -3,7 +3,7 @@ unit uIOCPJSonStreamDecoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, Classes, JSonStream, IdGlobal;
+  uIOCPCentre, uBuffer, Classes, JSonStream;
 
 type
   TIOCPJSonStreamDecoder = class(TIOCPDecoder)
@@ -32,7 +32,7 @@ var
   lvBufData:PAnsiChar;
   lvStream:TMemoryStream;
   lvJsonStream:TJsonStream;
-  lvBytes:TIdBytes;
+  lvBytes:TBytes;
 begin
   Result := nil;
 
@@ -70,7 +70,7 @@ begin
     ZeroMemory(@lvBytes[0], lvJSonLength);
     inBuf.readBuffer(@lvBytes[0], lvJSonLength);
 
-    lvData := BytesToString(lvBytes, TIdTextEncoding.UTF8, TIdTextEncoding.Default);
+    lvData := TNetworkTools.Utf8Bytes2AnsiString(lvBytes);
 
     lvJsonStream.Json := SO(lvData);
   end;

@@ -3,7 +3,7 @@ unit uIOCPJSonStreamEncoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, IdGlobal, JSonStream, Classes, uNetworkTools;
+  uIOCPCentre, uBuffer, JSonStream, Classes, uNetworkTools;
 
 type
   TIOCPJSonStreamEncoder = class(TIOCPEncoder)
@@ -28,7 +28,7 @@ var
   lvStream:TStream;
   lvTempBuf:PAnsiChar;
 
-  lvBytes, lvTempBytes:TIdBytes;
+  lvBytes, lvTempBytes:TBytes;
 begin
   if pvDataObject = nil then exit;
   lvJSonStream := TJsonStream(pvDataObject);
@@ -36,7 +36,7 @@ begin
   sData := lvJSonStream.JSon.AsJSon(True);
 
 
-  lvBytes := ToBytes(sData, TIdTextEncoding.UTF8);
+  lvBytes := TNetworkTools.ansiString2Utf8Bytes(sData);
 
   lvJSonLength := Length(lvBytes);
   lvStream := lvJSonStream.Stream;

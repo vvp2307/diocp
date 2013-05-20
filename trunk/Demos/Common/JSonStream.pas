@@ -52,8 +52,6 @@ type
 
 implementation
 
-uses
-  WinSock2;
 
 constructor TJsonStream.Create;
 begin

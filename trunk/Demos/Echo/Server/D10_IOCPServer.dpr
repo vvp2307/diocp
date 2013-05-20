@@ -10,7 +10,8 @@ uses
   uIOCPJSonStreamDecoder in '..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas',
   uIOCPJSonStreamEncoder in '..\..\IOCPCoder\uIOCPJSonStreamEncoder.pas',
   JSonStream in '..\..\Common\JSonStream.pas',
-  superobject in '..\..\Common\superobject.pas';
+  superobject in '..\..\Common\superobject.pas',
+  uNetworkTools in '..\..\IOCPCoder\uNetworkTools.pas';
 
 {$R *.res}
 

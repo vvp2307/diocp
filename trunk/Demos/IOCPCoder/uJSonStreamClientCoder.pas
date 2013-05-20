@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, JSonStream, superobject, uClientSocket,
-  IdGlobal, uNetworkTools, uD10ClientSocket;
+  uNetworkTools, uD10ClientSocket;
 
 type
   TJSonStreamClientCoder = class(TSocketObjectCoder)
@@ -42,7 +42,7 @@ var
   lvData:String;
   lvStream:TStream;
   lvJsonStream:TJsonStream;
-  lvBytes:TIdBytes;
+  lvBytes:TBytes;
 
   l:Integer;
   lvBufBytes:array[0..1023] of byte;
@@ -63,7 +63,7 @@ begin
     ZeroMemory(@lvBytes[0], lvJSonLength);
     pvSocket.recvBuffer(@lvBytes[0], lvJSonLength);
 
-    lvData := BytesToString(lvBytes, TIdTextEncoding.UTF8, TIdTextEncoding.Default);
+    lvData := TNetworkTools.Utf8Bytes2AnsiString(lvBytes);
 
     lvJsonStream.Json := SO(lvData);
   end;
@@ -89,11 +89,11 @@ var
   lvJSonStream:TJsonStream;
   lvJSonLength:Integer;
   lvStreamLength:Integer;
-  sData:String;
+  sData, lvTemp:String;
   lvStream:TStream;
   lvTempBuf:PAnsiChar;
 
-  lvBytes, lvTempBytes:TIdBytes;
+  lvBytes, lvTempBytes:TBytes;
   
   l:Integer;
   lvBufBytes:array[0..1023] of byte;
@@ -104,7 +104,7 @@ begin
   sData := lvJSonStream.JSon.AsJSon(True);
 
 
-  lvBytes := ToBytes(sData, TIdTextEncoding.UTF8);
+  lvBytes := TNetworkTools.ansiString2Utf8Bytes(sData);
 
   lvJSonLength := Length(lvBytes);
   lvStream := lvJSonStream.Stream;
