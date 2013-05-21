@@ -1,6 +1,11 @@
 unit uIOCPCentre;
 
 
+{$if CompilerVersion>= 23}
+  {$define NEED_NativeUInt}
+{$ifend}
+
+
 interface
 
 uses
@@ -326,7 +331,11 @@ begin
      if not PostQueuedCompletionStatus(
         FIOCoreHandle,
         1,   ///>>>传1, 0的话会断开连接
+      {$if defined(NEED_NativeUInt)}
+        NativeUInt(lvClientContext),
+      {$ELSE}
         Cardinal(lvClientContext),
+      {$ifend}
         POverlapped(lvIOData)) then
      begin     
        //投递失败
@@ -559,7 +568,12 @@ begin
   //工作者线程会停止到GetQueuedCompletionStatus函数处，直到接受到数据为止
   lvResultStatus := GetQueuedCompletionStatus(FIOCoreHandle,
     BytesTransferred,
-    Cardinal(lvClientContext),
+    {$if defined(NEED_NativeUInt)}
+      NativeUInt(lvClientContext),
+    {$ELSE}
+      Cardinal(lvClientContext),
+    {$ifend}
+
     POverlapped(lvIOData),
     INFINITE);
 
