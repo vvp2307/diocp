@@ -9,6 +9,7 @@ type
 
   TClientSocket = class(TObject)
   private
+    FTimeOut:Cardinal;
 
     FActive:Boolean;
     
@@ -28,7 +29,7 @@ type
     function socketErrorCheck(rc: Integer): Integer;
 
   public
-
+    function WaitForData: Boolean;
 
   public
 
@@ -41,6 +42,7 @@ type
     property Port: Integer read FPort write FPort;
 
     property SocketHandle: TSocket read FSocketHandle;
+    property TimeOut: Cardinal read FTimeOut;
 
     destructor Destroy; override;
 
@@ -71,6 +73,7 @@ end;
 constructor TClientSocket.Create;
 begin
   inherited Create;
+  FTimeOut := 30 * 1000;
   FSocketHandle := INVALID_SOCKET;
 end;
 
@@ -177,6 +180,24 @@ begin
   begin
     DoHandleError;
   end;
+end;
+
+function TClientSocket.WaitForData: Boolean;
+var
+  ReadReady, ExceptFlag: Boolean;
+  c: Char;
+  lvTimeOut:Integer;
+begin
+  Result := False;
+  // Select also returns True when connection is broken.
+  if socketErrorCheck(
+     TSocketTools.selectSocket(FSocketHandle,
+     @ReadReady, nil, @ExceptFlag, FTimeOut)
+     ) <> SOCKET_ERROR  then
+  begin
+    Result := ReadReady and not ExceptFlag;
+  end;
+
 end;
 
 end.
