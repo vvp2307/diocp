@@ -179,7 +179,11 @@ type
 
     //投递一个关闭请求
     function PostWSAClose: Boolean;
+
   protected
+    //复位<回收时进行复位>
+    procedure Reset; virtual;
+
     procedure DoConnect;virtual;
     procedure DoDisconnect;virtual;
     procedure DoOnWriteBack; virtual;
@@ -831,6 +835,12 @@ begin
   end;
 end;
 
+procedure TIOCPClientContext.Reset;
+begin
+  FUsing := false;
+  FPostedCloseQuest := false;
+end;
+
 procedure TIOCPClientContext.writeObject(const pvDataObject:TObject);
 var
   lvOutBuffer:TBufferLink;
@@ -962,8 +972,8 @@ begin
       end;                                                                                                  
     end;
     
-    //可以使用
-    context.FUsing := False;
+    //重置<复位>
+    context.Reset;
     
     FList.Add(context);
 
