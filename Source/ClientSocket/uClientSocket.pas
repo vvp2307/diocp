@@ -31,6 +31,9 @@ type
   public
     function WaitForData: Boolean;
 
+    //检测一次端口是否可以操作,如果不可以操作进行异常打开。
+    procedure checkOpen;
+
   public
 
     constructor Create;
@@ -82,6 +85,41 @@ begin
   inherited Destroy;
 end;
 
+procedure TClientSocket.checkOpen;
+var
+  lvIsActive, lvReadReady, lvWriteReady, lvExceptFlag: Boolean;
+  lvRet:Integer;
+
+
+begin
+  if not FActive then
+  begin
+    //直接进行打开
+    open;
+  end else
+  begin
+     // Select also returns True when connection is broken.
+     lvRet := TSocketTools.selectSocket(FSocketHandle,
+       @lvReadReady, @lvWriteReady, @lvExceptFlag, FTimeOut);
+     if lvRet = SOCKET_ERROR then
+     begin
+       lvIsActive := false;
+     end else
+     begin
+       lvIsActive := lvWriteReady and (not lvExceptFlag);
+     end;
+
+     if not lvIsActive then
+     begin
+       //进行一次关闭
+       close;
+
+       //重新打开
+       Open;
+     end;
+  end;
+end;
+
 procedure TClientSocket.close;
 begin
   if FActive then
@@ -120,8 +158,17 @@ begin
       begin      //10054
         //Connection reset by peer.
         //  An existing connection was forcibly closed by the remote host.
-        lvMsg :='服务器强制断开!';
+        lvMsg :='服务器强制断开[10054]!';
         close();
+      end;
+    WSAECONNABORTED:
+      //10053
+      //  Software caused connection abort.
+      //    An established connection was aborted by the software in your host computer,
+      //    possibly due to a data transmission time-out or protocol error.
+      begin
+        lvMsg :='连接中断[10053]!';
+        close(); 
       end;
     WSAENOTSOCK:
       begin      //10038
