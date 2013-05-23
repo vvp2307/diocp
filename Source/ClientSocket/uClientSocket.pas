@@ -90,7 +90,6 @@ var
   lvIsActive, lvReadReady, lvWriteReady, lvExceptFlag: Boolean;
   lvRet:Integer;
 
-
 begin
   if not FActive then
   begin
@@ -233,16 +232,22 @@ function TClientSocket.WaitForData: Boolean;
 var
   ReadReady, ExceptFlag: Boolean;
   c: Char;
-  lvTimeOut:Integer;
+  lvTimeOut, lvRet:Integer;
 begin
   Result := False;
   // Select also returns True when connection is broken.
-  if socketErrorCheck(
+
+  lvRet :=socketErrorCheck(
      TSocketTools.selectSocket(FSocketHandle,
      @ReadReady, nil, @ExceptFlag, FTimeOut)
-     ) <> SOCKET_ERROR  then
+     );
+  if lvRet <> SOCKET_ERROR  then
   begin
     Result := ReadReady and not ExceptFlag;
+  end else if lvRet = 0 then
+  begin
+    Result := false;
+    raise Exception.Create('等待接收超时!');
   end;
 
 end;
