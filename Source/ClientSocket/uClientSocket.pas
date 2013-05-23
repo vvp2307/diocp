@@ -89,6 +89,9 @@ procedure TClientSocket.checkOpen;
 var
   lvIsActive, lvReadReady, lvWriteReady, lvExceptFlag: Boolean;
   lvRet:Integer;
+  Sockin,Add : TSockAddrIn;
+  l:Integer;
+  lvTmpBuffer:array[0..1] of Byte;
 
 begin
   if not FActive then
@@ -97,7 +100,7 @@ begin
     open;
   end else
   begin
-     // Select also returns True when connection is broken.
+     //¶¼²»ÐÐÃ²ËÆ..
      lvRet := TSocketTools.selectSocket(FSocketHandle,
        @lvReadReady, @lvWriteReady, @lvExceptFlag, FTimeOut);
      if lvRet = SOCKET_ERROR then
@@ -216,7 +219,7 @@ end;
 
 function TClientSocket.sendBuffer(buf: PAnsiChar; len: Cardinal): Integer;
 begin
-  Result := socketErrorCheck(send(FSocketHandle, buf^, len, 0));  
+  Result := socketErrorCheck(send(FSocketHandle, buf^, len, 0));
 end;
 
 function TClientSocket.socketErrorCheck(rc: Integer): Integer;
