@@ -40,7 +40,6 @@ type
     class function ansiString2Utf8Bytes(v:AnsiString): TBytes;
 
     class function Utf8Bytes2AnsiString(pvData:TBytes): AnsiString;
-
   end;
 
 implementation

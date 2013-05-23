@@ -56,7 +56,12 @@ begin
     //返回buf的读取位置
     inBuf.restoreReaderIndex;
     exit;
+  end else if (lvJSonLength + lvStreamLength) = 0 then
+  begin
+    //两个都为0
+    Exit;
   end;
+
 
 
   //解码成功
