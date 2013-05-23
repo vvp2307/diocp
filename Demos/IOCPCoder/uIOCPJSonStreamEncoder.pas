@@ -3,7 +3,7 @@ unit uIOCPJSonStreamEncoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, JSonStream, Classes, uNetworkTools;
+  uIOCPCentre, uBuffer, JSonStream, Classes, uNetworkTools, uZipTools;
 
 type
   TIOCPJSonStreamEncoder = class(TIOCPEncoder)
@@ -27,7 +27,6 @@ var
   sData:String;
   lvStream:TStream;
   lvTempBuf:PAnsiChar;
-
   lvBytes, lvTempBytes:TBytes;
 begin
   if pvDataObject = nil then exit;
@@ -55,9 +54,6 @@ begin
 
   lvStreamLength := TNetworkTools.htonl(lvStreamLength);
   ouBuf.AddBuffer(@lvStreamLength, SizeOf(lvStreamLength));
-
-
-
 
   //json bytes
   ouBuf.AddBuffer(@lvBytes[0], Length(lvBytes));
