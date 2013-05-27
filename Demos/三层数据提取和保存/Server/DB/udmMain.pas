@@ -82,7 +82,10 @@ begin
     setDBAccessOperator(FDBAccessOperator);
     setData(PAnsiChar(pvEncodeData));
 
-    Execute;
+    if Execute = CDS_CODE_ERROR then
+    begin
+      raise Exception.Create(TCDSOperatorWrapper.CDSGetErrorDesc);
+    end;
     
     //解析好的SQL脚本
     lvSQL:= getUpdateSql;
