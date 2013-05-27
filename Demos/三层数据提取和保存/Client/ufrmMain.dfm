@@ -123,15 +123,8 @@ object frmMain: TfrmMain
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 1
-    ExplicitLeft = 216
-    ExplicitTop = 215
-    ExplicitWidth = 289
-    ExplicitHeight = 193
     object TabSheet1: TTabSheet
       Caption = 'TabSheet1'
-      ExplicitLeft = 0
-      ExplicitWidth = 281
-      ExplicitHeight = 165
       object DBGrid1: TDBGrid
         Left = 0
         Top = 0
@@ -150,8 +143,6 @@ object frmMain: TfrmMain
     object TabSheet2: TTabSheet
       Caption = 'TabSheet2'
       ImageIndex = 1
-      ExplicitWidth = 281
-      ExplicitHeight = 165
       object mmoData: TMemo
         Left = 0
         Top = 0
@@ -161,9 +152,6 @@ object frmMain: TfrmMain
         Lines.Strings = (
           'mmoData')
         TabOrder = 0
-        ExplicitTop = 377
-        ExplicitWidth = 740
-        ExplicitHeight = 89
       end
     end
   end

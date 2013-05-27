@@ -43,6 +43,7 @@
     <DCCReference Include="..\..\..\Source\IOCP\uSocketListener.pas" />
     <DCCReference Include="..\..\..\Source\Utils\FastMM4.pas" />
     <DCCReference Include="..\..\..\Source\Utils\FastMM4Messages.pas" />
+    <DCCReference Include="..\..\..\Source\Utils\uZipTools.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaMSWSock.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaQos.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaWinsock2.pas" />
