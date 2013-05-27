@@ -97,6 +97,10 @@
   {$define NEED_FORMATSETTINGS}
 {$ifend}
 
+{$if CompilerVersion>= 23}
+ {$define NEED_FORMATSETTINGS}
+{$ifend}
+
 {$if defined(FPC) and defined(VER2_6)}
   {$define NEED_FORMATSETTINGS}
 {$ifend}
