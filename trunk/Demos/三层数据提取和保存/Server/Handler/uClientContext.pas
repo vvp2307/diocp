@@ -3,7 +3,7 @@ unit uClientContext;
 interface
 
 uses
-  Windows, JwaWinsock2, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre;
+  Windows, JwaWinsock2, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre, FileLogger;
 
 type
   TClientContext = class(TIOCPClientContext)
@@ -75,6 +75,8 @@ begin
       lvJsonStream.Stream.Position := 0;
       SetLength(lvEncodeData, lvJSonStream.Stream.Size);
       lvJsonStream.Stream.ReadBuffer(lvEnCodeData[1], lvJSonStream.Stream.Size);
+
+      TFileLogger.instance.logDebugMessage(lvEnCodeData);
 
       dmMain.ExecuteApplyUpdate(lvEncodeData);
 
