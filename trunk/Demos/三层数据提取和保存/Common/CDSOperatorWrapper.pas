@@ -1,6 +1,14 @@
 unit CDSOperatorWrapper;
 
 
+///2013年5月27日 15:41:59
+///  添加CDSGetErrorCode,CDSGetErrorDesc函数
+
+///2013年5月27日 15:41:39
+///  修正XE下不能加载的bug
+///
+
+
 
 interface
 
@@ -15,6 +23,8 @@ type
   public
     class function createCDSEncode: ICDSEncode;
     class function createCDSDecode: ICDSDecode;
+    class function CDSGetErrorCode: Integer;
+    class function CDSGetErrorDesc: AnsiString;
   end;
 
 implementation
@@ -22,7 +32,38 @@ implementation
 var
   __Handle:THandle=0;
 
+  __passString:AnsiString;
 
+
+
+class function TCDSOperatorWrapper.CDSGetErrorCode: Integer;
+var
+  lvInvoke:function():Integer; stdcall;
+begin
+  checkInitialize;
+  @lvInvoke := nil;
+  @lvInvoke := GetProcAddress(__Handle, 'CDSGetErrorCode');
+  if @lvInvoke = nil then
+  begin
+    raise Exception.Create('找不到对应的CDSGetErrorCode函数,非法的CDSOperator动态库文件');
+  end;
+  Result := lvInvoke();
+end;
+
+class function TCDSOperatorWrapper.CDSGetErrorDesc: AnsiString;
+var
+  lvInvoke:function():PAnsiChar; stdcall;
+begin
+  checkInitialize;
+  @lvInvoke := nil;
+  @lvInvoke := GetProcAddress(__Handle, 'CDSGetErrorDesc');
+  if @lvInvoke = nil then
+  begin
+    raise Exception.Create('找不到对应的CDSGetErrorDesc函数,非法的CDSOperator动态库文件');
+  end;
+  __passString := lvInvoke();
+  Result := __passString;
+end;
 
 class procedure TCDSOperatorWrapper.checkFinalization;
 begin

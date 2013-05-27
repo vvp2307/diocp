@@ -1,6 +1,16 @@
 unit uICDSOperator;
+///
+///  2013年5月27日 15:43:41
+///    Execute
+///    ExecuteUpdate
+///    Decode.setData
+///    修改成有返回值的函数
 
 interface
+
+const
+  CDS_CODE_NO_ERROR = 0;
+  CDS_CODE_ERROR = -1;
 
 type                                                           
   IDBAccessOperator = interface(IInterface)
@@ -14,7 +24,7 @@ type
     function getPackageData:PAnsiChar;stdcall;
     procedure setTableINfo(pvUpdateTable:PAnsiChar; pvKeyFields:PAnsiChar);stdcall;
     procedure setData(pvData:OleVariant;pvDelta:OleVariant);stdcall;
-    procedure Execute;stdcall;
+    function Execute: Integer; stdcall;
   end;
 
 
@@ -24,7 +34,7 @@ type
     //获取解码好的SQL语句
     function getUpdateSql():PAnsiChar;stdcall;
 
-    procedure setData(pvEncodeData:PAnsiChar);stdcall;
+    function setData(pvEncodeData:PAnsiChar): Integer; stdcall;
 
     //如果赋值了TabFields可以不进行赋值IDBAccessOperator
     procedure SetTableFields(pvValue: PAnsiChar);stdcall;
@@ -36,10 +46,10 @@ type
     procedure setEncryptSQL(pvValue:Boolean);stdcall;
 
     //进行解码
-    procedure Execute;stdcall;
+    function Execute: Integer; stdcall;
 
     //解码后利用 IDBAccessOperator执行更新语句
-    procedure ExecuteUpdate; stdcall;
+    function ExecuteUpdate: Integer; stdcall;
   end;
 
 implementation
