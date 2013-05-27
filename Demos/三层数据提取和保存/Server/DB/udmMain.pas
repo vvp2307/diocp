@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, DB, ADODB, uCDSProvider, ADOConnConfig, uDBAccessOperator,
-  uICDSOperator, ADOPoolGroup;
+  uICDSOperator;
 
 type
   TdmMain = class(TDataModule)
