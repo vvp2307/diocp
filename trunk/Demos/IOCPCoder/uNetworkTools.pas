@@ -2,10 +2,9 @@ unit uNetworkTools;
 
 interface
 
+
 uses
-  JwaWinsock2;
-
-
+  windows, WinSock;
 
 type
   //from indy
@@ -69,15 +68,15 @@ var
   L: LongWord;
 begin
   LParts.QuadPart := v;
-  L := JwaWinsock2.htonl(LParts.HighPart);
-  LParts.HighPart := JwaWinsock2.htonl(LParts.LowPart);
+  L := WinSock.htonl(LParts.HighPart);
+  LParts.HighPart := htonl(LParts.LowPart);
   LParts.LowPart := L;
   Result := LParts.QuadPart;
 end;
 
 class function TNetworkTools.htonl(v: LongWord): LongWord;
 begin
-  Result := JwaWinsock2.htonl(v);
+  Result := WinSock.htonl(v);
 end;
 
 class function TNetworkTools.htonl(v: Integer): Integer;
@@ -87,7 +86,7 @@ end;
 
 class function TNetworkTools.ntohl(v: LongWord): LongWord;
 begin
-  Result := JwaWinsock2.ntohl(v);
+  Result := WinSock.ntohl(v);
 end;
 
 class function TNetworkTools.ntohl(v: Integer): Integer;
