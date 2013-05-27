@@ -31,7 +31,8 @@ uses
   ADOConnConfig in 'DB\ADOConnConfig.pas',
   CDSOperatorWrapper in '..\Common\CDSOperatorWrapper.pas',
   uDBAccessOperator in '..\Common\uDBAccessOperator.pas',
-  uICDSOperator in '..\Common\uICDSOperator.pas';
+  uICDSOperator in '..\Common\uICDSOperator.pas',
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
 
 {$R *.res}
 

@@ -18,7 +18,8 @@ uses
   JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   CDSOperatorWrapper in '..\Common\CDSOperatorWrapper.pas',
-  uICDSOperator in '..\Common\uICDSOperator.pas';
+  uICDSOperator in '..\Common\uICDSOperator.pas',
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
 
 {$R *.res}
 

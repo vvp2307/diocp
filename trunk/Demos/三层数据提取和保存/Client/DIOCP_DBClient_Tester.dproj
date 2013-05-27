@@ -34,6 +34,7 @@
     <DCCReference Include="..\..\..\Source\IOCP\FileLogger.pas" />
     <DCCReference Include="..\..\..\Source\Utils\uMemoLogger.pas" />
     <DCCReference Include="..\..\..\Source\Utils\uSocketTools.pas" />
+    <DCCReference Include="..\..\..\Source\Utils\uZipTools.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaMSWSock.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaQos.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaWinsock2.pas" />
