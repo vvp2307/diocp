@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
-  ExtCtrls;
+  ExtCtrls, uZipTools, types;
 
 type
   TfrmMain = class(TForm)
@@ -21,11 +21,13 @@ type
     tmrTestINfo: TTimer;
     lblClientContextINfo: TLabel;
     btnConnectConfig: TButton;
+    Button1: TButton;
     procedure btnConnectConfigClick(Sender: TObject);
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnStopSeviceClick(Sender: TObject);
     procedure tmrTestINfoTimer(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
     FIOCPConsole: TIOCPConsole;
@@ -103,6 +105,40 @@ begin
   FIOCPConsole.close;
   btnIOCPAPIRun.Enabled := not FIOCPConsole.Active;
   btnStopSevice.Enabled := not btnIOCPAPIRun.Enabled;
+end;
+
+procedure TfrmMain.Button1Click(Sender: TObject);
+var
+  lvData:AnsiString;
+  lvBytes:TByteDynArray;
+  lvStream:TStream;
+begin
+  lvData := 'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
+            'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111'
+            ;
+  lvBytes := TZipTools.compressStr(lvData);
+
+  lvData := TZipTools.unCompressStr(lvBytes);
+  showMessage(lvData);
+  lvStream:=TMemoryStream.Create;
+  try
+    lvStream.WriteBuffer(lvData[1], Length(lvData));
+    TZipTools.compressStreamEX(lvStream);
+    TZipTools.unCompressStreamEX(lvStream);
+
+    lvStream.Position := 0;
+    setLength(lvData, lvStream.Size);
+    lvStream.ReadBuffer(lvData[1], lvStream.Size);
+    showMessage(lvData);
+  finally
+    lvStream.Free;
+  end;
 end;
 
 procedure TfrmMain.tmrTestINfoTimer(Sender: TObject);

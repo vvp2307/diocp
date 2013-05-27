@@ -99,6 +99,15 @@ object frmMain: TfrmMain
     TabOrder = 4
     OnClick = btnConnectConfigClick
   end
+  object Button1: TButton
+    Left = 456
+    Top = 112
+    Width = 75
+    Height = 25
+    Caption = #35843#35797#21387#32553
+    TabOrder = 5
+    OnClick = Button1Click
+  end
   object tmrTestINfo: TTimer
     Enabled = False
     OnTimer = tmrTestINfoTimer

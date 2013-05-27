@@ -35,7 +35,7 @@ end;
 
 class procedure TCDSOperatorWrapper.checkInitialize;
 var
-  lvPath:AnsiString;
+  lvPath:String;
 begin
   if __Handle = 0 then
   begin
