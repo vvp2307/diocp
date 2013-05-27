@@ -32,6 +32,24 @@ begin
   if pvDataObject = nil then exit;
   lvJSonStream := TJsonStream(pvDataObject);
 
+  //是否压缩流
+  if (lvJSonStream.Stream <> nil) then
+  begin
+    if lvJSonStream.Json.O['config.stream.zip'] <> nil then
+    begin
+      if lvJSonStream.Json.B['config.stream.zip'] then
+      begin
+        //压缩流
+        TZipTools.compressStreamEx(lvJSonStream.Stream);
+      end;
+    end else if lvJSonStream.Stream.Size > 0 then
+    begin
+      //压缩流
+      TZipTools.compressStreamEx(lvJSonStream.Stream);
+      lvJSonStream.Json.B['config.stream.zip'] := true;
+    end;
+  end;   
+
   sData := lvJSonStream.JSon.AsJSon(True);
 
 

@@ -22,7 +22,7 @@ type
 implementation
 
 uses
-  Windows, uNetworkTools, superobject;
+  Windows, uNetworkTools, superobject, uZipTools;
 
 function TIOCPJSonStreamDecoder.Decode(const inBuf: TBufferLink): TObject;
 var
@@ -89,6 +89,13 @@ begin
       inBuf.readBuffer(lvBufData, lvStreamLength);
       lvJsonStream.Stream.Size := 0;
       lvJsonStream.Stream.WriteBuffer(lvBufData^, lvStreamLength);
+
+      //½âÑ¹Á÷
+      if lvJsonStream.Json.B['config.stream.zip'] then
+      begin
+        //½âÑ¹
+        TZipTools.unCompressStreamEX(lvJsonStream.Stream);
+      end;
     finally
       FreeMem(lvBufData, lvStreamLength);
     end;

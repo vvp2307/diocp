@@ -1,14 +1,16 @@
 unit uJSonStreamClientCoder;
 ////
-///  字符串转换成UTF8进行发送,数字也需要转换进行发送
 ///
+///  字符串转换成UTF8进行发送,数字也需要转换进行发送
+///   2013年5月25日 09:41:24
+///      加入压缩功能
 ////
 
 interface
 
 uses
   Classes, JSonStream, superobject, uClientSocket,
-  uNetworkTools, uD10ClientSocket;
+  uNetworkTools, uD10ClientSocket, uZipTools;
 
 type
   TJSonStreamClientCoder = class(TSocketObjectCoder)
@@ -79,6 +81,13 @@ begin
       l := pvSocket.recvBuffer(@lvBufBytes[0], SizeOf(lvBufBytes));
       lvStream.WriteBuffer(lvBufBytes, l);
     end;
+
+    //解压流
+    if lvJsonStream.Json.B['config.stream.zip'] then
+    begin
+      //解压
+      TZipTools.unCompressStreamEX(lvJsonStream.Stream);
+    end;
   end;
   Result := true;  
 end;
@@ -100,6 +109,24 @@ var
 begin
   if pvObject = nil then exit;
   lvJSonStream := TJsonStream(pvObject);
+  
+  //是否压缩流
+  if (lvJSonStream.Stream <> nil) then
+  begin
+    if lvJSonStream.Json.O['config.stream.zip'] <> nil then
+    begin
+      if lvJSonStream.Json.B['config.stream.zip'] then
+      begin
+        //压缩流
+        TZipTools.compressStreamEx(lvJSonStream.Stream);
+      end;
+    end else if lvJSonStream.Stream.Size > 0 then
+    begin
+      //压缩流
+      TZipTools.compressStreamEx(lvJSonStream.Stream);
+      lvJSonStream.Json.B['config.stream.zip'] := true;
+    end;
+  end;
 
   sData := lvJSonStream.JSon.AsJSon(True);
 

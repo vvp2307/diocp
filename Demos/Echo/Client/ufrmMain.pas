@@ -125,12 +125,15 @@ begin
     FillChar(lvData[1], 1024 * 1, Ord('1'));
     lvStream.WriteBuffer(lvData[1], Length(lvData));
 
+    //发送一个对象
     FClientSocket.sendObject(lvJSonStream);
 
     TMemoLogger.infoMsg('数据发送成功！', mmoLog.Lines);
     lvRecvObject := TJsonStream.Create;
     try
       // TMemoLogger.infoMsg('数据接收成功！', mmoLog.Lines);
+
+      //接收一个对象
       FClientSocket.recvObject(lvRecvObject);
       TMemoLogger.infoMsg('==============================================' + sLineBreak
         + lvRecvObject.JSon.AsJSon(True)
