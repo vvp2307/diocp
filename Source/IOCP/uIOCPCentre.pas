@@ -822,9 +822,15 @@ begin
     lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
     if lvObject <> nil then
     try
-      //解码成功，调用业务逻辑的处理方法
-      dataReceived(lvObject);
-
+      try
+        //解码成功，调用业务逻辑的处理方法
+        dataReceived(lvObject);
+      except
+        on E:Exception do
+        begin
+          TIOCPFileLogger.logErrMessage('截获处理逻辑异常!' + e.Message);
+        end;
+      end; 
       //清理掉这一次分配的内存
       FBuffers.clearBuffer;
     finally
