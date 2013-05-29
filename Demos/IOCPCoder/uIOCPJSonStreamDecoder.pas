@@ -3,7 +3,7 @@ unit uIOCPJSonStreamDecoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, Classes, JSonStream;
+  uIOCPCentre, uBuffer, Classes, JSonStream, uIOCPFileLogger;
 
 type
   TIOCPJSonStreamDecoder = class(TIOCPDecoder)
@@ -22,7 +22,7 @@ type
 implementation
 
 uses
-  Windows, uNetworkTools, superobject, uZipTools;
+  Windows, uNetworkTools, superobject, uZipTools, FileLogger;
 
 function TIOCPJSonStreamDecoder.Decode(const inBuf: TBufferLink): TObject;
 var
@@ -33,11 +33,13 @@ var
   lvStream:TMemoryStream;
   lvJsonStream:TJsonStream;
   lvBytes:TBytes;
+  lvValidCount:Integer;
 begin
   Result := nil;
 
   //如果缓存中的数据长度不够包头长度，解码失败<json字符串长度,流长度>
-  if (inBuf.validCount < SizeOf(Integer) + SizeOf(Integer)) then
+  lvValidCount := inBuf.validCount;
+  if (lvValidCount < SizeOf(Integer) + SizeOf(Integer)) then
   begin
     Exit;
   end;
@@ -51,14 +53,16 @@ begin
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
 
   //如果缓存中的数据不够json的长度和流长度<说明数据还没有收取完毕>解码失败
-  if inBuf.validCount < (lvJSonLength + lvStreamLength) then
+  lvValidCount := inBuf.validCount;
+  if lvValidCount < (lvJSonLength + lvStreamLength) then
   begin
     //返回buf的读取位置
     inBuf.restoreReaderIndex;
     exit;
   end else if (lvJSonLength + lvStreamLength) = 0 then
   begin
-    //两个都为0
+    //两个都为0<两个0>客户端可以用来作为自动重连使用
+    TIOCPFileLogger.logDebugMessage('接收到一次[00]数据!');
     Exit;
   end;
 
@@ -78,6 +82,9 @@ begin
     lvData := TNetworkTools.Utf8Bytes2AnsiString(lvBytes);
 
     lvJsonStream.Json := SO(lvData);
+  end else
+  begin
+    TFileLogger.instance.logMessage('接收到一次JSon为空的一次数据请求!', 'IOCP_ALERT_');
   end;
 
 

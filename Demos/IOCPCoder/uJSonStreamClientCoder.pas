@@ -1,16 +1,15 @@
 unit uJSonStreamClientCoder;
 ////
-///
 ///  字符串转换成UTF8进行发送,数字也需要转换进行发送
-///   2013年5月25日 09:41:24
-///      加入压缩功能
+///  2013年5月29日17:13:23
+///     优化接收数据方式
 ////
 
 interface
 
 uses
   Classes, JSonStream, superobject, uClientSocket,
-  uNetworkTools, uD10ClientSocket, uZipTools;
+  uNetworkTools, uD10ClientSocket, uZipTools, SysUtils, Math;
 
 type
   TJSonStreamClientCoder = class(TSocketObjectCoder)
@@ -35,55 +34,85 @@ type
 implementation
 
 uses
-  Windows;
+  Windows, FileLogger;
 
 function TJSonStreamClientCoder.Decode(pvSocket: TClientSocket; pvObject:
     TObject): Boolean;
 var
   lvJSonLength, lvStreamLength:Integer;
-  lvData:String;
+  lvData, lvTemp:String;
   lvStream:TStream;
+
   lvJsonStream:TJsonStream;
   lvBytes:TBytes;
 
-  l:Integer;
+  l, lvRemain:Integer;
   lvBufBytes:array[0..1023] of byte;
 begin
+  //TFileLogger.instance.logDebugMessage('1100');
   pvSocket.recvBuffer(@lvJSonLength, SizeOf(Integer));
   pvSocket.recvBuffer(@lvStreamLength, SizeOf(Integer));
+  //TFileLogger.instance.logDebugMessage('1101');
 
   lvJSonLength := TNetworkTools.ntohl(lvJSonLength);
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
 
+  TFileLogger.instance.logDebugMessage('1102, ' + InttoStr(lvJSonLength) + ',' + intToStr(lvStreamLength));
+
   lvJsonStream := TJsonStream(pvObject);
   lvJsonStream.Clear(True);
-
+  //TFileLogger.instance.logDebugMessage('1103');
   //读取json字符串
   if lvJSonLength > 0 then
   begin
-    SetLength(lvBytes, lvJSonLength);
-    ZeroMemory(@lvBytes[0], lvJSonLength);
-    pvSocket.recvBuffer(@lvBytes[0], lvJSonLength);
+    //TFileLogger.instance.logDebugMessage('1104');
 
-    lvData := TNetworkTools.Utf8Bytes2AnsiString(lvBytes);
+    lvStream:=TMemoryStream.Create();
+    try
+      lvRemain := lvJSonLength;
+      while lvStream.Size < lvJSonLength do
+      begin
+        l := pvSocket.recvBuffer(@lvBufBytes[0], Min(lvRemain, (SizeOf(lvBufBytes))));
+        lvStream.WriteBuffer(lvBufBytes[0], l);
+        lvRemain := lvRemain - l;
+      end;
 
-    lvJsonStream.Json := SO(lvData);
+
+      SetLength(lvBytes, lvStream.Size);
+      lvStream.Position := 0;
+      lvStream.ReadBuffer(lvBytes[0], lvStream.Size);
+      lvData := TNetworkTools.Utf8Bytes2AnsiString(lvBytes);
+
+      lvJsonStream.Json := SO(lvData);
+      if (lvJsonStream.Json = nil) or (lvJsonStream.Json.DataType <> stObject) then
+      begin
+        TFileLogger.instance.logMessage('接收JSon' + sLineBreak + lvData);
+        TMemoryStream(lvStream).SaveToFile(ExtractFilePath(ParamStr(0)) + 'DEBUG_' + FormatDateTime('YYYYMMDDHHNNSS', Now()) + '.dat');
+        raise Exception.Create('解码JSon对象失败,接收到得JSon字符串为!');
+      end;
+            
+    finally
+      lvStream.Free;
+    end;
+
+
   end;
-
 
   //读取流数据 
   if lvStreamLength > 0 then
   begin
     lvStream := lvJsonStream.Stream;
     lvStream.Size := 0;
+    lvRemain := lvStreamLength;
     while lvStream.Size < lvStreamLength do
     begin
-      l := pvSocket.recvBuffer(@lvBufBytes[0], SizeOf(lvBufBytes));
-      lvStream.WriteBuffer(lvBufBytes, l);
+      l := pvSocket.recvBuffer(@lvBufBytes[0], Min(lvRemain, (SizeOf(lvBufBytes))));
+      lvStream.WriteBuffer(lvBufBytes[0], l);
+      lvRemain := lvRemain - l;
     end;
 
     //解压流
-    if lvJsonStream.Json.B['config.stream.zip'] then
+    if (lvJsonStream.Json <> nil) and (lvJsonStream.Json.B['config.stream.zip']) then
     begin
       //解压
       TZipTools.unCompressStreamEX(lvJsonStream.Stream);
@@ -128,7 +157,7 @@ begin
     end;
   end;
 
-  sData := lvJSonStream.JSon.AsJSon(True);
+  sData := lvJSonStream.JSon.AsJSon(True, false);
 
 
   lvBytes := TNetworkTools.ansiString2Utf8Bytes(sData);
