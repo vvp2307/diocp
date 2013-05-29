@@ -184,6 +184,9 @@ type
     //复位<回收时进行复位>
     procedure Reset; virtual;
 
+    //借到，调用该函数
+    procedure Initialize4Use; virtual;
+
     procedure DoConnect;virtual;
     procedure DoDisconnect;virtual;
     procedure DoOnWriteBack; virtual;
@@ -313,6 +316,7 @@ begin
 
     ///
     lvClientContext := TIOCPContextFactory.instance.createContext(lvSocket);
+    lvClientContext.Initialize4Use;
     lvClientContext.FIOCPObject := Self;
     lvClientContext.DoConnect;
 
@@ -752,9 +756,9 @@ end;
 
 destructor TIOCPClientContext.Destroy;
 begin
+  closeClientSocket;
   FBuffers.Free;
   FBuffers := nil;
-  closeClientSocket;
   FCS.Free;
   FCS := nil;
   inherited Destroy;
@@ -796,6 +800,12 @@ begin
   
 end;
 
+procedure TIOCPClientContext.Initialize4Use;
+begin
+  FPostedCloseQuest := false;
+  FBuffers.clearBuffer;
+end;
+
 function TIOCPClientContext.PostWSAClose: Boolean;
 begin
   //已经回收
@@ -831,8 +841,11 @@ begin
           TIOCPFileLogger.logErrMessage('截获处理逻辑异常!' + e.Message);
         end;
       end; 
-      //清理掉这一次分配的内存
-      FBuffers.clearBuffer;
+      //清理掉这一次分配的内存<如果没有可用的内存块>清理
+      if FBuffers.validCount = 0 then
+      begin
+        FBuffers.clearBuffer;
+      end;
     finally
       lvObject.Free;
     end;
@@ -845,6 +858,7 @@ procedure TIOCPClientContext.Reset;
 begin
   FUsing := false;
   FPostedCloseQuest := false;
+  FBuffers.clearBuffer;
 end;
 
 procedure TIOCPClientContext.writeObject(const pvDataObject:TObject);

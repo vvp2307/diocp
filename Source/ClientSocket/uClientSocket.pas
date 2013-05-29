@@ -1,5 +1,15 @@
 unit uClientSocket;
 
+///2013年5月28日 09:50:25
+///  添加SendBufferEx不进行检测错误的发送
+///2013年5月28日 10:33:02
+///  抛出等待超时
+///2013年5月28日 12:53:58
+///  添加raiseException属性
+///
+
+{$DEFINE _D10_Debug}
+
 interface
 
 uses
@@ -9,6 +19,8 @@ type
 
   TClientSocket = class(TObject)
   private
+    FLastExceptionMessage:String;
+    
     FTimeOut:Cardinal;
 
     FActive:Boolean;
@@ -17,17 +29,17 @@ type
 
     FPort: Integer;
 
+    FRaiseSocketException: Boolean;
+
     FSocketHandle: TSocket;
 
     procedure closeSocketHandle;
 
     function createSocket: Boolean;
-
-
+    
     procedure DoHandleError;
 
     function socketErrorCheck(rc: Integer): Integer;
-
   public
     function WaitForData: Boolean;
 
@@ -35,6 +47,8 @@ type
     procedure checkOpen;
 
   public
+
+
 
     constructor Create;
 
@@ -44,7 +58,11 @@ type
        
     property Port: Integer read FPort write FPort;
 
+    property RaiseSocketException: Boolean read FRaiseSocketException write
+        FRaiseSocketException;
+
     property SocketHandle: TSocket read FSocketHandle;
+    
     property TimeOut: Cardinal read FTimeOut;
 
     destructor Destroy; override;
@@ -56,6 +74,8 @@ type
     function recvBuffer(buf: PAnsiChar; len: Cardinal): Integer;
     
     function sendBuffer(buf: PAnsiChar; len: Cardinal): Integer;
+    
+    function SendBufferEx(buf: PAnsiChar; len: Cardinal): Integer;
   end;
 
 
@@ -78,6 +98,8 @@ begin
   inherited Create;
   FTimeOut := 30 * 1000;
   FSocketHandle := INVALID_SOCKET;
+  
+  FRaiseSocketException := true;
 end;
 
 destructor TClientSocket.Destroy;
@@ -95,30 +117,8 @@ var
 
 begin
   if not FActive then
-  begin
-    //直接进行打开
+  begin    
     open;
-  end else
-  begin
-     //都不行貌似..
-     lvRet := TSocketTools.selectSocket(FSocketHandle,
-       @lvReadReady, @lvWriteReady, @lvExceptFlag, FTimeOut);
-     if lvRet = SOCKET_ERROR then
-     begin
-       lvIsActive := false;
-     end else
-     begin
-       lvIsActive := lvWriteReady and (not lvExceptFlag);
-     end;
-
-     if not lvIsActive then
-     begin
-       //进行一次关闭
-       close;
-
-       //重新打开
-       Open;
-     end;
   end;
 end;
 
@@ -179,6 +179,7 @@ begin
         // Either the socket handle parameter did not reference a valid socket, or for select,
         // a member of an fd_set was not valid.
         lvMsg :='操作的是一个无效的socket!';
+        close();
       end;
   else
     lvMsg := '';
@@ -190,7 +191,13 @@ begin
   begin
     lvMsg := lvMsg + sLineBreak + Format('Socket错误,错误代码:%d', [lvErrCode]);
   end;
-  raise Exception.Create(lvMsg);
+  FLastExceptionMessage := lvMsg;
+  if FRaiseSocketException then raise Exception.Create(lvMsg);
+end;
+
+function TClientSocket.SendBufferEx(buf: PAnsiChar; len: Cardinal): Integer;
+begin
+  Result := send(FSocketHandle, buf^, len, 0);  
 end;
 
 procedure TClientSocket.open;
@@ -238,19 +245,20 @@ var
   lvTimeOut, lvRet:Integer;
 begin
   Result := False;
-  // Select also returns True when connection is broken.
+
+  if not FActive then Exit;  
 
   lvRet :=socketErrorCheck(
      TSocketTools.selectSocket(FSocketHandle,
      @ReadReady, nil, @ExceptFlag, FTimeOut)
      );
-  if lvRet <> SOCKET_ERROR  then
-  begin
-    Result := ReadReady and not ExceptFlag;
-  end else if lvRet = 0 then
+  if lvRet = 0 then
   begin
     Result := false;
     raise Exception.Create('等待接收超时!');
+  end else if lvRet <> SOCKET_ERROR then
+  begin
+    Result := ReadReady and not ExceptFlag;
   end;
 
 end;
