@@ -71,7 +71,11 @@ end;
 
 function TD10ClientSocket.recvObject(pvObject:TObject): Boolean;
 begin
+  Result := false;
   if FCoder = nil then raise Exception.Create('没有注册对象编码和解码器(registerCoder)!');
+  
+  if not Active then Exit;
+  
   Result := FCoder.Decode(Self, pvObject);
 end;
 
@@ -89,6 +93,8 @@ end;
 procedure TD10ClientSocket.sendObject(pvObject:TObject);
 begin
   if FCoder = nil then raise Exception.Create('没有注册对象编码和解码器(registerCoder)!');
+
+  if not Active then Exit;
 
   FCoder.Encode(Self, pvObject);
 end;
