@@ -3,7 +3,7 @@ unit uIOCPJSonStreamDecoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, Classes, JSonStream, uIOCPFileLogger;
+  uIOCPCentre, uBuffer, Classes, JSonStream, uIOCPFileLogger, SysUtils;
 
 type
   TIOCPJSonStreamDecoder = class(TIOCPDecoder)

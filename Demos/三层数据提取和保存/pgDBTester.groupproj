@@ -3,42 +3,21 @@
     <ProjectGuid>{7414bf98-3b99-4075-8797-488652bc05d3}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Projects Include="Client\DIOCP_DBClient_Tester.dproj" />
-    <Projects Include="Server\DIOCP_DBServer.dproj" />
-  </ItemGroup>
+  <ItemGroup />
   <ProjectExtensions>
     <Borland.Personality>Default.Personality</Borland.Personality>
     <Borland.ProjectType />
     <BorlandProject>
 <BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
-  <Target Name="DIOCP_DBServer">
-    <MSBuild Projects="Server\DIOCP_DBServer.dproj" Targets="" />
-  </Target>
-  <Target Name="DIOCP_DBServer:Clean">
-    <MSBuild Projects="Server\DIOCP_DBServer.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="DIOCP_DBServer:Make">
-    <MSBuild Projects="Server\DIOCP_DBServer.dproj" Targets="Make" />
-  </Target>
-  <Target Name="DIOCP_DBClient_Tester">
-    <MSBuild Projects="Client\DIOCP_DBClient_Tester.dproj" Targets="" />
-  </Target>
-  <Target Name="DIOCP_DBClient_Tester:Clean">
-    <MSBuild Projects="Client\DIOCP_DBClient_Tester.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="DIOCP_DBClient_Tester:Make">
-    <MSBuild Projects="Client\DIOCP_DBClient_Tester.dproj" Targets="Make" />
-  </Target>
   <Target Name="Build">
-    <CallTarget Targets="DIOCP_DBServer;DIOCP_DBClient_Tester" />
+    <CallTarget Targets="" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="DIOCP_DBServer:Clean;DIOCP_DBClient_Tester:Clean" />
+    <CallTarget Targets="" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="DIOCP_DBServer:Make;DIOCP_DBClient_Tester:Make" />
+    <CallTarget Targets="" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

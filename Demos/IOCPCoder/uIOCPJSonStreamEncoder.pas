@@ -3,7 +3,7 @@ unit uIOCPJSonStreamEncoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, JSonStream, Classes, uNetworkTools, uZipTools;
+  uIOCPCentre, uBuffer, JSonStream, Classes, uNetworkTools, uZipTools, SysUtils;
 
 type
   TIOCPJSonStreamEncoder = class(TIOCPEncoder)

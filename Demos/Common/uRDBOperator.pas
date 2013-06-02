@@ -1,6 +1,11 @@
 unit uRDBOperator;
 ///
 ///  添加了DBID项目
+///    源文件存放E:\项目中心\PluginFrame\Source\Tools\DIOCP\Demos\Common
+///  2013年5月28日 09:55:59
+///    添加ExecuteCommandText函数
+///  2013年5月28日 12:52:55
+///    添加checkConnectionConnect函数
 ///
 
 interface
@@ -12,6 +17,7 @@ uses
 type
   TRDBOperator = class(TObject)
   private
+    FTrySend:TJsonStream;
     FConnection: TD10ClientSocket;
     FDBID: String;
     FRScript: ISuperObject;
@@ -25,12 +31,17 @@ type
     procedure clear;
 
     //1 尝试发送两个00,测试socket是否连接失效
-    procedure checkSocketConnection;
+    procedure checkSocketConnect;
+
+    //1，尝试发送一个数据
+    procedure checkConnectionConnect;
 
     procedure QueryCDS(pvCDS: TClientDataSet);
 
 
     procedure ExecuteScript;
+
+    procedure ExecuteCommandText(pvCmdText:string);
 
     function ApplyUpdate(pvCDS: TClientDataSet; pvTable, pvKey: string): Boolean;
 
@@ -52,7 +63,7 @@ type
 implementation
 
 uses
-  CDSOperatorWrapper;
+  CDSOperatorWrapper, FileLogger;
 
 function TRDBOperator.ApplyUpdate(pvCDS: TClientDataSet; pvTable, pvKey:
     string): Boolean;
@@ -64,12 +75,14 @@ var
 begin
   Result := false;
   if pvCDS.State in [dsInsert, dsEdit] then pvCDS.Post;
-  
+
   if pvCDS.ChangeCount = 0 then
   begin
     Exit;
   end;
+  
   FConnection.checkOpen;
+  
   lvJSonStream := TJsonStream.Create;
   try
     lvJSonStream.JSon := SO();
@@ -93,22 +106,23 @@ begin
     lvJSonStream.Free;
   end;
 
-  FConnection.WaitForData;
-  
-  //读取数据
-  lvRecvObject := TJsonStream.Create;
-  try
-    FConnection.recvObject(lvRecvObject);
-    FTraceData := lvRecvObject.Json.O['trace'];
-    if not lvRecvObject.getResult then
-    begin
-      raise Exception.Create(lvRecvObject.getResultMsg);
-    end else
-    begin
-      Result := true;
+  if FConnection.WaitForData then
+  begin
+    //读取数据
+    lvRecvObject := TJsonStream.Create;
+    try
+      FConnection.recvObject(lvRecvObject);
+      FTraceData := lvRecvObject.Json.O['trace'];
+      if not lvRecvObject.getResult then
+      begin
+        raise Exception.Create('服务端返回信息:' + lvRecvObject.getResultMsg);
+      end else
+      begin
+        Result := true;
+      end;
+    finally
+       lvRecvObject.Free;
     end;
-  finally
-     lvRecvObject.Free;
   end;
 end;
 
@@ -120,35 +134,67 @@ end;
 constructor TRDBOperator.Create;
 begin
   inherited Create;
+  FTrySend := TJsonStream.Create;
+  FTrySend.Json.I['cmdIndex'] := 102;  //连接测试 
   FRScript :=SO();  
 end;
 
 destructor TRDBOperator.Destroy;
 begin
+  FTrySend.Free;
   FRScript := nil;
   inherited Destroy;
 end;
 
-procedure TRDBOperator.checkSocketConnection;
+procedure TRDBOperator.checkSocketConnect;
 var
   lvRet:Integer;
   lvTempInteger:Integer;
 begin
-  //服务端解码器需要支持发送两个0
-  lvTempInteger := 0;
-  lvTempInteger := TNetworkTools.htonl(lvTempInteger);  
-  lvRet :=  FConnection.sendBufferEx(@lvTempInteger, SizeOf(lvTempInteger));
-  if lvRet = SOCKET_ERROR then
-  begin  //服务端已经断开
-    FConnection.close;
-    Exit;
+  if FConnection.Active then
+  begin
+    //服务端解码器需要支持发送两个0
+    lvTempInteger := 0;
+    lvTempInteger := TNetworkTools.htonl(lvTempInteger);
+    lvRet :=  FConnection.sendBufferEx(@lvTempInteger, SizeOf(lvTempInteger));
+    if lvRet = SOCKET_ERROR then
+    begin  //服务端已经断开
+      FConnection.close;
+      Exit;
+    end;
+    lvRet :=  FConnection.sendBufferEx(@lvTempInteger, SizeOf(lvTempInteger));
+    if lvRet = SOCKET_ERROR then
+    begin  //服务端已经断开
+      FConnection.close;
+      Exit;
+    end;
   end;
-  lvRet :=  FConnection.sendBufferEx(@lvTempInteger, SizeOf(lvTempInteger));
-  if lvRet = SOCKET_ERROR then
-  begin  //服务端已经断开
-    FConnection.close;
-    Exit;
+end;
+
+procedure TRDBOperator.checkConnectionConnect;
+begin
+  if FConnection.Active then
+  begin
+    FConnection.RaiseSocketException := false;
+    try
+      FConnection.sendObject(FTrySend);
+      if FConnection.Active then FConnection.recvObject(FTrySend);      
+    finally
+      FConnection.RaiseSocketException := true;
+    end;
   end;
+
+  if not FConnection.Active then
+  begin
+    FConnection.open;
+  end;
+end;
+
+procedure TRDBOperator.ExecuteCommandText(pvCmdText:string);
+begin
+  RScript.Clear();
+  RScript.S['sql'] := pvCmdText;
+  ExecuteScript;
 end;
 
 procedure TRDBOperator.ExecuteScript;
@@ -171,19 +217,20 @@ begin
     lvJSonStream.Free;
   end;
 
-  FConnection.WaitForData();
-
-  //读取数据
-  lvRecvObject := TJsonStream.Create;
-  try
-    FConnection.recvObject(lvRecvObject);
-    FTraceData := lvRecvObject.Json.O['trace'];
-    if not lvRecvObject.getResult then
-    begin
-      raise Exception.Create(lvRecvObject.getResultMsg);
+  if FConnection.WaitForData() then
+  begin
+    //读取数据
+    lvRecvObject := TJsonStream.Create;
+    try
+      FConnection.recvObject(lvRecvObject);
+      FTraceData := lvRecvObject.Json.O['trace'];
+      if not lvRecvObject.getResult then
+      begin
+        raise Exception.Create('服务端返回信息:' + lvRecvObject.getResultMsg);
+      end;
+    finally
+      lvRecvObject.Free;
     end;
-  finally
-    lvRecvObject.Free;
   end;
 end;
 
@@ -208,9 +255,9 @@ var
   lvData:AnsiString;
   l, j, x:Integer;
 begin
-  self.checkSocketConnection;
-  
+  //self.checkSocketConnect;
   FConnection.checkOpen;
+  
   lvJSonStream := TJsonStream.Create;
   try
     lvJSonStream.JSon := SO();
@@ -219,29 +266,35 @@ begin
     lvJSonStream.JSon.I['cmdIndex'] := 1001;   //打开一个SQL脚本，获取数据
     lvJSonStream.Json.O['script'] := FRScript;
     FConnection.sendObject(lvJSonStream);
+    TFileLogger.instance.logDebugMessage('已经sendObject');
   finally
     lvJSonStream.Free;
   end;
 
-  FConnection.WaitForData();
+  if FConnection.WaitForData() then
+  begin
+    TFileLogger.instance.logDebugMessage('已经WaitForData');
+    //读取数据
+    lvRecvObject := TJsonStream.Create;
+    try
+      FConnection.recvObject(lvRecvObject);
+      TFileLogger.instance.logDebugMessage('已经lvRecvObject');
+      FTraceData := lvRecvObject.Json.O['trace'];
+      if not lvRecvObject.getResult then
+      begin
+        raise Exception.Create('服务端返回信息:' + lvRecvObject.getResultMsg);
+      end;
 
-  //读取数据
-  lvRecvObject := TJsonStream.Create;
-  try
-    FConnection.recvObject(lvRecvObject);
-    FTraceData := lvRecvObject.Json.O['trace'];
-    if not lvRecvObject.getResult then
-    begin
-      raise Exception.Create(lvRecvObject.getResultMsg);
+      SetLength(lvData, lvRecvObject.Stream.Size);
+      lvRecvObject.Stream.Position := 0;
+      lvRecvObject.Stream.ReadBuffer(lvData[1], lvRecvObject.Stream.Size);
+
+      pvCDS.XMLData := lvData;
+
+      TFileLogger.instance.logDebugMessage('已经XMLData');
+    finally
+      lvRecvObject.Free;
     end;
-
-    SetLength(lvData, lvRecvObject.Stream.Size);
-    lvRecvObject.Stream.Position := 0;
-    lvRecvObject.Stream.ReadBuffer(lvData[1], lvRecvObject.Stream.Size);
-
-    pvCDS.XMLData := lvData;
-  finally
-    lvRecvObject.Free;
   end;
 end;
 
