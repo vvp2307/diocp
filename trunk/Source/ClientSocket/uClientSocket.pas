@@ -13,9 +13,13 @@ unit uClientSocket;
 interface
 
 uses
-  Windows, WinSock, uSocketTools;
+  Windows, WinSock, uSocketTools, SysUtils, Sockets, Classes;
+
+const
+  BUF_BLOCK_SIZE = 1024;
 
 type
+  TSocketException = class(Exception);
 
   TClientSocket = class(TObject)
   private
@@ -70,7 +74,9 @@ type
     procedure open;
 
     procedure close;
-    
+
+    function sendStream(const stm: TStream): Boolean;
+
     function recvBuffer(buf: PAnsiChar; len: Cardinal): Integer;
     
     function sendBuffer(buf: PAnsiChar; len: Cardinal): Integer;
@@ -83,8 +89,6 @@ type
 
 implementation
 
-uses
-  SysUtils;
 
 
 procedure TClientSocket.closeSocketHandle;
@@ -108,13 +112,6 @@ begin
 end;
 
 procedure TClientSocket.checkOpen;
-var
-  lvIsActive, lvReadReady, lvWriteReady, lvExceptFlag: Boolean;
-  lvRet:Integer;
-  Sockin,Add : TSockAddrIn;
-  l:Integer;
-  lvTmpBuffer:array[0..1] of Byte;
-
 begin
   if not FActive then
   begin    
@@ -149,7 +146,9 @@ procedure TClientSocket.DoHandleError;
 var
   lvErrCode: Integer;
   lvMsg:String;
-begin
+  lvDoClose:Boolean;
+begin                         
+  lvDoClose := true;
   lvErrCode := WSAGetLastError;
   case lvErrCode of
     WSAECONNREFUSED:
@@ -160,8 +159,7 @@ begin
       begin      //10054
         //Connection reset by peer.
         //  An existing connection was forcibly closed by the remote host.
-        lvMsg :='服务器强制断开[10054]!';
-        close();
+        lvMsg :='服务器强制断开!';
       end;
     WSAECONNABORTED:
       //10053
@@ -169,8 +167,7 @@ begin
       //    An established connection was aborted by the software in your host computer,
       //    possibly due to a data transmission time-out or protocol error.
       begin
-        lvMsg :='连接中断[10053]!';
-        close(); 
+        lvMsg :='连接中断!';
       end;
     WSAENOTSOCK:
       begin      //10038
@@ -179,7 +176,6 @@ begin
         // Either the socket handle parameter did not reference a valid socket, or for select,
         // a member of an fd_set was not valid.
         lvMsg :='操作的是一个无效的socket!';
-        close();
       end;
   else
     lvMsg := '';
@@ -192,7 +188,13 @@ begin
     lvMsg := lvMsg + sLineBreak + Format('Socket错误,错误代码:%d', [lvErrCode]);
   end;
   FLastExceptionMessage := lvMsg;
-  if FRaiseSocketException then raise Exception.Create(lvMsg);
+
+  if lvDoClose then
+  begin
+    //关闭
+    close();
+  end;
+  if FRaiseSocketException then raise TSocketException.Create(lvMsg);
 end;
 
 function TClientSocket.SendBufferEx(buf: PAnsiChar; len: Cardinal): Integer;
@@ -209,10 +211,9 @@ begin
   begin
     lvAddr := TSocketTools.getSocketAddr(FHost, FPort);
     try
-      TSocketTools.socketErrorCheck(WinSock.connect(FSocketHandle, lvAddr, sizeof(TSockAddr)));
+      socketErrorCheck(WinSock.connect(FSocketHandle, lvAddr, sizeof(TSockAddr)));
       FActive := true;
     except
-      FActive := false;
       close;
       raise;
     end;
@@ -227,6 +228,35 @@ end;
 function TClientSocket.sendBuffer(buf: PAnsiChar; len: Cardinal): Integer;
 begin
   Result := socketErrorCheck(send(FSocketHandle, buf^, len, 0));
+end;
+
+function TClientSocket.sendStream(const stm: TStream): Boolean;
+var
+  lvBufBytes:array[0..BUF_BLOCK_SIZE-1] of byte;
+  l, j, lvTotal:Integer;
+begin
+  Result := False;
+  if stm = nil then Exit;
+  if stm.Size = 0 then Exit;
+
+  lvTotal :=0;
+  
+  stm.Position := 0;
+  repeat
+    l := stm.Read(lvBufBytes[0], SizeOf(lvBufBytes));
+    if (l > 0) and FActive then
+    begin
+      j:=sendBuffer(@lvBufBytes[0], l);
+      if j <> l then
+      begin
+        raise Exception.CreateFmt('发送Buffer错误指定发送%d,实际发送:%d', [j, l]);
+      end else
+      begin
+        lvTotal := lvTotal + j;
+      end;
+    end else Break;
+  until (l = 0);
+  Result := lvTotal = stm.Size;  
 end;
 
 function TClientSocket.socketErrorCheck(rc: Integer): Integer;
