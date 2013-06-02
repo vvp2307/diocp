@@ -128,7 +128,7 @@ var
   lvJSonLength:Integer;
   lvStreamLength:Integer;
   sData, lvTemp:String;
-  lvStream:TStream;
+  lvStream, lvSendStream:TStream;
   lvTempBuf:PAnsiChar;
 
   lvBytes, lvTempBytes:TBytes;
@@ -158,17 +158,11 @@ begin
   end;
 
   sData := lvJSonStream.JSon.AsJSon(True, false);
-
-
+  //转换成Utf8格式的Bytes
   lvBytes := TNetworkTools.ansiString2Utf8Bytes(sData);
-
   lvJSonLength := Length(lvBytes);
+
   lvStream := lvJSonStream.Stream;
-
-  lvJSonLength := TNetworkTools.htonl(lvJSonLength);
-  pvSocket.sendBuffer(@lvJSonLength, SizeOf(lvJSonLength));
-
-
   if lvStream <> nil then
   begin
     lvStreamLength := lvStream.Size;
@@ -177,23 +171,30 @@ begin
     lvStreamLength := 0;
   end;
 
+  lvJSonLength := TNetworkTools.htonl(lvJSonLength);
   lvStreamLength := TNetworkTools.htonl(lvStreamLength);
-  pvSocket.sendBuffer(@lvStreamLength, SizeOf(lvStreamLength));
+
+//  pvSocket.sendBuffer(@lvJSonLength, SizeOf(lvJSonLength));
+//  pvSocket.sendBuffer(@lvStreamLength, SizeOf(lvStreamLength));
+//  //json bytes
+//  pvSocket.sendBuffer(@lvBytes[0], Length(lvBytes));
 
 
-
-
-  //json bytes
-  pvSocket.sendBuffer(@lvBytes[0], Length(lvBytes));
-
-  if lvStream.Size > 0 then
-  begin
-    lvStream.Position := 0;
-    repeat
-      l := lvStream.Read(lvBufBytes, SizeOf(lvBufBytes));
-      pvSocket.sendBuffer(@lvBufBytes[0], l);
-    until (l = 0);
+  lvSendStream := TMemoryStream.Create;
+  try
+    lvSendStream.Write(lvJSonLength, SizeOf(lvJSonLength));
+    lvSendStream.Write(lvStreamLength, SizeOf(lvStreamLength));
+    lvSendStream.Write(lvBytes[0], Length(lvBytes));
+    
+    //头信息和JSon数据
+    pvSocket.sendStream(lvSendStream);
+  finally
+    lvSendStream.Free;
   end;
+
+  //
+  pvSocket.sendStream(lvStream);
+  
 end;
 
 end.

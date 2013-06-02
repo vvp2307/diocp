@@ -1,10 +1,13 @@
 unit uNetworkTools;
+///
+///  2013年5月29日 17:20:35
+///     添加Utf8AnsiString2AnsiString(pvData:AnsiString)函数
 
 interface
 
 
 uses
-  windows, WinSock;
+  windows, WinSock, SysUtils;
 
 type
   //from indy
@@ -22,8 +25,6 @@ type
       QuadPart: Int64);
   end;
 
-  TBytes = array of Byte;
-
   TNetworkTools = class(TObject)
   public
     class function htonl(v: LongWord): LongWord; overload;
@@ -39,6 +40,8 @@ type
     class function ansiString2Utf8Bytes(v:AnsiString): TBytes;
 
     class function Utf8Bytes2AnsiString(pvData:TBytes): AnsiString;
+
+    class function Utf8AnsiString2AnsiString(pvData:AnsiString): AnsiString;
   end;
 
 implementation
@@ -60,6 +63,11 @@ begin
   SetLength(lvTemp, Length(pvData));
   Move(pvData[0], lvTemp[1],  Length(pvData));
   Result := Utf8ToAnsi(lvTemp);
+end;
+
+class function TNetworkTools.Utf8AnsiString2AnsiString(pvData:AnsiString): AnsiString;
+begin
+  Result := Utf8ToAnsi(pvData);
 end;
 
 class function TNetworkTools.htonl(v:Int64): Int64;
