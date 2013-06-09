@@ -63,6 +63,8 @@ type
     //等待全部还回
     function waitForGiveBack: Boolean;
 
+    property ErrMsg: string read FErrMsg;
+    
     //正在使用的个数
     property UsingCount: Integer read FUsingCount;
 
@@ -220,14 +222,11 @@ begin
   lock;
   try
     FUsableList.Add(pvObj);
-
     Dec(FUsingCount);
-
     checkSingle;
   finally
     unLock;
   end;
-
 end;
 
 procedure TObjectPool.lock;
