@@ -55,9 +55,6 @@ type
 
     property trace: Boolean read Ftrace write Ftrace;
     property TraceData: ISuperObject read FTraceData;
-
-
-
   end;
 
 implementation
