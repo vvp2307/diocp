@@ -630,11 +630,19 @@ begin
       PostWSARecv(lvClientContext);
     end else if lvIOData.IO_TYPE = IO_TYPE_Recv then
     begin
-      //加入到套接字对应的缓存中，处理逻辑
-      lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
-        lvIOData.Overlapped.InternalHigh);
+      try
+        //加入到套接字对应的缓存中，处理逻辑
+        lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
+          lvIOData.Overlapped.InternalHigh);
 
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+        TIODataMemPool.instance.giveBackIOData(lvIOData);
+      except
+        ON E:Exception do
+        begin
+           TIOCPFileLogger.logErrMessage(
+             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:' + e.Message);
+        end;                                          
+      end;
 
       //继续投递接收请求
       PostWSARecv(lvClientContext);
@@ -929,6 +937,10 @@ end;
 
 function TIOCPContextPool.createContext(ASocket: TSocket): TIOCPClientContext;
 begin
+//  Result := DoInnerCreateContext;
+//  Result.FSocket := ASocket;
+//  Result.FUsing := true;
+
   FCS.Enter;
   try
     if FList.Count = 0 then
@@ -978,6 +990,8 @@ end;
 
 procedure TIOCPContextPool.freeContext(context: TIOCPClientContext);
 begin
+//  context.Free;
+//  context := nil;
   FCS.Enter;
   try
     if not context.FUsing then exit;  //已经回收
