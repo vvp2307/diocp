@@ -23,6 +23,7 @@ uses
 
 procedure TSocketListener.Execute;
 begin
+  try
   while not self.Terminated do
   begin
     try
@@ -36,6 +37,9 @@ begin
       end;
     except
     end;
+  end;
+  finally
+    TIOCPFileLogger.logDebugMessage('TSocketListenerÒÑ¾­ÍË³ö!');
   end;
 end;
 

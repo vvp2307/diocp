@@ -25,6 +25,7 @@ procedure TIOCPWorker.Execute;
 var
    lvRET:Integer;
 begin
+  try
    //得到创建线程是传递过来的IOCP
    while(not self.Terminated) do
    begin
@@ -45,6 +46,9 @@ begin
      except
      end;
    end;
+  finally
+    TIOCPFileLogger.logDebugMessage('TIOCPWorker.FIOCPObject.processIOQueued, 工作线程已经退出!');
+  end;  
 end;
 
 procedure TIOCPWorker.SetIOCPObject(const pvValue: TIOCPObject);
