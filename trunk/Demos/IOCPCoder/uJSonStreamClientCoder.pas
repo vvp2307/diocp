@@ -31,10 +31,13 @@ type
     function Decode(pvSocket: TClientSocket; pvObject: TObject): Boolean; override;
   end;
 
+
+
 implementation
 
 uses
-  Windows, FileLogger;
+  Windows, FileLogger, uTesterTools;
+
 
 function TJSonStreamClientCoder.Decode(pvSocket: TClientSocket; pvObject:
     TObject): Boolean;
@@ -57,7 +60,9 @@ begin
   lvJSonLength := TNetworkTools.ntohl(lvJSonLength);
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
 
-  TFileLogger.instance.logDebugMessage('1102, ' + InttoStr(lvJSonLength) + ',' + intToStr(lvStreamLength));
+  TTesterTools.incRecvBytesSize(SizeOf(Integer) * 2);
+
+  //TFileLogger.instance.logDebugMessage('1102, ' + InttoStr(lvJSonLength) + ',' + intToStr(lvStreamLength));
 
   lvJsonStream := TJsonStream(pvObject);
   lvJsonStream.Clear(True);
@@ -73,6 +78,7 @@ begin
       while lvStream.Size < lvJSonLength do
       begin
         l := pvSocket.recvBuffer(@lvBufBytes[0], Min(lvRemain, (SizeOf(lvBufBytes))));
+        TTesterTools.incRecvBytesSize(l);
         lvStream.WriteBuffer(lvBufBytes[0], l);
         lvRemain := lvRemain - l;
       end;
@@ -107,6 +113,7 @@ begin
     while lvStream.Size < lvStreamLength do
     begin
       l := pvSocket.recvBuffer(@lvBufBytes[0], Min(lvRemain, (SizeOf(lvBufBytes))));
+      TTesterTools.incRecvBytesSize(l);
       lvStream.WriteBuffer(lvBufBytes[0], l);
       lvRemain := lvRemain - l;
     end;
@@ -188,13 +195,18 @@ begin
     
     //头信息和JSon数据
     pvSocket.sendStream(lvSendStream);
+
+    TTesterTools.incSendbytesSize(lvSendStream.Size);
   finally
     lvSendStream.Free;
   end;
 
   //
   pvSocket.sendStream(lvStream);
+  TTesterTools.incSendbytesSize(lvStream.Size);
   
 end;
+
+
 
 end.
