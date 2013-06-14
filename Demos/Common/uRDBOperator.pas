@@ -263,19 +263,19 @@ begin
     lvJSonStream.JSon.I['cmdIndex'] := 1001;   //打开一个SQL脚本，获取数据
     lvJSonStream.Json.O['script'] := FRScript;
     FConnection.sendObject(lvJSonStream);
-    TFileLogger.instance.logDebugMessage('已经sendObject');
+    //TFileLogger.instance.logDebugMessage('已经sendObject');
   finally
     lvJSonStream.Free;
   end;
 
   if FConnection.WaitForData() then
   begin
-    TFileLogger.instance.logDebugMessage('已经WaitForData');
+    //TFileLogger.instance.logDebugMessage('已经WaitForData');
     //读取数据
     lvRecvObject := TJsonStream.Create;
     try
       FConnection.recvObject(lvRecvObject);
-      TFileLogger.instance.logDebugMessage('已经lvRecvObject');
+      //TFileLogger.instance.logDebugMessage('已经lvRecvObject');
       FTraceData := lvRecvObject.Json.O['trace'];
       if not lvRecvObject.getResult then
       begin
@@ -288,7 +288,7 @@ begin
 
       pvCDS.XMLData := lvData;
 
-      TFileLogger.instance.logDebugMessage('已经XMLData');
+      //TFileLogger.instance.logDebugMessage('已经XMLData');
     finally
       lvRecvObject.Free;
     end;

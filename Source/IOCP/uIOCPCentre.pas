@@ -46,8 +46,8 @@ type
     FCS:TCriticalSection;
     FContextClass:TIOCPClientContextClass;
     FList: TList;
+    FUsingList:TList;
     function DoInnerCreateContext: TIOCPClientContext;
-
     procedure clear;
     function GetCount: Integer;
   public
@@ -57,9 +57,13 @@ type
     
     function createContext(ASocket: TSocket): TIOCPClientContext;
 
+    procedure getUsingList(pvList:TList);
+
     procedure freeContext(context: TIOCPClientContext);
 
     property BusyCount: Integer read FBusyCount;
+
+
 
     property count: Integer read Getcount;
   end;
@@ -160,6 +164,9 @@ type
 
   TIOCPClientContext = class(TObject)
   private
+    FRemoteAddr:String;
+    FRemotePort:Integer;
+
     //正在使用
     FUsing:Boolean;
 
@@ -173,12 +180,16 @@ type
     FSocket: TSocket;
 
     FBuffers: TBufferLink;
+    FStateINfo: String;
 
     //关闭客户端连接
     procedure closeClientSocket;
+    function GetStateINfo: String;
 
     //投递一个关闭请求
     function PostWSAClose: Boolean;
+
+    procedure getPeerINfo;
 
   protected
     //复位<回收时进行复位>
@@ -221,6 +232,13 @@ type
     destructor Destroy; override;
 
     property Buffers: TBufferLink read FBuffers;
+    property RemoteAddr: String read FRemoteAddr;
+    property RemotePort: Integer read FRemotePort;
+
+    //状态信息
+    property StateINfo: String read GetStateINfo write FStateINfo;
+
+    
     
     //property Socket: TSocket read FSocket;
   end;
@@ -318,6 +336,7 @@ begin
     lvClientContext := TIOCPContextFactory.instance.createContext(lvSocket);
     lvClientContext.Initialize4Use;
     lvClientContext.FIOCPObject := Self;
+    lvClientContext.getPeerINfo;
     lvClientContext.DoConnect;
 
      //将套接字、完成端口客户端对象绑定在一起。
@@ -612,7 +631,6 @@ begin
     end;
   end else if BytesTransferred = 0 then  //客户端断开连接
   begin
-    TIOCPFileLogger.logDebugMessage('客户端断开!');
     if (lvClientContext <> nil) then
     begin                       //已经关闭
       TIOCPContextFactory.instance.freeContext(lvClientContext);
@@ -808,6 +826,23 @@ begin
   
 end;
 
+procedure TIOCPClientContext.getPeerINfo;
+var
+  SockAddrIn: TSockAddrIn;
+  Size: Integer;
+  HostEnt: PHostEnt;
+begin
+  Size := SizeOf(SockAddrIn);
+  getpeername(FSocket, @SockAddrIn, Size);
+  FRemoteAddr := inet_ntoa(SockAddrIn.sin_addr);
+  FRemotePort := ntohs(SockAddrIn.sin_port);
+end;
+
+function TIOCPClientContext.GetStateINfo: String;
+begin
+  Result := FStateINfo;
+end;
+
 procedure TIOCPClientContext.Initialize4Use;
 begin
   FPostedCloseQuest := false;
@@ -836,13 +871,18 @@ begin
     //加入到套接字对应的缓存
     FBuffers.AddBuffer(buf, len);
 
+    self.StateINfo := '接收到数据,准备进行解码';
+
     //调用注册的解码器<进行解码>
     lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
     if lvObject <> nil then
     try
       try
+        self.StateINfo := '解码成功,准备调用dataReceived进行逻辑处理';
         //解码成功，调用业务逻辑的处理方法
         dataReceived(lvObject);
+
+        self.StateINfo := 'dataReceived逻辑处理完成!';
       except
         on E:Exception do
         begin
@@ -875,8 +915,10 @@ var
 begin
   lvOutBuffer := TBufferLink.Create;
   try
+    self.StateINfo := 'TIOCPClientContext.writeObject,准备编码对象到lvOutBuffer';
     TIOCPContextFactory.instance.FEncoder.Encode(pvDataObject, lvOutBuffer);
     FIOCPObject.PostWSASend(self.FSocket, lvOutBuffer);
+    self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';
     DoOnWriteBack;
   finally
     lvOutBuffer.Free;
@@ -933,6 +975,7 @@ begin
   FBusyCount := 0;
   FCS := TCriticalSection.Create;
   FList := TList.Create();
+  FUsingList := TList.Create();
 end;
 
 function TIOCPContextPool.createContext(ASocket: TSocket): TIOCPClientContext;
@@ -951,9 +994,14 @@ begin
       Result := TIOCPClientContext(FList[0]);
       FList.Delete(0);
     end;
+    
     Result.FSocket := ASocket;
+
     Result.FUsing := true;
+
     Inc(FBusyCount);
+    
+    FUsingList.Add(Result);
   finally
     FCS.Leave;
   end;
@@ -964,6 +1012,7 @@ begin
   clear;
   FCS.Free;
   FreeAndNil(FList);
+  FUsingList.Free;
   inherited Destroy;
 end;
 
@@ -999,17 +1048,21 @@ begin
     try
       //关闭
       context.CloseClientSocket;
+      context.StateINfo := '关闭连接';
     except
       on E:Exception do
       begin
         TIOCPFileLogger.logErrMessage('回收context时执行CloseClientSocket出现了异常!' + e.Message);
-      end;                                                                                                  
+      end;
     end;
-    
+
     //重置<复位>
     context.Reset;
-    
+
     FList.Add(context);
+    context.StateINfo := '已经回归到池!';
+
+    FUsingList.Remove(context);
 
     Dec(FBusyCount);
   finally
@@ -1022,6 +1075,21 @@ begin
   FCS.Enter;
   try
     Result := FBusyCount + FList.Count;
+  finally
+    FCS.Leave;
+  end;
+end;
+
+procedure TIOCPContextPool.getUsingList(pvList: TList);
+var
+  i:Integer;
+begin
+  FCS.Enter;
+  try
+    for I := 0 to FUsingList.Count - 1 do
+    begin
+      pvList.Add(FUsingList[i]);
+    end;                            
   finally
     FCS.Leave;
   end;
