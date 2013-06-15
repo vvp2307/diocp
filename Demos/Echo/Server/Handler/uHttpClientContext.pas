@@ -34,6 +34,7 @@ procedure THttpClientContext.dataReceived(const pvDataObject:TObject);
 var
   lvString:TStrings;
 begin
+  InterlockedIncrement(TesterINfo.__RecvTimes);
   lvString := TStrings(pvDataObject);
   lvString.Clear;
   lvString.Text := FormatDateTime('yyyy-MM-dd hh:nn:ss', Now());
