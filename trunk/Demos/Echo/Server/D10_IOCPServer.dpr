@@ -24,7 +24,10 @@ uses
   uSocketListener in '..\..\..\Source\IOCP\uSocketListener.pas',
   JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
   JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
-  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas';
+  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
+  uIOCPHttpDecoder in '..\..\IOCPCoder\uIOCPHttpDecoder.pas',
+  uIOCPHttpEncoder in '..\..\IOCPCoder\uIOCPHttpEncoder.pas',
+  uHttpClientContext in 'Handler\uHttpClientContext.pas';
 
 {$R *.res}
 

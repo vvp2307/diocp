@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
-  ExtCtrls;
+  ExtCtrls, uIOCPHttpDecoder, uIOCPHttpEncoder, uHttpClientContext;
 
 type
   TfrmMain = class(TForm)
@@ -20,6 +20,7 @@ type
     lblMemINfo: TLabel;
     tmrTestINfo: TTimer;
     lblClientContextINfo: TLabel;
+    chkHttpSvr: TCheckBox;
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnStopSeviceClick(Sender: TObject);
@@ -27,6 +28,8 @@ type
   private
     { Private declarations }
     FIOCPConsole: TIOCPConsole;
+    FHttpDecoder:TIOCPHttpDecoder;
+    FHttpEncoder:TIOCPHttpEncoder;
     FDecoder:TIOCPJSonStreamDecoder;
     FEncoder:TIOCPJSonStreamEncoder;
   public
@@ -50,6 +53,10 @@ begin
   inherited Create(AOwner);
   FDecoder := TIOCPJSonStreamDecoder.Create;
   FEncoder := TIOCPJSonStreamEncoder.Create;
+
+  FHttpDecoder := TIOCPHttpDecoder.Create;
+  FHttpEncoder := TIOCPHttpEncoder.Create;
+
   FIOCPConsole := TIOCPConsole.Create();
 
   //×¢²áÀ©Õ¹¿Í»§¶ËÀà
@@ -65,6 +72,8 @@ end;
 destructor TfrmMain.Destroy;
 begin
   FIOCPConsole.close;
+  FHttpDecoder.Free;
+  FHttpEncoder.Free;
   FDecoder.Free;
   FEncoder.Free;
   FreeAndNil(FIOCPConsole);
@@ -80,6 +89,28 @@ procedure TfrmMain.btnIOCPAPIRunClick(Sender: TObject);
 begin
   if not FIOCPConsole.Active then
   begin
+    if chkHttpSvr.Checked then
+    begin
+      //×¢²áÀ©Õ¹¿Í»§¶ËÀà
+      TIOCPContextFactory.instance.registerClientContextClass(THttpClientContext);
+
+      //×¢²á½âÂëÆ÷
+      TIOCPContextFactory.instance.registerDecoder(FHttpDecoder);
+
+      //×¢²á±àÂëÆ÷
+      TIOCPContextFactory.instance.registerEncoder(FHttpEncoder);
+    end else
+    begin
+      //×¢²áÀ©Õ¹¿Í»§¶ËÀà
+      TIOCPContextFactory.instance.registerClientContextClass(TClientContext);
+
+      //×¢²á½âÂëÆ÷
+      TIOCPContextFactory.instance.registerDecoder(FDecoder);
+
+      //×¢²á±àÂëÆ÷
+      TIOCPContextFactory.instance.registerEncoder(FEncoder);
+    end;
+
     //FIOCPConsole.WorkerCount := 1;
     FIOCPConsole.Port := StrToInt(edtPort.Text);
     FIOCPConsole.open;

@@ -48,11 +48,14 @@
     <DCCReference Include="..\..\..\Source\WinSock2\JwaWinsock2.pas" />
     <DCCReference Include="..\..\Common\JSonStream.pas" />
     <DCCReference Include="..\..\Common\superobject.pas" />
+    <DCCReference Include="..\..\IOCPCoder\uIOCPHttpDecoder.pas" />
+    <DCCReference Include="..\..\IOCPCoder\uIOCPHttpEncoder.pas" />
     <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas" />
     <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamEncoder.pas" />
     <DCCReference Include="..\..\IOCPCoder\uNetworkTools.pas" />
     <DCCReference Include="Handler\TesterINfo.pas" />
     <DCCReference Include="Handler\uClientContext.pas" />
+    <DCCReference Include="Handler\uHttpClientContext.pas" />
     <DCCReference Include="ufrmMain.pas">
       <Form>frmMain</Form>
     </DCCReference>
