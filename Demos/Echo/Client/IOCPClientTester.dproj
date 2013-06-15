@@ -43,6 +43,7 @@
     <DCCReference Include="..\..\Common\uJSonStreamTools.pas" />
     <DCCReference Include="..\..\IOCPCoder\uJSonStreamClientCoder.pas" />
     <DCCReference Include="..\..\IOCPCoder\uNetworkTools.pas" />
+    <DCCReference Include="..\..\IOCPCoder\uTesterTools.pas" />
     <DCCReference Include="uEchoTester.pas" />
     <DCCReference Include="ufrmMain.pas">
       <Form>frmMain</Form>
