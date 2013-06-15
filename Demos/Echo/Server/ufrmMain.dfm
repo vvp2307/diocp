@@ -90,6 +90,14 @@ object frmMain: TfrmMain
       Caption = 'lblClientContextINfo'
     end
   end
+  object chkHttpSvr: TCheckBox
+    Left = 303
+    Top = 12
+    Width = 97
+    Height = 17
+    Caption = 'Http'#26381#21153#22120
+    TabOrder = 4
+  end
   object tmrTestINfo: TTimer
     Enabled = False
     OnTimer = tmrTestINfoTimer
