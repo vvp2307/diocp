@@ -17,7 +17,8 @@ uses
   JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
   JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
   JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
-  FileLogger in '..\..\..\Source\IOCP\FileLogger.pas';
+  FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
+  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas';
 
 {$R *.res}
 
