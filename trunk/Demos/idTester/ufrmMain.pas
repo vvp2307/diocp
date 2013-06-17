@@ -77,6 +77,7 @@ var
   __count:Integer;
   __errCount:Integer;
   __tickcount:Cardinal;
+  __preCount:Integer;
 
 implementation
 
@@ -184,6 +185,7 @@ begin
   end;
   __count := 0;
   __errCount := 0;
+  __preCount := 0;
   __tickcount := GetTickCount;
 end;
 
@@ -246,11 +248,27 @@ procedure TForm1.tmr1Timer(Sender: TObject);
 var
   lvTime:Cardinal;
 begin
-  lvTime := Trunc((GetTickCount - __tickcount)/1000);
-  if lvTime = 0 then exit;  
+
+  lvTime := (GetTickCount - __tickcount);
+  __tickcount := GetTickCount;
+  if lvTime > 0 then
+  begin
+    lvTime := (__count-__preCount) * 1000 div lvTime;
+  end;
+  __preCount := __count;
+  
+
+//  lvTime := Trunc((GetTickCount - __tickcount)/1000);
+//  if FThreadList.Count = 0 then lvTime := 0;
+//  if lvTime <> 0 then
+//  begin
+//    lvTime := Trunc(__count/lvTime);
+//  end;
+
+
   lblFCount.Caption := Format('成功次数:%d,失败次数:%d, 速度:%d /每秒',
     [__count, __errCount,
-       Trunc(__count/lvTime)
+       Trunc(lvTime)
     ]);
 end;
 
