@@ -27,9 +27,16 @@ begin
   
   sData := TStrings(pvDataObject).Text;
 
+//  sHead := 'HTTP/1.1 200 OK' + sLineBreak +
+//           'Content-Type: text/plain'  + sLineBreak +
+//           'Content-Length:' + IntToStr(Length(sData)) + sLineBreak + sLineBreak;
+
+  //Indy的模式
+  //2013年6月24日 18:29:47 
   sHead := 'HTTP/1.1 200 OK' + sLineBreak +
-           'Content-Type: text/plain'  + sLineBreak +
-           'Content-Length:' + IntToStr(Length(sData)) + sLineBreak + sLineBreak;
+           'Connection: close'  + sLineBreak +
+           'Content-Type: text/html; charset=ISO-8859-1'  + sLineBreak +
+           'Content-Length:' + IntToStr(Length(sData)) + sLineBreak + sLineBreak + sLineBreak;
 
   ouBuf.AddBuffer(@sHead[1], Length(sHead));
 
