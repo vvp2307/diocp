@@ -4,23 +4,23 @@ FPoolGroup := TADOConnectionPoolGroup.Create();
 
 //加载配置<初始化连接池>
 TADOPoolGroupTools.loadconfig(FPoolGroup);
-配置文件
-{
-   "main":
-    {
-		"host": "192.168.1.2",
-		"user": "sa",
-		"password": "efsa",
-		"database": "EF_DATA"
-    },
-   "sys":
-    {
-		"host": "192.168.7.55",
-		  "user": "sa",
-		  "password": "efsa",
-		  "database": "EF_SYS"
-    },
-}
+//配置文件
+//{
+//   "main":
+//    {
+//		"host": "192.168.1.2",
+//		"user": "sa",
+//		"password": "efsa",
+//		"database": "EF_DATA"
+//    },
+//   "sys":
+//    {
+//		"host": "192.168.7.55",
+//		  "user": "sa",
+//		  "password": "efsa",
+//		  "database": "EF_SYS"
+//    },
+//}
 
 
 ////////////使用连接池
