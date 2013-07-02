@@ -201,8 +201,9 @@ type
     procedure DoConnect;virtual;
     procedure DoDisconnect;virtual;
     procedure DoOnWriteBack; virtual;
-
   public
+    procedure Lock;
+    procedure unLock;
     procedure notifyStopWork; virtual;
 
     constructor Create(ASocket: TSocket = 0);
@@ -316,12 +317,17 @@ var
   lvClientContext:TIOCPClientContext;
 
   lvErr:Integer;
+
+  addr: Tsockaddrin;
+  addrlen: integer;
 begin
   //  If no error occurs, WSAAccept returns a value of type SOCKET
   //  that is a descriptor for the accepted socket.
   //  Otherwise, a value of INVALID_SOCKET is returned,
   //  and a specific error code can be retrieved by calling WSAGetLastError.
-  
+
+  addrlen := sizeof(addr);
+  //lvSocket := Accept(FSSocket, @addr, @addrlen);
   lvSocket := WSAAccept(FSSocket, nil, nil, nil, 0);
   if (lvSocket = INVALID_SOCKET) then
   begin
@@ -849,6 +855,11 @@ begin
   FBuffers.clearBuffer;
 end;
 
+procedure TIOCPClientContext.Lock;
+begin
+  FCS.Enter;
+end;
+
 function TIOCPClientContext.PostWSAClose: Boolean;
 begin
   //已经回收
@@ -866,7 +877,7 @@ procedure TIOCPClientContext.RecvBuffer(buf:PAnsiChar; len:Cardinal);
 var
   lvObject:TObject;
 begin
-  FCS.Enter;
+  self.Lock;
   try
     //加入到套接字对应的缓存
     FBuffers.AddBuffer(buf, len);
@@ -898,7 +909,7 @@ begin
       lvObject.Free;
     end;
   finally
-    FCS.Leave;
+    self.unLock;
   end;
 end;
 
@@ -907,6 +918,11 @@ begin
   FUsing := false;
   FPostedCloseQuest := false;
   FBuffers.clearBuffer;
+end;
+
+procedure TIOCPClientContext.unLock;
+begin
+  FCS.Leave;
 end;
 
 procedure TIOCPClientContext.writeObject(const pvDataObject:TObject);
