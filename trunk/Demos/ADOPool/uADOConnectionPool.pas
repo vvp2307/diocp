@@ -8,6 +8,7 @@ uses
 type
   TADOConnectionPool = class(TObjectPool)
   private
+    FCommandTimeOut: Integer;
     FConnectionString:string;
   protected
     function createObject: TObject; override;
@@ -15,6 +16,11 @@ type
     procedure InitializeConnectionString(pvServerName, pvDBName, pvUser,
         pvPassword: string; pvUseWindowsSecurity: Boolean = false); overload;
     procedure InitializeConnectionString(pvConnectionString:String); overload;
+
+    //ÃëÊý
+    property CommandTimeOut: Integer read FCommandTimeOut write FCommandTimeOut;
+
+
   end;
 
 implementation
@@ -33,6 +39,10 @@ begin
   CoInitialize(nil);
   Result := TADOConnection.Create(nil);
   TADOConnection(Result).ConnectionString := FConnectionString;
+  if FCommandTimeOut <> 0 then
+  begin
+    TADOConnection(Result).CommandTimeout := FCommandTimeOut;
+  end;
 end;
 
 procedure TADOConnectionPool.InitializeConnectionString(pvServerName, pvDBName,

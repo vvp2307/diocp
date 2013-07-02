@@ -286,9 +286,13 @@ begin
   begin
     Result := false;
     raise Exception.Create('等待接收超时!');
-  end else if lvRet <> SOCKET_ERROR then
+  end else if lvRet = SOCKET_ERROR then
+  begin
+    close;
+  end else
   begin
     Result := ReadReady and not ExceptFlag;
+           
   end;
 
 end;

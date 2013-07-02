@@ -77,6 +77,11 @@ begin
   if not Active then Exit;
   
   Result := FCoder.Decode(Self, pvObject);
+  if not Result then
+  begin
+    //解码失败!与服务器断开
+    close;
+  end;
 end;
 
 procedure TD10ClientSocket.registerCoder(pvCoder:TSocketObjectCoder;

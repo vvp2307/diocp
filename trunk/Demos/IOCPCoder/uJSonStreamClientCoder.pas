@@ -52,10 +52,17 @@ var
   l, lvRemain:Integer;
   lvBufBytes:array[0..1023] of byte;
 begin
+  Result := false;
+  lvJSonLength := 0;
+  lvStreamLength := 0;
   //TFileLogger.instance.logDebugMessage('1100');
   pvSocket.recvBuffer(@lvJSonLength, SizeOf(Integer));
   pvSocket.recvBuffer(@lvStreamLength, SizeOf(Integer));
   //TFileLogger.instance.logDebugMessage('1101');
+
+  if (lvJSonLength = 0) and (lvStreamLength = 0) then exit;
+  
+  
 
   lvJSonLength := TNetworkTools.ntohl(lvJSonLength);
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
