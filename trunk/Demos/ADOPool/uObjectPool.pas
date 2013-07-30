@@ -74,9 +74,6 @@ type
 
 implementation
 
-uses
-  FileLogger;
-
 procedure TObjectPool.checkSingle;
 begin
   if (FCount < FMaxCount)      //还可以创建
