@@ -4,13 +4,12 @@ interface
 
 uses
   uADOConnectionPool, uADOConnectionPoolGroup, superobject,
-  SysUtils;
+  SysUtils, Classes;
 
 type
   TADOPoolGroupTools = class(TObject)
   public
-    class function JsnParseFromFile(pvFile: string; pvEncrypKey: string = ''):
-        ISuperObject;
+    class function JsnParseFromFile(pvFile: string): ISuperObject;
     /// <summary>TADOPoolGroupTools.loadconfig
     /// </summary>
     /// <param name="pvPoolGroup"> (IADOPoolGroup) </param>
@@ -30,8 +29,8 @@ type
 
 implementation
 
-class function TADOPoolGroupTools.JsnParseFromFile(pvFile: string; pvEncrypKey:
-    string = ''): ISuperObject;
+class function TADOPoolGroupTools.JsnParseFromFile(pvFile: string):
+    ISuperObject;
 var
   lvStream: TMemoryStream;
   lvStr: AnsiString;
