@@ -3,12 +3,14 @@ unit uADOPoolGroupTools;
 interface
 
 uses
-  uADOConnectionPool, uADOConnectionPoolGroup, superobject, uJSonTools,
+  uADOConnectionPool, uADOConnectionPoolGroup, superobject,
   SysUtils;
 
 type
   TADOPoolGroupTools = class(TObject)
   public
+    class function JsnParseFromFile(pvFile: string; pvEncrypKey: string = ''):
+        ISuperObject;
     /// <summary>TADOPoolGroupTools.loadconfig
     /// </summary>
     /// <param name="pvPoolGroup"> (IADOPoolGroup) </param>
@@ -28,6 +30,28 @@ type
 
 implementation
 
+class function TADOPoolGroupTools.JsnParseFromFile(pvFile: string; pvEncrypKey:
+    string = ''): ISuperObject;
+var
+  lvStream: TMemoryStream;
+  lvStr: AnsiString;
+begin
+  if FileExists(pvFile) then
+  begin
+    lvStream := TMemoryStream.Create;
+    try
+      lvStream.LoadFromFile(pvFile);
+      lvStream.Position := 0;
+      SetLength(lvStr, lvStream.Size);
+      lvStream.ReadBuffer(lvStr[1], lvStream.Size);
+      Result := SO(lvStr);
+    finally
+      lvStream.Free;
+    end;
+  end;
+  if (Result = nil) or (not Result.IsType(stObject)) then Result := SO();
+end;
+
 class function TADOPoolGroupTools.loadconfig(const pvPoolGroup:
     TADOConnectionPoolGroup): Boolean;
 var
@@ -43,7 +67,7 @@ begin
     Result := false;
     exit;
   end;
-  lvJSon := TJSonTools.JsnParseFromFile(lvConfigFile);
+  lvJSon := JsnParseFromFile(lvConfigFile);
   for lvItem in lvJSon.AsObject do
   begin
     lvPool := TADOConnectionPool.Create; 
