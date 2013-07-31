@@ -32,6 +32,7 @@
     <DCCReference Include="..\..\..\Source\ClientSocket\uClientSocket.pas" />
     <DCCReference Include="..\..\..\Source\ClientSocket\uD10ClientSocket.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\FileLogger.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPProtocol.pas" />
     <DCCReference Include="..\..\..\Source\Utils\uMemoLogger.pas" />
     <DCCReference Include="..\..\..\Source\Utils\uSocketTools.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaMSWSock.pas" />

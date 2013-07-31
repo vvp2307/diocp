@@ -18,7 +18,8 @@ uses
   JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
   JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
-  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas';
+  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas',
+  uIOCPProtocol in '..\..\..\Source\IOCP\uIOCPProtocol.pas';
 
 {$R *.res}
 

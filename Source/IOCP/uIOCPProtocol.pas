@@ -3,7 +3,7 @@ unit uIOCPProtocol;
 interface
 
 uses
-  JwaWinsock2, Windows;
+  JwaWinsock2, Windows, SysUtils;
 
 const
   //每次接收最大的字节数
@@ -38,6 +38,8 @@ type
     pre:POVERLAPPEDEx;
     next:POVERLAPPEDEx;
   end;
+
+  TIOCPBytes = array of Byte;
 
 implementation
 

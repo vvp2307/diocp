@@ -34,7 +34,6 @@
     <DCCReference Include="..\..\..\Source\IOCP\uBuffer.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPCentre.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPConsole.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPContextPool.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPFileLogger.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPProtocol.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPTools.pas" />
@@ -43,6 +42,7 @@
     <DCCReference Include="..\..\..\Source\IOCP\uSocketListener.pas" />
     <DCCReference Include="..\..\..\Source\Utils\FastMM4.pas" />
     <DCCReference Include="..\..\..\Source\Utils\FastMM4Messages.pas" />
+    <DCCReference Include="..\..\..\Source\Utils\uZipTools.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaMSWSock.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaQos.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\JwaWinsock2.pas" />

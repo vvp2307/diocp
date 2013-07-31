@@ -25,10 +25,11 @@ type
   private
     FLastExceptionMessage:String;
     
-    FTimeOut:Cardinal;
+    FCommandTimeOut: Cardinal;
 
     FActive:Boolean;
-    
+    FConnectTimeOut: Integer;
+
     FHost: String;
 
     FPort: Integer;
@@ -66,8 +67,12 @@ type
         FRaiseSocketException;
 
     property SocketHandle: TSocket read FSocketHandle;
-    
-    property TimeOut: Cardinal read FTimeOut;
+
+    property CommandTimeOut: Cardinal read FCommandTimeOut write FCommandTimeOut;
+
+    property ConnectTimeOut: Integer read FConnectTimeOut write FConnectTimeOut;
+
+
 
     destructor Destroy; override;
 
@@ -100,7 +105,9 @@ end;
 constructor TClientSocket.Create;
 begin
   inherited Create;
-  FTimeOut := 30 * 1000;
+  FCommandTimeOut := 30 * 1000;
+  FConnectTimeOut := 30 * 1000;
+  
   FSocketHandle := INVALID_SOCKET;
   
   FRaiseSocketException := true;
@@ -153,7 +160,7 @@ begin
   case lvErrCode of
     WSAECONNREFUSED:
       begin      //10061
-        lvMsg :='与服务器连接错误!';
+        lvMsg :='与服务器连接错误(' + FHost + ':' + IntToStr(FPort) + ')';
       end;
     WSAECONNRESET:
       begin      //10054
@@ -280,7 +287,7 @@ begin
 
   lvRet :=socketErrorCheck(
      TSocketTools.selectSocket(FSocketHandle,
-     @ReadReady, nil, @ExceptFlag, FTimeOut)
+     @ReadReady, nil, @ExceptFlag, FCommandTimeOut)
      );
   if lvRet = 0 then
   begin
