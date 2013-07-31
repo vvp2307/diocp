@@ -27,7 +27,8 @@ uses
   JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
   uIOCPHttpDecoder in '..\..\IOCPCoder\uIOCPHttpDecoder.pas',
   uIOCPHttpEncoder in '..\..\IOCPCoder\uIOCPHttpEncoder.pas',
-  uHttpClientContext in 'Handler\uHttpClientContext.pas';
+  uHttpClientContext in 'Handler\uHttpClientContext.pas',
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
 
 {$R *.res}
 

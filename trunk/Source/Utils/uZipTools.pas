@@ -9,7 +9,7 @@ unit uZipTools;
 interface
 
 uses
-  ZLib, Windows, Types, Classes, SysUtils;
+  ZLib, Windows, Types, Classes, SysUtils, uIOCPProtocol;
 
 {$if CompilerVersion>= 23}
   {$define NEWZLib}
@@ -19,10 +19,10 @@ type
   TZipTools = class(TObject)
   public
     //—πÀı◊÷∑˚¥Æ(”ÎJAVAºÊ»›)
-    class function compressStr(pvData: string): TByteDynArray;
+    class function compressStr(pvData: string): TIOCPBytes;
 
     //Ω‚—π◊÷∑˚¥Æ(”ÎJAVAºÊ»›)
-    class function unCompressStr(pvData: TByteDynArray; pvDataSize: Integer = 0):
+    class function unCompressStr(pvData: TIOCPBytes; pvDataSize: Integer = 0):
         string;
 
     //—πÀı(”ÎJAVAºÊ»›)
@@ -39,19 +39,19 @@ type
 
 
     //—πÀı(”ÎJAVAºÊ»›)
-    class function compressBuf(const Buffer; Count: Longint): TByteDynArray;
+    class function compressBuf(const Buffer; Count: Longint): TIOCPBytes;
 
     //Ω‚—π(”ÎJAVAºÊ»›)
-    class function unCompressBuf(const zipBuffer; Count: Longint): TByteDynArray;
+    class function unCompressBuf(const zipBuffer; Count: Longint): TIOCPBytes;
   end;
 
 implementation
 
 class function TZipTools.compressBuf(const Buffer; Count: Longint):
-    TByteDynArray;
+    TIOCPBytes;
 var
   lvTmp: string;
-  lvBytes: TByteDynArray;
+  lvBytes: TIOCPBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 begin
@@ -69,7 +69,7 @@ begin
 end;
 
 class function TZipTools.unCompressBuf(const zipBuffer; Count: Longint):
-    TByteDynArray;
+    TIOCPBytes;
 var
   lvSize:Cardinal;
   OutBuf: Pointer;
@@ -90,7 +90,7 @@ begin
 
 end;
 
-class function TZipTools.compressStr(pvData: string): TByteDynArray;
+class function TZipTools.compressStr(pvData: string): TIOCPBytes;
 begin
   result := compressBuf(PAnsiChar(AnsiString(pvData))^, Length(AnsiString(pvData)));
 end;
@@ -178,11 +178,11 @@ begin
 
 end;
 
-class function TZipTools.unCompressStr(pvData: TByteDynArray; pvDataSize:
+class function TZipTools.unCompressStr(pvData: TIOCPBytes; pvDataSize:
     Integer = 0): string;
 var
   lvSize:Cardinal;
-  lvOutBytes:TByteDynArray;
+  lvOutBytes:TIOCPBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 
