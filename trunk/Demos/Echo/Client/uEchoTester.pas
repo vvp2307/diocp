@@ -59,9 +59,10 @@ begin
   Result.JSon.I['cmdIndex'] := 1000;   //echo 数据测试
   Result.JSon.S['data'] := '测试发送打包数据';
   Result.JSon.S['EchoCode'] := FEchoCode;
+  Result.Json.B['config.stream.zip'] := false;
   
-  SetLength(lvData, 1024 * 4);
-  FillChar(lvData[1], 1024 * 4, Ord('1'));
+  //SetLength(lvData, 1024 * 4);
+  //FillChar(lvData[1], 1024 * 4, Ord('1'));
   Result.Stream.WriteBuffer(lvData[1], Length(lvData));
 
 end;
@@ -104,7 +105,10 @@ begin
           lvCrc := TJSonStreamTools.crcObject(lvJSonObject);
           if lvCrc <> FCrc then
           begin
-            TFileLogger.instance.logErrMessage(FEchoCode + ':数据出现异常,次数[' + IntToStr(i) + '],将退出循环');
+            TFileLogger.instance.logErrMessage(FEchoCode +
+              ':数据出现异常,次数[' + IntToStr(i) + '],将退出循环' + sLineBreak + lvJSonObject.Json.AsJSon(true, False)
+
+              );
             Break;
           end;
 
