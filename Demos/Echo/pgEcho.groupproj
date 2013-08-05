@@ -5,13 +5,14 @@
   <ItemGroup />
   <ItemGroup>
     <Projects Include="Client\IOCPClientTester.dproj" />
+    <Projects Include="IdTCPClient\IOCPIdTcpClientTester.dproj" />
     <Projects Include="Server\D10_IOCPServer.dproj" />
   </ItemGroup>
   <ProjectExtensions>
     <Borland.Personality>Default.Personality</Borland.Personality>
     <Borland.ProjectType />
     <BorlandProject>
-  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
+<BorlandProject xmlns=""><Default.Personality></Default.Personality></BorlandProject></BorlandProject>
   </ProjectExtensions>
   <Target Name="D10_IOCPServer">
     <MSBuild Projects="Server\D10_IOCPServer.dproj" Targets="" />
@@ -21,6 +22,15 @@
   </Target>
   <Target Name="D10_IOCPServer:Make">
     <MSBuild Projects="Server\D10_IOCPServer.dproj" Targets="Make" />
+  </Target>
+  <Target Name="IOCPIdTcpClientTester">
+    <MSBuild Projects="IdTCPClient\IOCPIdTcpClientTester.dproj" Targets="" />
+  </Target>
+  <Target Name="IOCPIdTcpClientTester:Clean">
+    <MSBuild Projects="IdTCPClient\IOCPIdTcpClientTester.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="IOCPIdTcpClientTester:Make">
+    <MSBuild Projects="IdTCPClient\IOCPIdTcpClientTester.dproj" Targets="Make" />
   </Target>
   <Target Name="IOCPClientTester">
     <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="" />
@@ -32,13 +42,13 @@
     <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="Make" />
   </Target>
   <Target Name="Build">
-    <CallTarget Targets="D10_IOCPServer;IOCPClientTester" />
+    <CallTarget Targets="D10_IOCPServer;IOCPIdTcpClientTester;IOCPClientTester" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="D10_IOCPServer:Clean;IOCPClientTester:Clean" />
+    <CallTarget Targets="D10_IOCPServer:Clean;IOCPIdTcpClientTester:Clean;IOCPClientTester:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="D10_IOCPServer:Make;IOCPClientTester:Make" />
+    <CallTarget Targets="D10_IOCPServer:Make;IOCPIdTcpClientTester:Make;IOCPClientTester:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

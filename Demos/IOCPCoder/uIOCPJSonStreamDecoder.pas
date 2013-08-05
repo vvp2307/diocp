@@ -22,7 +22,7 @@ type
 implementation
 
 uses
-  Windows, uNetworkTools, superobject, uZipTools, FileLogger;
+  Windows, uNetworkTools, superobject, uZipTools, FileLogger, uIOCPProtocol;
 
 function TIOCPJSonStreamDecoder.Decode(const inBuf: TBufferLink): TObject;
 var
@@ -32,7 +32,7 @@ var
   lvBufData:PAnsiChar;
   lvStream:TMemoryStream;
   lvJsonStream:TJsonStream;
-  lvBytes:TBytes;
+  lvBytes:TIOCPBytes;
   lvValidCount:Integer;
 begin
   Result := nil;
