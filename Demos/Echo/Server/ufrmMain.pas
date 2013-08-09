@@ -144,7 +144,7 @@ procedure TfrmMain.tmrTestINfoTimer(Sender: TObject);
 var
   lvCount, lvBusyCount:Integer;
 begin
-  lblClientINfo.Caption := '连接数:' + IntToStr(TesterINfo.__ClientContextCount);
+  lblClientINfo.Caption := '连接数:' + IntToStr(TIOCPDebugger.clientCount);
   lblRecvINfo.Caption :=   '接收数据次数:' + IntToStr(TesterINfo.__RecvTimes);
   lblSendINfo.Caption :=   '发送数据次数:' + IntToStr(TesterINfo.__SendTimes);
   lblWorkCount.Caption :=  '工作线程:' + IntToStr(FIOCPConsole.WorkerCount);

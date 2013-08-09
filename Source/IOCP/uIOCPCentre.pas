@@ -92,7 +92,7 @@ type
     procedure Add(pvContext:TIOCPClientContext);
 
     //从在线列表中移除
-    procedure Remove(pvContext:TIOCPClientContext);
+    function Remove(pvContext:TIOCPClientContext): Boolean;
 
     function PostWSASendBlock(pvSocket: TSocket; pvIOData: POVERLAPPEDEx): Boolean;
 
@@ -195,6 +195,9 @@ type
 
     procedure getPeerINfo;
 
+    procedure invokeConnect;
+    procedure invokeDisconnect;
+
   protected
     //复位<回收时进行复位>
     procedure Reset; virtual;
@@ -202,8 +205,9 @@ type
     //借到，调用该函数
     procedure Initialize4Use; virtual;
 
-    procedure DoConnect;virtual;
-    procedure DoDisconnect;virtual;
+
+    procedure DoConnect; virtual;
+    procedure DoDisconnect; virtual;
     procedure DoOnWriteBack; virtual;
   public
     procedure Lock;
@@ -358,7 +362,7 @@ begin
     lvClientContext.Initialize4Use;
     lvClientContext.FIOCPObject := Self;
     lvClientContext.getPeerINfo;
-    lvClientContext.DoConnect;
+    lvClientContext.invokeConnect;
 
 
      ////----end
@@ -746,11 +750,11 @@ begin
   end;
 end;
 
-procedure TIOCPObject.Remove(pvContext: TIOCPClientContext);
+function TIOCPObject.Remove(pvContext:TIOCPClientContext): Boolean;
 begin
   FCS.Enter;
   try
-    FContextOnLineList.Remove(pvContext);
+    Result := FContextOnLineList.Remove(pvContext) <> -1;
   finally
     FCS.Leave;
   end;                                   
@@ -827,7 +831,7 @@ procedure TIOCPClientContext.closeClientSocket;
 begin
   if (FSocket <> INVALID_SOCKET) and (FSocket <> 0) then
   begin
-    DoDisconnect;
+    invokeDisconnect;
     closesocket(FSocket);
     FSocket := INVALID_SOCKET;
     FBuffers.clearBuffer;
@@ -855,12 +859,12 @@ end;
 
 procedure TIOCPClientContext.DoConnect;
 begin
-  FIOCPObject.Add(Self);  
+
 end;
 
 procedure TIOCPClientContext.DoDisconnect;
 begin
-  FIOCPObject.Remove(Self);
+
 end;
 
 function TIOCPClientContext.AppendBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
@@ -910,6 +914,25 @@ procedure TIOCPClientContext.Initialize4Use;
 begin
   FPostedCloseQuest := false;
   FBuffers.clearBuffer;
+end;
+
+procedure TIOCPClientContext.invokeConnect;
+begin
+  FIOCPObject.Add(Self);
+  TIOCPDebugger.incClientCount;  
+  DoConnect;
+end;
+
+procedure TIOCPClientContext.invokeDisconnect;
+begin
+  if FIOCPObject.Remove(Self) then
+  begin
+    TIOCPDebugger.decClientCount;
+    DoDisconnect;
+  end else
+  begin
+    TIOCPFileLogger.logErrMessage('procedure TIOCPClientContext.invokeDisconnect已经断开!');
+  end;                                                                                        
 end;
 
 procedure TIOCPClientContext.Lock;
