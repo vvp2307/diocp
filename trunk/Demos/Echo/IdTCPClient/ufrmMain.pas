@@ -137,6 +137,7 @@ begin
     try
       // TMemoLogger.infoMsg('数据接收成功！', mmoLog.Lines);
       TIdTcpClientJSonStreamCoder.Decode(self.IdTCPClient, lvRecvObject);
+      
       TMemoLogger.infoMsg('==============================================' + sLineBreak
         + lvRecvObject.JSon.AsJSon(True)
         , mmoLog.Lines);
@@ -169,8 +170,8 @@ end;
 procedure TfrmMain.tmrEchoTesterTimer(Sender: TObject);
 begin
   lblEchoINfo.Caption :=
-//                         Format('发送次数:%d', [__sendCount]) + sLineBreak +
-//                         Format('接收次数:%d', [__recvCount]) + sLineBreak +
+                         Format('发送次数:%d', [__sendCount]) + sLineBreak +
+                         Format('接收次数:%d', [__recvCount]) + sLineBreak +
                          Format('接收错误次数:%d', [__recvErrCount]) + sLineBreak +
                          Format('工作线程数:%d', [__threadCount]) + sLineBreak
 //                         Format('接收/发送对象个数:%d/%d', [__recvObjectCount, __sendObjectCount]) + sLineBreak +

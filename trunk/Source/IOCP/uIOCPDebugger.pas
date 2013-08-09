@@ -115,6 +115,12 @@ class procedure TIOCPDebugger.incRecvBytesSize(pvSize: Integer);
 begin
   __cs.Enter;
   try
+    //น้มใ
+    if MaxInt - __recvbytes_size < pvSize then
+    begin
+      __recvbytes_size := 0;
+    end;
+    
     __recvbytes_size :=__recvbytes_size + pvSize;
   finally
     __cs.Leave;
@@ -130,6 +136,12 @@ class procedure TIOCPDebugger.incSendbytesSize(pvSize:Integer);
 begin
   __cs.Enter;
   try
+    //น้มใ
+    if MaxInt - __sendbytes_size < pvSize then
+    begin
+      __sendbytes_size := 0;
+    end;
+    
     __sendbytes_size :=__sendbytes_size + pvSize;
   finally
     __cs.Leave;
@@ -140,6 +152,12 @@ class procedure TIOCPDebugger.incWSASendbytesSize(pvSize: Integer);
 begin
   __cs.Enter;
   try
+    //น้มใ
+    if MaxInt - __WSASendBytes < pvSize then
+    begin
+      __WSASendBytes := 0;
+    end;
+
     __WSASendBytes :=__WSASendBytes + pvSize;
   finally
     __cs.Leave;

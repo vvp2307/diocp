@@ -11,7 +11,7 @@ interface
 uses
   JwaWinsock2, Windows, SysUtils, uIOCPTools,
   uMemPool,
-  uIOCPProtocol, uBuffer, SyncObjs, Classes, IdGlobal;
+  uIOCPProtocol, uBuffer, SyncObjs, Classes;
 
 type
   TIOCPClientContext = class;
