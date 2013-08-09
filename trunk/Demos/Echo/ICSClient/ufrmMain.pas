@@ -109,7 +109,6 @@ procedure TfrmMain.btnSend100Click(Sender: TObject);
 var
   i:Integer;
 begin
-  TTesterTools.clearTesterInfo;
   for i := 0 to 100 - 1 do
   begin
     btnSendJSonStreamObject.Click;
