@@ -14,8 +14,8 @@ object frmMain: TfrmMain
   PixelsPerInch = 96
   TextHeight = 13
   object lblEchoINfo: TLabel
-    Left = 256
-    Top = 304
+    Left = 16
+    Top = 264
     Width = 54
     Height = 13
     Caption = 'lblEchoINfo'
@@ -67,34 +67,8 @@ object frmMain: TfrmMain
     Left = 8
     Top = 70
     Width = 564
-    Height = 202
+    Height = 171
     TabOrder = 5
-  end
-  object btnEchoTester: TButton
-    Left = 8
-    Top = 296
-    Width = 121
-    Height = 25
-    Caption = #24320#21551'Echo'#27979#35797#32447#31243
-    TabOrder = 6
-    OnClick = btnEchoTesterClick
-  end
-  object edtCount: TEdit
-    Left = 135
-    Top = 298
-    Width = 89
-    Height = 21
-    TabOrder = 7
-    Text = '1000'
-  end
-  object btnStopEcho: TButton
-    Left = 8
-    Top = 327
-    Width = 121
-    Height = 25
-    Caption = #20572#27490#27979#35797#32447#31243
-    TabOrder = 8
-    OnClick = btnStopEchoClick
   end
   object btnSend100: TButton
     Left = 175
@@ -102,7 +76,7 @@ object frmMain: TfrmMain
     Width = 75
     Height = 25
     Caption = #29378#28857'100'#27425
-    TabOrder = 9
+    TabOrder = 6
     OnClick = btnSend100Click
   end
   object btnClearINfo: TButton
@@ -111,21 +85,13 @@ object frmMain: TfrmMain
     Width = 75
     Height = 25
     Caption = #28165#31354#26085#24535
-    TabOrder = 10
+    TabOrder = 7
     OnClick = btnClearINfoClick
-  end
-  object btn2: TButton
-    Left = 8
-    Top = 393
-    Width = 75
-    Height = 25
-    Caption = 'btn2'
-    TabOrder = 11
   end
   object tmrEchoTester: TTimer
     OnTimer = tmrEchoTesterTimer
-    Left = 528
-    Top = 296
+    Left = 536
+    Top = 264
   end
   object FICSSocket: TWSocket
     LineMode = False

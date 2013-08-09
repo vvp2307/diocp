@@ -13,6 +13,13 @@ object frmMain: TfrmMain
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
+  object lblEchoINfo: TLabel
+    Left = 256
+    Top = 304
+    Width = 54
+    Height = 13
+    Caption = 'lblEchoINfo'
+  end
   object edtIP: TEdit
     Left = 119
     Top = 10
@@ -105,5 +112,10 @@ object frmMain: TfrmMain
     ReadTimeout = -1
     Left = 512
     Top = 8
+  end
+  object tmrEchoTester: TTimer
+    OnTimer = tmrEchoTesterTimer
+    Left = 528
+    Top = 296
   end
 end

@@ -9,7 +9,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, 
   IdBaseComponent, IdComponent, IdTCPConnection,
-  IdTCPClient;
+  IdTCPClient, ExtCtrls;
 
 type
   TfrmMain = class(TForm)
@@ -24,12 +24,15 @@ type
     btnStopEcho: TButton;
     btnSend100: TButton;
     IdTCPClient: TIdTCPClient;
+    lblEchoINfo: TLabel;
+    tmrEchoTester: TTimer;
     procedure btnCloseSocketClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
     procedure btnEchoTesterClick(Sender: TObject);
     procedure btnSend100Click(Sender: TObject);
     procedure btnSendJSonStreamObjectClick(Sender: TObject);
     procedure btnStopEchoClick(Sender: TObject);
+    procedure tmrEchoTesterTimer(Sender: TObject);
   private
     { Private declarations }
     FTesterList: TList;
@@ -161,6 +164,18 @@ begin
     TEchoTester(FTesterList[i]).Free;
   end;
   FTesterList.Clear;
+end;
+
+procedure TfrmMain.tmrEchoTesterTimer(Sender: TObject);
+begin
+  lblEchoINfo.Caption := Format('在线数:%d', [__onlineCount]) + sLineBreak +
+                         Format('发送次数:%d', [__sendCount]) + sLineBreak +
+                         Format('接收次数:%d', [__recvCount]) + sLineBreak +
+                         Format('接收错误次数:%d', [__recvErrCount]) + sLineBreak +
+                         Format('工作线程数:%d', [__threadCount]) + sLineBreak +
+                         Format('接收/发送对象个数:%d/%d', [__recvObjectCount, __sendObjectCount]) + sLineBreak +
+                         Format('接收/发送字节数:%d/%d', [__recvbytes_size, __sendbytes_size]) + sLineBreak;
+
 end;
 
 end.
