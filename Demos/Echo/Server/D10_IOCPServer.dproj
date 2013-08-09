@@ -34,6 +34,7 @@
     <DCCReference Include="..\..\..\Source\IOCP\uBuffer.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPCentre.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPConsole.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uIOCPDebugger.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPFileLogger.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPProtocol.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPTools.pas" />

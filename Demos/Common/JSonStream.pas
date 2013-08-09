@@ -63,6 +63,7 @@ end;
 
 destructor TJsonStream.Destroy;
 begin
+  FJson := nil;
   FreeAndNil(FInnerStream);
   inherited Destroy;
 end;

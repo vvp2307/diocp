@@ -17,6 +17,11 @@ type
 var
   __sendbytes_size :Int64;
   __recvbytes_size :Int64;
+  __sendcount:Integer;
+  __recvcount:Integer;
+  __recvObjectCount:Integer;
+  __sendObjectCount:Integer;
+
 
 implementation
 
@@ -29,6 +34,8 @@ begin
   try
     __sendbytes_size := 0;
     __recvbytes_size := 0;
+    __recvObjectCount := 0;
+    __sendObjectCount := 0;
   finally
     __cs.Leave;
   end;
