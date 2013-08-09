@@ -23,6 +23,7 @@ type
     chkHttpSvr: TCheckBox;
     lblSendAndRecvBytes: TLabel;
     btnReset: TButton;
+    lblSendBytes: TLabel;
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -154,6 +155,10 @@ begin
        TIOCPDebugger.recvBlockCount,
        TIOCPDebugger.sendBlockCount]);
 
+  lblSendBytes.Caption :=
+    Format('投递/发送字节数:%d/%d bytes',
+      [TIOCPDebugger.WSASendBytes,
+       TIOCPDebugger.sendBytes]);
 
   lblMemINfo.Caption :=   Format(
      'IO内存块池共(%d),可用(%d)',

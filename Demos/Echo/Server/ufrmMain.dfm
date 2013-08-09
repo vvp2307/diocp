@@ -42,8 +42,8 @@ object frmMain: TfrmMain
   object pnlINfo: TPanel
     Left = 8
     Top = 79
-    Width = 392
-    Height = 241
+    Width = 409
+    Height = 274
     BevelKind = bkTile
     BevelOuter = bvNone
     TabOrder = 3
@@ -90,6 +90,13 @@ object frmMain: TfrmMain
       Caption = 'lblClientContextINfo'
     end
     object lblSendAndRecvBytes: TLabel
+      Left = 8
+      Top = 224
+      Width = 104
+      Height = 13
+      Caption = 'lblSendAndRecvBytes'
+    end
+    object lblSendBytes: TLabel
       Left = 8
       Top = 200
       Width = 104
