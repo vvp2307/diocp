@@ -79,9 +79,23 @@ begin
 end;
 
 procedure TEchoTester.echoWork(pvObject: TJSonStream);
+var
+  lvKey:String;
 begin
+  lvKey := CreateClassID;
+  pvObject.Json.S['key'] := lvKey;
   TIdTcpClientJSonStreamCoder.Encode(FClient, pvObject);
+  InterlockedIncrement(__sendCount);
+
   TIdTcpClientJSonStreamCoder.Decode(FClient, pvObject);
+
+  if (pvObject.Json.S['key'] <> lvKey) then
+  begin
+    InterlockedIncrement(__recvErrCount);
+  end else
+  begin
+    InterlockedIncrement(__recvCount);
+  end;
 end;
 
 { TEchoTester }
