@@ -10,6 +10,9 @@ type
   TIOCPDebugger = class(TObject)
   public
     class procedure incSendbytesSize(pvSize:Integer);
+
+    class procedure incWSASendbytesSize(pvSize:Integer);
+
     class procedure incRecvBytesSize(pvSize:Integer);
 
     class procedure incSendBlockCount();
@@ -17,6 +20,7 @@ type
 
     class procedure resetDebugINfo;
   public
+    class function WSASendBytes:Int64;
     class function sendBytes:Int64;
     class function recvBytes:Int64;
     class function sendBlockCount:Integer;
@@ -29,10 +33,16 @@ implementation
 
 var
   __cs:TCriticalSection;
+  
+  //发送完成
   __sendbytes_size :Int64;
+  //投递
+  __WSASendBytes : Int64;
+
   __recvbytes_size :Int64;
   __sendBlockCount:Integer;
   __recvBlockCount:Integer;
+
 
 class function TIOCPDebugger.recvBlockCount: Integer;
 begin
@@ -52,6 +62,7 @@ begin
     __recvbytes_size := 0;
     __sendBlockCount := 0;
     __recvBlockCount := 0;
+    __WSASendBytes := 0;
   finally
     __cs.Leave;
   end;
@@ -66,6 +77,11 @@ end;
 class function TIOCPDebugger.sendBytes: Int64;
 begin
   Result := __sendbytes_size;
+end;
+
+class function TIOCPDebugger.WSASendBytes: Int64;
+begin
+  Result := __WSASendBytes;
 end;
 
 class procedure TIOCPDebugger.incRecvBlockCount;
@@ -93,6 +109,16 @@ begin
   __cs.Enter;
   try
     __sendbytes_size :=__sendbytes_size + pvSize;
+  finally
+    __cs.Leave;
+  end;
+end;
+
+class procedure TIOCPDebugger.incWSASendbytesSize(pvSize: Integer);
+begin
+  __cs.Enter;
+  try
+    __WSASendBytes :=__WSASendBytes + pvSize;
   finally
     __cs.Leave;
   end;
