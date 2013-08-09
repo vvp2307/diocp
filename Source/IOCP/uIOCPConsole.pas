@@ -53,6 +53,7 @@ type
     procedure close;
     
     property Active: Boolean read FActive;
+    
 
     property Port: Integer read FPort write FPort;
 
@@ -123,7 +124,7 @@ begin
   FActive := false;
 
   try
-
+    
     TIOCPTools.checkSocketInitialize;
 
     FIOCPObject.Port := FPort;

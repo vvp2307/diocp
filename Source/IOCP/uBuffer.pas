@@ -48,6 +48,9 @@ type
     function readBuffer(const buf: PAnsiChar; len: Cardinal): Cardinal;
 
     procedure clearBuffer;
+
+    //清理已经读完的Buffer
+    procedure clearHaveReadBuffer;
     
     /// <summary>
     ///   有效的可读取的数量
@@ -81,6 +84,29 @@ begin
   
   FMark := nil;
   FMarkPosition := 0;
+end;
+
+procedure TBufferLink.clearHaveReadBuffer;
+var
+  lvBuf, lvFreeBuf:PBufRecord;
+begin
+  if FRead = nil then exit;
+
+  //将FRead之前的都清理掉
+
+  lvBuf := FRead.preBuf;
+  while lvBuf <> nil do
+  begin
+    lvFreeBuf :=lvBuf;
+    lvBuf := lvBuf.preBuf;
+    FreeMem(lvFreeBuf.buf, lvFreeBuf.len);
+    FreeMem(lvFreeBuf, SizeOf(_BufRecord));
+  end;
+
+  //之前都被清理
+  FRead.preBuf := nil;
+
+  FHead := FRead;
 end;
 
 constructor TBufferLink.Create;

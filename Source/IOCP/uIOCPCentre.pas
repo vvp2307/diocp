@@ -73,6 +73,7 @@ type
 
   TIOCPObject = class(TObject)
   private
+    FDebug_Locker:TCriticalSection;
     FCS: TCriticalSection;
 
     //在线的列表
@@ -94,6 +95,9 @@ type
     procedure Remove(pvContext:TIOCPClientContext);
 
     function PostWSASendBlock(pvSocket: TSocket; pvIOData: POVERLAPPEDEx): Boolean;
+
+    procedure interlockIncDebugVar(var v:Cardinal; incValue:Cardinal);
+    procedure interlockDecDebugVar(var v:Cardinal; decValue:Cardinal);
 
   public
     constructor Create;
@@ -286,7 +290,7 @@ type
 implementation
 
 uses
-  uIOCPFileLogger;
+  uIOCPFileLogger, uIOCPDebugger;
 
 
 var
@@ -297,10 +301,12 @@ begin
   inherited Create;
   FContextOnLineList := TList.Create();
   FCS := TCriticalSection.Create();
+  FDebug_Locker := TCriticalSection.Create();
 end;
 
 destructor TIOCPObject.Destroy;
 begin
+  FDebug_Locker.Free;
   FreeAndNil(FCS);
   FreeAndNil(FContextOnLineList);
   inherited Destroy;
@@ -340,10 +346,6 @@ begin
 
     ///
     lvClientContext := TIOCPContextFactory.instance.createContext(lvSocket);
-    lvClientContext.Initialize4Use;
-    lvClientContext.FIOCPObject := Self;
-    lvClientContext.getPeerINfo;
-    lvClientContext.DoConnect;
 
      //将套接字、完成端口客户端对象绑定在一起。
      //2013年4月20日 13:45:10
@@ -352,35 +354,45 @@ begin
      begin
         Exit;
      end;
+
+    lvClientContext.Initialize4Use;
+    lvClientContext.FIOCPObject := Self;
+    lvClientContext.getPeerINfo;
+    lvClientContext.DoConnect;
+
+
      ////----end
 
-     //初始化数据包
-     lvIOData := TIODataMemPool.instance.borrowIOData;
+     //有连接进入，投递一个接收
+     PostWSARecv(lvClientContext);
 
-     //数据包中的IO类型:有连接请求
-     lvIOData.IO_TYPE := IO_TYPE_Accept;
-
-     //通知工作线程,有新的套接字连接<第三个参数>
-     if not PostQueuedCompletionStatus(
-        FIOCoreHandle,
-        1,   ///>>>传1, 0的话会断开连接
-      {$if defined(NEED_NativeUInt)}
-        NativeUInt(lvClientContext),
-      {$ELSE}
-        Cardinal(lvClientContext),
-      {$ifend}
-        POverlapped(lvIOData)) then
-     begin     
-       //投递失败
-       lvErr := GetLastError;
-       TIOCPFileLogger.logErrMessage('acceptClient>>PostQueuedCompletionStatus投递连接请求失败!');
-
-       //关闭
-       TIOCPContextFactory.instance.freeContext(lvClientContext);
-
-       //归还
-       TIODataMemPool.instance.giveBackIOData(lvIOData);
-     end;
+//     //初始化数据包
+//     lvIOData := TIODataMemPool.instance.borrowIOData;
+//
+//     //数据包中的IO类型:有连接请求
+//     lvIOData.IO_TYPE := IO_TYPE_Accept;
+//
+//     //通知工作线程,有新的套接字连接<第三个参数>
+//     if not PostQueuedCompletionStatus(
+//        FIOCoreHandle,
+//        1,   ///>>>传1, 0的话会断开连接
+//      {$if defined(NEED_NativeUInt)}
+//        NativeUInt(lvClientContext),
+//      {$ELSE}
+//        Cardinal(lvClientContext),
+//      {$ifend}
+//        POverlapped(lvIOData)) then
+//     begin
+//       //投递失败
+//       lvErr := GetLastError;
+//       TIOCPFileLogger.logErrMessage('acceptClient>>PostQueuedCompletionStatus投递连接请求失败!');
+//
+//       //关闭
+//       TIOCPContextFactory.instance.freeContext(lvClientContext);
+//
+//       //归还
+//       TIODataMemPool.instance.giveBackIOData(lvIOData);
+//     end;
   end;
 end;
 
@@ -446,6 +458,26 @@ begin
   end;
 end;
 
+procedure TIOCPObject.interlockDecDebugVar(var v: Cardinal; decValue: Cardinal);
+begin
+  FDebug_Locker.Enter;
+  try
+    v := v - decValue;
+  finally
+    FDebug_Locker.Leave;
+  end;
+end;
+
+procedure TIOCPObject.interlockIncDebugVar(var v: Cardinal; incValue: Cardinal);
+begin
+  FDebug_Locker.Enter;
+  try
+    v := v + incValue;
+  finally
+    FDebug_Locker.Leave;
+  end;
+end;
+
 procedure TIOCPObject.PostExitIO;
 begin
    //通知工作线程,有新的套接字连接<第三个参数>
@@ -506,7 +538,8 @@ begin
   begin
     lvIOData := TIODataMemPool.instance.borrowIOData;
     lvIOData.IO_TYPE := IO_TYPE_Send;
-    lvIOData.DataBuf.len := ouBuf.readBuffer(lvIOData.DataBuf.buf, lvIOData.DataBuf.len);
+    lvIOData.DataBuf.len :=
+      ouBuf.readBuffer(lvIOData.DataBuf.buf, lvIOData.DataBuf.len);
 
     //发送一个内存块
     if not PostWSASendBlock(pvSocket, lvIOData) then
@@ -577,9 +610,14 @@ begin
           Break;
         end;
       end;
-    end else
+    end else if lvRet = 0 then
     begin    //没有错误,发送完成
       Result := true;
+      Break;
+    end else
+    begin
+      TIOCPFileLogger.logErrMessage(Format('投递发送数据时发生了错误错误代码:%d', [lvErrCode]));
+      Result := false;
       Break;
     end;
   end;
@@ -587,7 +625,7 @@ end;
 
 function TIOCPObject.processIOQueued: Integer;
 var
-  BytesTransferred:Cardinal;
+  lvBytesTransferred:Cardinal;
   lvResultStatus:BOOL;
   lvRet:Integer;
   lvIOData:POVERLAPPEDEx;
@@ -600,7 +638,7 @@ begin
 
   //工作者线程会停止到GetQueuedCompletionStatus函数处，直到接受到数据为止
   lvResultStatus := GetQueuedCompletionStatus(FIOCoreHandle,
-    BytesTransferred,
+    lvBytesTransferred,
     {$if defined(NEED_NativeUInt)}
       NativeUInt(lvClientContext),
     {$ELSE}
@@ -635,7 +673,7 @@ begin
     begin
       TIODataMemPool.instance.giveBackIOData(lvIOData);
     end;
-  end else if BytesTransferred = 0 then  //客户端断开连接
+  end else if lvBytesTransferred = 0 then  //客户端断开连接
   begin
     if (lvClientContext <> nil) then
     begin                       //已经关闭
@@ -655,6 +693,24 @@ begin
     end else if lvIOData.IO_TYPE = IO_TYPE_Recv then
     begin
       try
+        //已经接收字节数
+        TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
+        TIOCPDebugger.incRecvBlockCount;
+
+        if lvIOData.WorkBytes > lvBytesTransferred then
+        begin
+           TIOCPFileLogger.logErrMessage(
+             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:接收字节不一致');
+
+        end;
+        
+
+        if (lvIOData.WorkBytes = 0 ) or (lvBytesTransferred = 0) or (lvIOData.Overlapped.InternalHigh <> lvBytesTransferred) then
+        begin
+           TIOCPFileLogger.logErrMessage(
+             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:接收字节不一致');
+        end;
+        
         //加入到套接字对应的缓存中，处理逻辑
         lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
           lvIOData.Overlapped.InternalHigh);
@@ -672,6 +728,11 @@ begin
       PostWSARecv(lvClientContext);
     end else if lvIOData.IO_TYPE = IO_TYPE_Send then
     begin    //发送完成数据<WSASend>完成
+
+      //已经发送字节数
+      TIOCPDebugger.incSendbytesSize(lvIOData.WorkBytes);
+      TIOCPDebugger.incSendBlockCount;
+
       //回收数据块
       TIODataMemPool.instance.giveBackIOData(lvIOData);
       //不必要投递接收请求
