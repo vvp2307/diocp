@@ -70,7 +70,7 @@ object frmMain: TfrmMain
     end
     object lblWorkCount: TLabel
       Left = 8
-      Top = 112
+      Top = 114
       Width = 64
       Height = 13
       Caption = 'lblWorkCount'
@@ -84,10 +84,26 @@ object frmMain: TfrmMain
     end
     object lblClientContextINfo: TLabel
       Left = 8
-      Top = 184
+      Top = 168
       Width = 97
       Height = 13
       Caption = 'lblClientContextINfo'
+    end
+    object lblSendAndRecvBytes: TLabel
+      Left = 8
+      Top = 200
+      Width = 104
+      Height = 13
+      Caption = 'lblSendAndRecvBytes'
+    end
+    object btnReset: TButton
+      Left = 295
+      Top = 11
+      Width = 75
+      Height = 25
+      Caption = 'btnReset'
+      TabOrder = 0
+      OnClick = btnResetClick
     end
   end
   object chkHttpSvr: TCheckBox

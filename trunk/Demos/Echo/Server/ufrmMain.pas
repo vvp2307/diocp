@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
-  ExtCtrls, uIOCPHttpDecoder, uIOCPHttpEncoder, uHttpClientContext;
+  ExtCtrls, uIOCPHttpDecoder, uIOCPHttpEncoder, uHttpClientContext, superobject;
 
 type
   TfrmMain = class(TForm)
@@ -21,8 +21,11 @@ type
     tmrTestINfo: TTimer;
     lblClientContextINfo: TLabel;
     chkHttpSvr: TCheckBox;
+    lblSendAndRecvBytes: TLabel;
+    btnReset: TButton;
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
+    procedure btnResetClick(Sender: TObject);
     procedure btnStopSeviceClick(Sender: TObject);
     procedure tmrTestINfoTimer(Sender: TObject);
   private
@@ -32,6 +35,7 @@ type
     FHttpEncoder:TIOCPHttpEncoder;
     FDecoder:TIOCPJSonStreamDecoder;
     FEncoder:TIOCPJSonStreamEncoder;
+  protected
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -44,7 +48,7 @@ var
 implementation
 
 uses
-  uIOCPCentre, uClientContext, TesterINfo, uBuffer, uMemPool;
+  uIOCPCentre, uClientContext, TesterINfo, uBuffer, uMemPool, uIOCPDebugger;
 
 {$R *.dfm}
 
@@ -122,6 +126,12 @@ begin
 
 end;
 
+procedure TfrmMain.btnResetClick(Sender: TObject);
+begin
+  TesterINfo.initializeTestINfo;
+  TIOCPDebugger.resetDebugINfo;
+end;
+
 procedure TfrmMain.btnStopSeviceClick(Sender: TObject);
 begin
   FIOCPConsole.close;
@@ -137,6 +147,14 @@ begin
   lblRecvINfo.Caption :=   '接收数据次数:' + IntToStr(TesterINfo.__RecvTimes);
   lblSendINfo.Caption :=   '发送数据次数:' + IntToStr(TesterINfo.__SendTimes);
   lblWorkCount.Caption :=  '工作线程:' + IntToStr(FIOCPConsole.WorkerCount);
+  lblSendAndRecvBytes.Caption :=
+    Format('接收/发送字节数:%d/%d bytes, %d/%d blockCount',
+      [TIOCPDebugger.recvBytes,
+       TIOCPDebugger.sendBytes,
+       TIOCPDebugger.recvBlockCount,
+       TIOCPDebugger.sendBlockCount]);
+
+
   lblMemINfo.Caption :=   Format(
      'IO内存块池共(%d),可用(%d)',
      [TIODataMemPool.instance.getCount, TIODataMemPool.instance.getUseableCount]);
@@ -149,3 +167,4 @@ begin
 end;
 
 end.
+
