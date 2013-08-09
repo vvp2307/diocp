@@ -555,10 +555,11 @@ end;
 function TIOCPObject.PostWSASendBlock(pvSocket: TSocket; pvIOData:
     POVERLAPPEDEx): Boolean;
 var
-  lvErrCode, lvRet, i:Integer;
+  lvErrCode, lvRet, i, l:Integer;
 begin
   i := 1;
   Result := False;
+  l := pvIOData.DataBuf.len;
   while i<=10 do    //尝试10次,如果还不成功就返回false
   begin
     //如果立刻发送成功  0也会触发队列
@@ -575,6 +576,7 @@ begin
         ERROR_IO_PENDING:
          begin     //出现ERROR_IO_PENDING是正常的，表示数据尚未发送完成，
                    //如果数据发送成功，GetQueuedCompletionStatus会有返回值
+            TIOCPDebugger.incWSASendbytesSize(l);
             Result := true;
             Break;
          end;
@@ -612,6 +614,9 @@ begin
       end;
     end else if lvRet = 0 then
     begin    //没有错误,发送完成
+      //成功投递
+      //l := pvIOData.DataBuf.len;
+      TIOCPDebugger.incWSASendbytesSize(l);
       Result := true;
       Break;
     end else
@@ -696,21 +701,7 @@ begin
         //已经接收字节数
         TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
         TIOCPDebugger.incRecvBlockCount;
-
-        if lvIOData.WorkBytes > lvBytesTransferred then
-        begin
-           TIOCPFileLogger.logErrMessage(
-             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:接收字节不一致');
-
-        end;
-        
-
-        if (lvIOData.WorkBytes = 0 ) or (lvBytesTransferred = 0) or (lvIOData.Overlapped.InternalHigh <> lvBytesTransferred) then
-        begin
-           TIOCPFileLogger.logErrMessage(
-             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:接收字节不一致');
-        end;
-        
+       
         //加入到套接字对应的缓存中，处理逻辑
         lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
           lvIOData.Overlapped.InternalHigh);
@@ -729,8 +720,13 @@ begin
     end else if lvIOData.IO_TYPE = IO_TYPE_Send then
     begin    //发送完成数据<WSASend>完成
 
+      if lvIOData.DataBuf.len <> lvBytesTransferred then
+      begin
+        TIOCPFileLogger.logDebugMessage('发送字节不一致.');
+      end;
+
       //已经发送字节数
-      TIOCPDebugger.incSendbytesSize(lvIOData.WorkBytes);
+      TIOCPDebugger.incSendbytesSize(lvBytesTransferred);
       TIOCPDebugger.incSendBlockCount;
 
       //回收数据块
@@ -965,6 +961,9 @@ begin
       if FBuffers.validCount = 0 then
       begin
         FBuffers.clearBuffer;
+      end else
+      begin
+        FBuffers.clearHaveReadBuffer;
       end;
     finally
       lvObject.Free;
