@@ -8,7 +8,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls,  OverbyteIcsWSocket,
-  uICSSocketWrapper, ExtCtrls, OverbyteIcsWndControl, uBuffer;
+  ExtCtrls, OverbyteIcsWndControl, uBuffer;
 
 type
   TfrmMain = class(TForm)
@@ -18,22 +18,16 @@ type
     btnCloseSocket: TButton;
     edtPort: TEdit;
     mmoLog: TMemo;
-    btnEchoTester: TButton;
-    edtCount: TEdit;
-    btnStopEcho: TButton;
     btnSend100: TButton;
     tmrEchoTester: TTimer;
     lblEchoINfo: TLabel;
     btnClearINfo: TButton;
-    btn2: TButton;
     FICSSocket: TWSocket;
     procedure btnClearINfoClick(Sender: TObject);
     procedure btnCloseSocketClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
-    procedure btnEchoTesterClick(Sender: TObject);
     procedure btnSend100Click(Sender: TObject);
     procedure btnSendJSonStreamObjectClick(Sender: TObject);
-    procedure btnStopEchoClick(Sender: TObject);
     procedure FICSSocketDataAvailable(Sender: TObject; ErrCode: Word);
     procedure tmrEchoTesterTimer(Sender: TObject);
   private
@@ -41,7 +35,6 @@ type
     FRecvBuffer:TBufferLink;
 
     FTesterList: TList;
-    procedure ClearTester;
   protected
   public
     constructor Create(AOwner: TComponent); override;
@@ -56,7 +49,7 @@ implementation
 
 uses
   ComObj, superobject, uMemoLogger,
-  uEchoTester, uSocketTools, JSonStream, IdGlobal, uNetworkTools,
+  uSocketTools, JSonStream, IdGlobal, uNetworkTools,
   uICSClientJSonStreamCoder, uTesterTools;
 
 {$R *.dfm}
@@ -72,7 +65,6 @@ end;
 destructor TfrmMain.Destroy;
 begin
   FRecvBuffer.Free;
-  ClearTester;
   FreeAndNil(FTesterList);
   inherited Destroy;
 end;
@@ -83,7 +75,6 @@ begin
   __sendCount := 0;
   __recvCount := 0;
   TTesterTools.clearTesterInfo;
-  resetEchoINfo;
 end;
 
 procedure TfrmMain.btnCloseSocketClick(Sender: TObject);
@@ -114,29 +105,11 @@ begin
 
 end;
 
-procedure TfrmMain.btnEchoTesterClick(Sender: TObject);
-var
-  lvEchoTester:TEchoTester;
-  i:Integer;
-begin
-  resetEchoINfo;
-  for I := 1 to StrToInt(edtCount.Text) do
-  begin
-    lvEchoTester := TEchoTester.Create;
-    lvEchoTester.EchoCode := IntToStr(i);
-    lvEchoTester.Host := edtIP.Text;
-    lvEchoTester.Port := edtPort.Text;
-    lvEchoTester.Resume;
-    FTesterList.Add(lvEchoTester);
-  end;
-
-end;
-
 procedure TfrmMain.btnSend100Click(Sender: TObject);
 var
   i:Integer;
 begin
-  resetEchoINfo;
+  TTesterTools.clearTesterInfo;
   for i := 0 to 100 - 1 do
   begin
     btnSendJSonStreamObject.Click;
@@ -174,24 +147,6 @@ begin
   finally
     lvJSonStream.Free;
   end;
-end;
-
-procedure TfrmMain.btnStopEchoClick(Sender: TObject);
-begin
-  ClearTester;
-end;
-
-procedure TfrmMain.ClearTester;
-var
-  i:Integer;
-begin
-  for i := 0 to FTesterList.Count - 1 do
-  begin
-    TEchoTester(FTesterList[i]).Terminate;
-    TEchoTester(FTesterList[i]).WaitFor;
-    TEchoTester(FTesterList[i]).Free;
-  end;
-  FTesterList.Clear;
 end;
 
 procedure TfrmMain.FICSSocketDataAvailable(Sender: TObject; ErrCode: Word);
@@ -278,11 +233,8 @@ end;
 
 procedure TfrmMain.tmrEchoTesterTimer(Sender: TObject);
 begin
-  lblEchoINfo.Caption := Format('在线数:%d', [__onlineCount]) + sLineBreak +
-                         Format('发送次数:%d', [__sendCount]) + sLineBreak +
+  lblEchoINfo.Caption := Format('发送次数:%d', [__sendCount]) + sLineBreak +
                          Format('接收次数:%d', [__recvCount]) + sLineBreak +
-                         Format('接收错误次数:%d', [__recvErrCount]) + sLineBreak +
-                         Format('工作线程数:%d', [__threadCount]) + sLineBreak +
                          Format('接收/发送对象个数:%d/%d', [__recvObjectCount, __sendObjectCount]) + sLineBreak +
                          Format('接收/发送字节数:%d/%d', [__recvbytes_size, __sendbytes_size]) + sLineBreak;
 
