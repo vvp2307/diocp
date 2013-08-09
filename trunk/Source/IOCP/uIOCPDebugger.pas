@@ -18,11 +18,15 @@ type
     class procedure incSendBlockCount();
     class procedure incRecvBlockCount();
 
+    class procedure incClientCount();
+    class procedure decClientCount();
+
     class procedure resetDebugINfo;
   public
     class function WSASendBytes:Int64;
     class function sendBytes:Int64;
     class function recvBytes:Int64;
+    class function clientCount:Integer;
     class function sendBlockCount:Integer;
     class function recvBlockCount:Integer;
 
@@ -33,6 +37,9 @@ implementation
 
 var
   __cs:TCriticalSection;
+
+  //在线数量
+  __clientCount: Integer;
   
   //发送完成
   __sendbytes_size :Int64;
@@ -84,6 +91,21 @@ begin
   Result := __WSASendBytes;
 end;
 
+class function TIOCPDebugger.clientCount: Integer;
+begin
+  Result := __clientCount;
+end;
+
+class procedure TIOCPDebugger.decClientCount;
+begin
+  InterlockedDecrement(__clientCount);
+end;
+
+class procedure TIOCPDebugger.incClientCount;
+begin
+  InterlockedIncrement(__clientCount);
+end;
+
 class procedure TIOCPDebugger.incRecvBlockCount;
 begin
   InterlockedIncrement(__recvBlockCount);  
@@ -127,6 +149,7 @@ end;
 initialization
   __sendbytes_size := 0;
   __recvbytes_size := 0;
+  __clientCount := 0;
   __cs := TCriticalSection.Create;
 
 finalization

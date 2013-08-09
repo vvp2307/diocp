@@ -29,6 +29,16 @@ type
     
   end;
 
+var
+  __threadCount:Integer;
+  __sendCount:Integer;
+  __recvCount:Integer;
+  __recvAllCount:Integer;
+  __recvErrCount:Integer;
+  __errCount:Integer;
+
+
+
 implementation
 
 uses
@@ -39,11 +49,13 @@ begin
   inherited Create(true);
   FClient := TIdTCPClient.Create();
   FEchoCode := CreateClassID;
+  InterlockedIncrement(__threadCount);
 end;
 
 destructor TEchoTester.Destroy;
 begin
   FClient.Free;
+  InterlockedDecrement(__threadCount);
   inherited Destroy;
 end;
 

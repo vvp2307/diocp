@@ -7,7 +7,6 @@ uses
   ufrmMain in 'ufrmMain.pas' {frmMain},
   uSocketTools in '..\..\..\Source\Utils\uSocketTools.pas',
   uMemoLogger in '..\..\..\Source\Utils\uMemoLogger.pas',
-  uEchoTester in 'uEchoTester.pas',
   JSonStream in '..\..\Common\JSonStream.pas',
   uNetworkTools in '..\..\IOCPCoder\uNetworkTools.pas',
   uJSonStreamTools in '..\..\Common\uJSonStreamTools.pas',
