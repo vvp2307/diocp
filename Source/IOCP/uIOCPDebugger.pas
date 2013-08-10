@@ -18,6 +18,9 @@ type
     class procedure incSendBlockCount();
     class procedure incRecvBlockCount();
 
+    class procedure incSendObjectCount();
+    class procedure incRecvObjectCount();
+
     class procedure incClientCount();
     class procedure decClientCount();
 
@@ -30,6 +33,8 @@ type
     class function sendBlockCount:Integer;
     class function recvBlockCount:Integer;
 
+    class function recvObjectCount:Integer;
+    class function sendObjectCount:Integer;
   end;
 
 
@@ -43,12 +48,19 @@ var
   
   //发送完成
   __sendbytes_size :Int64;
+
   //投递
   __WSASendBytes : Int64;
 
   __recvbytes_size :Int64;
+
   __sendBlockCount:Integer;
+
   __recvBlockCount:Integer;
+
+  __recvObjectCount:Integer;
+
+  __sendObjectCount:Integer;
 
 
 class function TIOCPDebugger.recvBlockCount: Integer;
@@ -61,6 +73,11 @@ begin
   Result := __recvbytes_size;
 end;
 
+class function TIOCPDebugger.recvObjectCount: Integer;
+begin
+  Result := __recvObjectCount;
+end;
+
 class procedure TIOCPDebugger.resetDebugINfo;
 begin
   __cs.Enter;
@@ -70,6 +87,8 @@ begin
     __sendBlockCount := 0;
     __recvBlockCount := 0;
     __WSASendBytes := 0;
+    __recvObjectCount := 0;
+    __sendObjectCount := 0;
   finally
     __cs.Leave;
   end;
@@ -84,6 +103,11 @@ end;
 class function TIOCPDebugger.sendBytes: Int64;
 begin
   Result := __sendbytes_size;
+end;
+
+class function TIOCPDebugger.sendObjectCount: Integer;
+begin
+  Result := __sendObjectCount;
 end;
 
 class function TIOCPDebugger.WSASendBytes: Int64;
@@ -127,6 +151,11 @@ begin
   end;
 end;
 
+class procedure TIOCPDebugger.incRecvObjectCount;
+begin
+  InterlockedIncrement(__recvObjectCount);
+end;
+
 class procedure TIOCPDebugger.incSendBlockCount;
 begin
   InterlockedIncrement(__sendBlockCount);
@@ -146,6 +175,11 @@ begin
   finally
     __cs.Leave;
   end;
+end;
+
+class procedure TIOCPDebugger.incSendObjectCount;
+begin
+  InterlockedIncrement(__sendObjectCount);
 end;
 
 class procedure TIOCPDebugger.incWSASendbytesSize(pvSize: Integer);
