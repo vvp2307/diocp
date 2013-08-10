@@ -970,6 +970,9 @@ begin
     try
       try
         self.StateINfo := '解码成功,准备调用dataReceived进行逻辑处理';
+
+        TIOCPDebugger.incRecvObjectCount;
+
         //解码成功，调用业务逻辑的处理方法
         dataReceived(lvObject);
 
@@ -1017,8 +1020,12 @@ begin
     self.StateINfo := 'TIOCPClientContext.writeObject,准备编码对象到lvOutBuffer';
     TIOCPContextFactory.instance.FEncoder.Encode(pvDataObject, lvOutBuffer);
     FIOCPObject.PostWSASend(self.FSocket, lvOutBuffer);
+    
+    TIOCPDebugger.incSendObjectCount;
+    
     self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';
     DoOnWriteBack;
+
   finally
     lvOutBuffer.Free;
   end;
