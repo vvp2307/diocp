@@ -35,7 +35,7 @@ type
     /// </summary>
     /// <param name="pvSocket"> (TClientSocket) </param>
     /// <param name="pvObject"> (TObject) </param>
-    class procedure Encode(pvSocket: TIdTcpClient; pvObject: TObject);
+    class function Encode(pvSocket: TIdTcpClient; pvObject: TObject): Integer;
 
   end;
 
@@ -140,8 +140,8 @@ begin
   Result := true;
 end;
 
-class procedure TIdTcpClientJSonStreamCoder.Encode(pvSocket: TIdTcpClient;
-    pvObject: TObject);
+class function TIdTcpClientJSonStreamCoder.Encode(pvSocket: TIdTcpClient;
+    pvObject: TObject): Integer;
 var
   lvJSonStream:TJsonStream;
   lvJSonLength:Integer;
@@ -212,9 +212,9 @@ begin
 
     
     //头信息和JSon数据
-    sendStream(pvSocket, lvSendStream);
-
-    TTesterTools.incSendbytesSize(lvSendStream.Size);
+    l := sendStream(pvSocket, lvSendStream);
+    Result := l;
+    TTesterTools.incSendbytesSize(l);
   finally
     lvSendStream.Free;
   end;
@@ -249,7 +249,7 @@ var
   lvBufBytes:array[0..BUF_BLOCK_SIZE-1] of byte;
   l, j, lvTotal:Integer;
 begin
-  Result := -1;
+  Result := 0;
   if pvStream = nil then Exit;
   if pvStream.Size = 0 then Exit;
 
@@ -257,6 +257,7 @@ begin
   
   pvStream.Position := 0;
   repeat
+    FillMemory(@lvBufBytes[0], SizeOf(lvBufBytes), 0);
     l := pvStream.Read(lvBufBytes[0], SizeOf(lvBufBytes));
     if (l > 0) and pvSocket.Connected then
     begin
