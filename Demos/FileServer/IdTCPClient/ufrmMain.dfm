@@ -75,6 +75,7 @@ object frmMain: TfrmMain
     Height = 25
     Caption = #33719#21462#19968#20010#36828#31243#25991#20214
     TabOrder = 6
+    OnClick = btnGetFileClick
   end
   object btnUpload: TButton
     Left = 8
@@ -86,11 +87,11 @@ object frmMain: TfrmMain
     OnClick = btnUploadClick
   end
   object chkZip: TCheckBox
-    Left = 152
-    Top = 256
+    Left = 192
+    Top = 258
     Width = 228
     Height = 17
-    Caption = #19978#20256#26102#26159#21542#36827#34892#21387#32553#65311
+    Caption = #19978#20256'/'#19979#36733#26102#26159#21542#36827#34892#21387#32553#65311
     TabOrder = 8
   end
   object IdTCPClient: TIdTCPClient
