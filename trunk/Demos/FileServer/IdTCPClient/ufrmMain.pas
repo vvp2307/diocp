@@ -28,7 +28,7 @@ type
     chkZip: TCheckBox;
     procedure btnCloseSocketClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
-    procedure btnSendJSonStreamObjectClick(Sender: TObject);
+    procedure btnGetFileClick(Sender: TObject);
     procedure btnStopEchoClick(Sender: TObject);
     procedure btnUploadClick(Sender: TObject);
   private
@@ -100,42 +100,72 @@ begin
 
 end;
 
-procedure TfrmMain.btnSendJSonStreamObjectClick(Sender: TObject);
+procedure TfrmMain.btnGetFileClick(Sender: TObject);
+
 var
-  lvJSonStream, lvRecvObject:TJsonStream;
-  lvStream:TStream;
-  lvData:String;
-  l, j, x:Integer;
+  lvFileStream:TFileStream;
+  lvRecvObj, lvSendObj:TJsonStream;
+  i, l, lvSize:Integer;
+  lvFileName:String;
+  lvCrc:Cardinal;
 begin
-  lvJSonStream := TJsonStream.Create;
+
+  //将文件分段下载<每段固定大小>
+  //循环发送
+  //  {
+  //     fileName:'xxxx',  //客户端请求文件
+  //     start:0,          //客户端请求开始位置
+  
+  //     filesize:11111,   //文件总大小
+  //     crc:xxxx,         //服务端返回
+  //     blockSize:4096   //服务端返回
+  //  }
+  
+
+  lvFileName := ExtractFilePath(ParamStr(0)) + 'tempFiles\' + edtRFile.Text;
+  DeleteFile(lvFileName);
+
+  lvFileStream := TFileStream.Create(lvFileName, fmCreate or fmShareDenyWrite);
+  lvSendObj := TJsonStream.Create;
+  lvRecvObj := TJsonStream.Create;
   try
-    lvJSonStream.JSon := SO();
-    lvJSonStream.JSon.I['cmdIndex'] := 1000;   //echo 数据测试
-    lvJSonStream.JSon.S['data'] := '测试发送打包数据';
-    lvJSonStream.JSon.S['key'] := CreateClassID;
-    lvStream := lvJSonStream.Stream;
+    while true do
+    begin
+      lvSendObj.Clear();
+      //请求文件下载
+      lvSendObj.Json.I['cmdIndex'] := 1002;
+      lvSendObj.Json.I['start'] := lvFileStream.Position;
+      lvSendObj.Json.S['fileName'] := edtRFile.Text;
+      lvSendObj.Json.B['config.stream.zip'] := chkZip.Checked;
 
-    SetLength(lvData, 1024 * 1);
-    FillChar(lvData[1], 1024 * 1, Ord('1'));
-    lvStream.WriteBuffer(lvData[1], Length(lvData));
+      TIdTcpClientJSonStreamCoder.Encode(self.IdTCPClient, lvSendObj);
+      TIdTcpClientJSonStreamCoder.Decode(self.IdTCPClient, lvRecvObj);
+      if not lvRecvObj.getResult then
+      begin
+        raise Exception.Create(lvRecvObj.getResultMsg);
+      end;
 
-    TIdTcpClientJSonStreamCoder.Encode(self.IdTCPClient, lvJSonStream);
+      lvCrc := TCRCTools.crc32Stream(lvRecvObj.Stream);
+      if lvCrc <> lvRecvObj.Json.I['crc'] then
+      begin
+        raise Exception.Create('crc校验失败!');
+      end;
+      lvRecvObj.Stream.Position := 0;
+      lvFileStream.CopyFrom(lvRecvObj.Stream, lvRecvObj.Stream.Size);
 
-    TMemoLogger.infoMsg('数据发送成功！', mmoLog.Lines);
-    lvRecvObject := TJsonStream.Create;
-    try
-      // TMemoLogger.infoMsg('数据接收成功！', mmoLog.Lines);
-      TIdTcpClientJSonStreamCoder.Decode(self.IdTCPClient, lvRecvObject);
-      
-      TMemoLogger.infoMsg('==============================================' + sLineBreak
-        + lvRecvObject.JSon.AsJSon(True)
-        , mmoLog.Lines);
-    finally
-       lvRecvObject.Free;
+      //文件下载完成
+      if lvFileStream.Size = lvRecvObj.Json.I['fileSize'] then
+      begin
+        Break;
+      end;
     end;
   finally
-    lvJSonStream.Free;
-  end;   
+    lvFileStream.Free;
+    lvSendObj.Free;
+    lvRecvObj.Free;
+  end;
+
+  ShowMessage('下载成功!');
 end;
 
 procedure TfrmMain.btnStopEchoClick(Sender: TObject);
@@ -144,7 +174,6 @@ begin
 end;
 
 procedure TfrmMain.btnUploadClick(Sender: TObject);
-
 const
   SEC_SIZE = 1024 * 4;
   //SEC_SIZE = 10;

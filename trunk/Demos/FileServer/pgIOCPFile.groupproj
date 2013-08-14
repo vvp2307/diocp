@@ -4,8 +4,6 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
-    <Projects Include="Client\IOCPClientTester.dproj" />
-    <Projects Include="ICSClient\IOCPICSClient.dproj" />
     <Projects Include="IdTCPClient\IOCPIdTcpClientTester.dproj" />
     <Projects Include="Server\IOCP_FileServer.dproj" />
   </ItemGroup>
@@ -33,32 +31,14 @@
   <Target Name="IOCPIdTcpClientTester:Make">
     <MSBuild Projects="IdTCPClient\IOCPIdTcpClientTester.dproj" Targets="Make" />
   </Target>
-  <Target Name="IOCPClientTester">
-    <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="" />
-  </Target>
-  <Target Name="IOCPClientTester:Clean">
-    <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="IOCPClientTester:Make">
-    <MSBuild Projects="Client\IOCPClientTester.dproj" Targets="Make" />
-  </Target>
-  <Target Name="IOCPICSClient">
-    <MSBuild Projects="ICSClient\IOCPICSClient.dproj" Targets="" />
-  </Target>
-  <Target Name="IOCPICSClient:Clean">
-    <MSBuild Projects="ICSClient\IOCPICSClient.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="IOCPICSClient:Make">
-    <MSBuild Projects="ICSClient\IOCPICSClient.dproj" Targets="Make" />
-  </Target>
   <Target Name="Build">
-    <CallTarget Targets="IOCP_FileServer;IOCPIdTcpClientTester;IOCPClientTester;IOCPICSClient" />
+    <CallTarget Targets="IOCP_FileServer;IOCPIdTcpClientTester" />
   </Target>
   <Target Name="Clean">
-    <CallTarget Targets="IOCP_FileServer:Clean;IOCPIdTcpClientTester:Clean;IOCPClientTester:Clean;IOCPICSClient:Clean" />
+    <CallTarget Targets="IOCP_FileServer:Clean;IOCPIdTcpClientTester:Clean" />
   </Target>
   <Target Name="Make">
-    <CallTarget Targets="IOCP_FileServer:Make;IOCPIdTcpClientTester:Make;IOCPClientTester:Make;IOCPICSClient:Make" />
+    <CallTarget Targets="IOCP_FileServer:Make;IOCPIdTcpClientTester:Make" />
   </Target>
   <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
 </Project>

@@ -14,6 +14,7 @@ type
     procedure DoOnWriteBack; override;
 
     procedure wirteFileData(pvDataObject:TJsonStream);
+    procedure readFileData(pvDataObject:TJsonStream);
   public
     /// <summary>
     ///   数据处理
@@ -34,7 +35,7 @@ type
 implementation
 
 uses
-  uFrameConfig, uCRCTools;
+  uFrameConfig, uCRCTools, Math;
 
 
 
@@ -58,7 +59,14 @@ begin
 
       lvJsonStream.Clear();
       lvJsonStream.setResult(True);
-       
+
+      //回写数据
+      writeObject(lvJsonStream);
+    end else if lvCmdIndex= 1002 then
+    begin
+      //获取文件块
+      readFileData(lvJsonStream);
+
       //回写数据
       writeObject(lvJsonStream);
     end else
@@ -102,6 +110,41 @@ var
 begin
   lvNewFile := ExtractFilePath(pvSrcFile) + ExtractFileName(pvNewFileName);
   Result := MoveFile(pchar(pvSrcFile), pchar(lvNewFile));
+end;
+
+procedure TClientContext.readFileData(pvDataObject: TJsonStream);
+const
+  SEC_SIZE = 1024 * 4;
+var
+  lvFileStream:TFileStream;
+  lvFileName, lvRealFileName:String;
+  lvCrc, lvSize:Cardinal;
+begin
+  lvFileName:= TFrameConfig.getBasePath;
+  if lvFileName = '' then
+  begin
+    raise Exception.Create('服务端没有设定文件服务器目录!');
+  end;
+  lvFileName := lvFileName + '\' + pvDataObject.Json.S['fileName'];
+
+  //删除原有文件
+  if not FileExists(lvFileName) then raise Exception.CreateFmt('(%s)文件不存在!', [pvDataObject.Json.S['fileName']]);
+
+
+  lvFileStream := TFileStream.Create(lvFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    lvFileStream.Position := pvDataObject.Json.I['start'];
+    pvDataObject.Clear();
+    pvDataObject.Json.I['fileSize'] := lvFileStream.Size;
+    lvSize := Min(SEC_SIZE, lvFileStream.Size-lvFileStream.Position);
+    pvDataObject.Stream.CopyFrom(lvFileStream, lvSize);
+    pvDataObject.Json.I['blockSize'] := lvSize;
+    pvDataObject.Json.I['crc']:=TCRCTools.crc32Stream(pvDataObject.Stream);
+  finally
+    lvFileStream.Free;
+  end;
+  lvCrc := TCRCTools.crc32Stream(pvDataObject.Stream);
+
 end;
 
 procedure TClientContext.wirteFileData(pvDataObject: TJsonStream);
