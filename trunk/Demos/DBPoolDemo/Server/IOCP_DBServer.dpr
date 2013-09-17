@@ -27,7 +27,6 @@ uses
   uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
   uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
-  uFrameConfig in 'Common\uFrameConfig.pas',
   uCRCTools in '..\..\Common\uCRCTools.pas',
   uUniOperator in '..\..\UniDACPool\uUniOperator.pas',
   UntCobblerUniPool in '..\..\UniDACPool\UntCobblerUniPool.pas',
