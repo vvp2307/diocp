@@ -667,7 +667,7 @@ begin
     lvRet := GetLastError;
 
     //{ The specified network name is no longer available. }
-    if lvRet = ERROR_NETNAME_DELETED then
+    if lvRet = ERROR_NETNAME_DELETED then  //64
     begin
 
     end;
@@ -964,35 +964,49 @@ begin
 
     self.StateINfo := '接收到数据,准备进行解码';
 
-    //调用注册的解码器<进行解码>
-    lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
-    if lvObject <> nil then
-    try
-      try
-        self.StateINfo := '解码成功,准备调用dataReceived进行逻辑处理';
-
-        TIOCPDebugger.incRecvObjectCount;
-
-        //解码成功，调用业务逻辑的处理方法
-        dataReceived(lvObject);
-
-        self.StateINfo := 'dataReceived逻辑处理完成!';
-      except
-        on E:Exception do
-        begin
-          TIOCPFileLogger.logErrMessage('截获处理逻辑异常!' + e.Message);
-        end;
-      end;
-      //清理掉这一次分配的内存<如果没有可用的内存块>清理
-      if FBuffers.validCount = 0 then
+    ////避免一次收到多个包时导致只调用了一次逻辑的处理(dataReceived);
+    ///  2013年9月26日 08:57:20
+    ///    感谢群内JOE找到bug。
+    while True do
+    begin
+      lvObject := nil;
+      //调用注册的解码器<进行解码>
+      lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
+      if lvObject <> nil then
       begin
-        FBuffers.clearBuffer;
+        try
+          try
+            self.StateINfo := '解码成功,准备调用dataReceived进行逻辑处理';
+
+            TIOCPDebugger.incRecvObjectCount;
+
+            //解码成功，调用业务逻辑的处理方法
+            dataReceived(lvObject);
+
+            self.StateINfo := 'dataReceived逻辑处理完成!';
+          except
+            on E:Exception do
+            begin
+              TIOCPFileLogger.logErrMessage('截获处理逻辑异常!' + e.Message);
+            end;
+          end;
+        finally
+          lvObject.Free;
+        end;
       end else
       begin
-        FBuffers.clearHaveReadBuffer;
+        //缓存中没有可以使用的完整数据包,跳出循环
+        Break;
       end;
-    finally
-      lvObject.Free;
+    end;
+
+    //清理缓存<如果没有可用的内存块>清理
+    if FBuffers.validCount = 0 then
+    begin
+      FBuffers.clearBuffer;
+    end else
+    begin
+      FBuffers.clearHaveReadBuffer;
     end;
   finally
     self.unLock;
