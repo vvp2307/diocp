@@ -44,7 +44,7 @@ implementation
 
 uses
   ComObj, superobject, uMemoLogger,
-  uEchoTester, uSocketTools, JSonStream, IdGlobal, uNetworkTools,
+  uSocketTools, JSonStream, IdGlobal, uNetworkTools,
   uIdTcpClientJSonStreamCoder, uCRCTools, Math;
 
 {$R *.dfm}
@@ -101,26 +101,37 @@ begin
   lvRecvObj := TJsonStream.Create;
   try
     lvSendObj.Clear();
+
+    //帐套ID
     lvSendObj.Json.S['config.accountID'] := txtAccount.Text;
+
+    //执行SQL的命令ID
     lvSendObj.Json.I['cmdIndex'] := 1001;
+
+    //要执行的SQL
     lvSendObj.Json.S['script.sql'] := mmoSQL.Lines.Text;
+
+    //发送到服务端进行处理<使用Indy进行传输>,如果需要使用ICS，可以在IOCPCoder文件夹中找到对应的uICSClientJSonStreamCoder.pas单元
     TIdTcpClientJSonStreamCoder.Encode(self.IdTCPClient, lvSendObj);
+
+    //接收服务端处理的数据<使用Indy接收数据>
     TIdTcpClientJSonStreamCoder.Decode(self.IdTCPClient, lvRecvObj);
     if not lvRecvObj.getResult then
     begin
       raise Exception.Create(lvRecvObj.getResultMsg);
     end;
 
+    //获取数据
     SetLength(lvData, lvRecvObj.Stream.Size);
     lvRecvObj.Stream.Position := 0;
     lvRecvObj.Stream.ReadBuffer(lvData[1], lvRecvObj.Stream.Size);
 
+    //放入CDS的XMLDATA
     cdsMain.XMLData := lvData;
   finally
     lvSendObj.Free;
     lvRecvObj.Free;
   end;
-
 end;
 
 end.
