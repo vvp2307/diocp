@@ -1,9 +1,9 @@
 unit uIOCPCentre;
 
 
-{$if CompilerVersion>= 23}
+{$IF CompilerVersion>= 23}
   {$define NEED_NativeUInt}
-{$ifend}
+{$IFEND}
 
 
 interface
@@ -87,6 +87,7 @@ type
 
     //侦听端口
     FPort: Integer;
+    FsystemSocketHeartState: Boolean;
 
     //添加到在线列表
     procedure Add(pvContext:TIOCPClientContext);
@@ -98,7 +99,6 @@ type
 
     procedure interlockIncDebugVar(var v:Cardinal; incValue:Cardinal);
     procedure interlockDecDebugVar(var v:Cardinal; decValue:Cardinal);
-
   public
     constructor Create;
 
@@ -113,6 +113,8 @@ type
 
     //创建服务端端口
     function createSSocket: Boolean;
+
+
 
     //关闭服务端端口
     procedure closeSSocket;
@@ -162,6 +164,12 @@ type
 
     //侦听端口
     property Port: Integer read FPort write FPort;
+
+    //是否处理默认的socket心跳
+    property systemSocketHeartState: Boolean read FsystemSocketHeartState write
+        FsystemSocketHeartState default true;
+
+
 
   end;
 
@@ -303,6 +311,7 @@ var
 constructor TIOCPObject.Create;
 begin
   inherited Create;
+  FsystemSocketHeartState := true;
   FContextOnLineList := TList.Create();
   FCS := TCriticalSection.Create();
   FDebug_Locker := TCriticalSection.Create();
@@ -344,9 +353,12 @@ begin
     TIOCPFileLogger.logWSAError('接收新的客户端连接出现异常!');
   end else
   begin
-    
-    //加入心跳
-    TIOCPTools.socketInitializeHeart(lvSocket);
+
+    if FsystemSocketHeartState then
+    begin
+      //加入心跳
+      TIOCPTools.socketInitializeHeart(lvSocket);
+    end;
 
     ///
     lvClientContext := TIOCPContextFactory.instance.createContext(lvSocket);
@@ -438,9 +450,15 @@ begin
     CloseSocket(FSSocket);
     FSSocket := INVALID_HANDLE_VALUE;
   end;
-  
-  //假如心跳
-  if TIOCPTools.socketInitializeHeart(FSSocket) then
+
+  if FsystemSocketHeartState then
+  begin
+    //假如心跳
+    if TIOCPTools.socketInitializeHeart(FSSocket) then
+    begin
+      Result := true;
+    end;
+  end else
   begin
     Result := true;
   end;
