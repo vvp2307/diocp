@@ -13,7 +13,7 @@ uses
 
 {$if CompilerVersion>= 23}
   {$define NEWZLib}
-{$ifend}
+{$IFEND}
 
 type
   TZipTools = class(TObject)
@@ -148,7 +148,7 @@ class function TZipTools.unCompressStream(const pvZipStream, pvStream:TStream):
     Boolean;
 var
   l:Integer;
-  lvBytes: TBytes;
+  lvBytes: TIOCPBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 
