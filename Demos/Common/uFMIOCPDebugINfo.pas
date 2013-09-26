@@ -18,6 +18,7 @@ type
     lblSendAndRecvBytes: TLabel;
     lblSendBytes: TLabel;
     btnReset: TButton;
+    lblRunTimeINfo: TLabel;
     procedure btnResetClick(Sender: TObject);
     procedure tmrTestINfoTimer(Sender: TObject);
   private
@@ -34,7 +35,7 @@ type
 implementation
 
 uses
-  uIOCPDebugger, uIOCPFileLogger;
+  uIOCPDebugger, uIOCPFileLogger, uRunTimeINfoTools;
 
 {$R *.dfm}
 
@@ -87,6 +88,8 @@ begin
     lblClientContextINfo.Caption :=   Format(
        'ClientContext池共(%d),可用(%d)',
        [lvCount, lvCount - lvBusyCount]);
+
+    lblRunTimeINfo.Caption :='程序已经运行:' +  TRunTimeINfoTools.getRunTimeINfo;
   except
     on E:Exception do
     begin
@@ -95,5 +98,7 @@ begin
   end;
 
 end;
+
+
 
 end.

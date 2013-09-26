@@ -21,7 +21,6 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = 'pnlTopOperator'
     TabOrder = 0
-    ExplicitTop = -6
     object lblaccountID: TLabel
       Left = 65
       Top = 40

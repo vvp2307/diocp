@@ -43,6 +43,7 @@ begin
   begin
     TADOConnection(Result).CommandTimeout := FCommandTimeOut;
   end;
+  TADOConnection(Result).KeepConnection := true;
 end;
 
 procedure TADOConnectionPool.InitializeConnectionString(pvServerName, pvDBName,

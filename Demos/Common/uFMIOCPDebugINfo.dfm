@@ -60,6 +60,13 @@ object FMIOCPDebugINfo: TFMIOCPDebugINfo
     Height = 13
     Caption = 'lblSendAndRecvBytes'
   end
+  object lblRunTimeINfo: TLabel
+    Left = 8
+    Top = 280
+    Width = 72
+    Height = 13
+    Caption = 'lblRunTimeINfo'
+  end
   object btnReset: TButton
     Left = 279
     Top = 16
