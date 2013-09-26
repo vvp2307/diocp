@@ -3,7 +3,7 @@ unit uIOCPConsole;
 interface
 
 uses
-  uIOCPCentre, uSocketListener, Classes;
+  uIOCPCentre, uSocketListener, Classes, SysUtils;
 
 type
   TIOCPConsole = class(TObject)
@@ -51,11 +51,18 @@ type
 
     procedure open;
     procedure close;
-    
-    property Active: Boolean read FActive;
-    
 
+
+
+    ///是否处理Socket心跳
+    procedure setSystemSocketHeartState(pvValue:Boolean);
+
+    function getSystemSocketHeartState:Boolean;
+
+
+    property Active: Boolean read FActive;
     property Port: Integer read FPort write FPort;
+
 
 
 
@@ -108,6 +115,11 @@ begin
   FIOCPObject.DisconnectAllClientContext;
 end;
 
+function TIOCPConsole.getSystemSocketHeartState: Boolean;
+begin
+  Result := FIOCPObject.systemSocketHeartState;
+end;
+
 function TIOCPConsole.GetWorkerCount: Integer;
 begin
   if FWorkers.Count > 0 then
@@ -150,6 +162,17 @@ begin
       close;
     end;
 
+  end;
+end;
+
+procedure TIOCPConsole.setSystemSocketHeartState(pvValue:Boolean);
+begin
+  if not FActive then
+  begin
+    FIOCPObject.systemSocketHeartState := pvValue;
+  end else
+  begin
+    raise Exception.Create('服务开启后不允许修改该属性!');
   end;
 end;
 
