@@ -32,7 +32,7 @@ type
   TIOCPEncoder = class(TObject)
   public
     /// <summary>
-    ///   编码要发生的对象
+    ///   编码要发送的对象
     /// </summary>
     /// <param name="pvDataObject"> 要进行编码的对象 </param>
     /// <param name="ouBuf"> 编码好的数据 </param>
