@@ -6,8 +6,6 @@ uses
   Forms,
   ufrmMain in 'ufrmMain.pas' {frmMain},
   uClientContext in 'Handler\uClientContext.pas',
-  JSonStream in '..\..\Common\JSonStream.pas',
-  superobject in '..\..\Common\superobject.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   uBuffer in '..\..\..\Source\IOCP\uBuffer.pas',
   uIOCPCentre in '..\..\..\Source\IOCP\uIOCPCentre.pas',
@@ -24,9 +22,9 @@ uses
   uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
   uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
-  uCRCTools in '..\..\Common\uCRCTools.pas',
   uRunTimeINfoTools in '..\..\Common\uRunTimeINfoTools.pas',
-  uMyObject in '..\Common\uMyObject.pas';
+  uMyObject in '..\Common\uMyObject.pas',
+  uMyObjectCoder in 'Coder\uMyObjectCoder.pas';
 
 {$R *.res}
 

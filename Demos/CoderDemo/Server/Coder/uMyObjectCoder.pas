@@ -3,7 +3,7 @@ unit uMyObjectCoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer;
+  uIOCPCentre, uBuffer, uMyObject;
 
 type
   TMyObjectDecoder = class(TIOCPDecoder)
@@ -41,8 +41,18 @@ end;
 
 procedure TMyObjectEncoder.Encode(pvDataObject: TObject;
   const ouBuf: TBufferLink);
+var
+  lvMyObj:TMyObject;
+  lvOleLen, lvStringLen:Integer;
+
 begin
-  inherited;
+  lvMyObj := TMyObject(pvDataObject);
+  lvStringLen := Length(lvMyObj.DataString);
+
+
+  ouBuf.AddBuffer(@lvStringLen,sizeOf(Integer));
+
+
 
 end;
 
