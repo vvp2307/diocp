@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, uIOCPConsole, uMyObjectCoder,
+  Dialogs, StdCtrls, uIOCPConsole, uMyObjectCoder, uOleVariantConverter,
   ExtCtrls,
   ComCtrls;
 
@@ -16,11 +16,12 @@ type
     edtPort: TEdit;
     btnIOCPAPIRun: TButton;
     btnStopSevice: TButton;
-    procedure btnConnectionConfigClick(Sender: TObject);
+    btn1: TButton;
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure btnStopSeviceClick(Sender: TObject);
+    procedure btn1Click(Sender: TObject);
   private
     { Private declarations }
     FIOCPConsole: TIOCPConsole;
@@ -78,38 +79,28 @@ begin
   inherited Destroy;
 end;
 
-procedure TfrmMain.btnConnectionConfigClick(Sender: TObject);
+procedure TfrmMain.btn1Click(Sender: TObject);
 var
-  lvConn, lvNewConn:TUniConnection;
-  lvConnectDialog:TUniConnectDialog;
+  ole, lvOle02:OleVariant;
+  lvStream:TMemoryStream;
 begin
-  lvConn := TUniConnection.Create(nil);
-  lvConnectDialog := TUniConnectDialog.Create(nil);
-  try   
-    lvConn.ConnectString := TUniConfigTools.getConnectionString(txtAccount.Text);
-    lvConn.ConnectDialog :=lvConnectDialog;
-    lvConnectDialog.StoreLogInfo := false;
-    lvConnectDialog.OptionChanged;
-    lvConnectDialog.Caption := '配置帐套[' +txtAccount.Text + ']数据库连接';
-    lvConnectDialog.ConnectButton := '确定';
-    lvConnectDialog.CancelButton := '取消';
 
-    lvConnectDialog.SavePassword := true;
-    if lvConn.ConnectDialog.Execute then
-    begin
-      lvNewConn := TUniConnection.Create(nil);
-      try
-        lvNewConn.ConnectString := lvConn.ConnectString;
-        lvNewConn.LoginPrompt := False;
-        lvNewConn.Connect;
-      finally
-        lvNewConn.Free;
-      end;
-      TUniConfigTools.saveConnectionString(txtAccount.Text, lvConn.ConnectString);
-    end;
+  lvStream := TMemoryStream.Create;
+  try
+
+    ole :=VarArrayCreate([0, 1], varVariant);
+    ole[0]:= Now();;
+    ole[1]:= 'abc';
+    WriteOleVariant(ole, lvStream);
+
+    lvStream.Position := 0;
+
+    lvOle02 := ReadOleVariant(lvStream);
+
+    showMessage(lvOle02[1]);
+
   finally
-    lvConn.Free;
-    lvConnectDialog.Free;
+    lvStream.Free;
   end;
 end;
 
@@ -120,7 +111,6 @@ end;
 
 procedure TfrmMain.btnIOCPAPIRunClick(Sender: TObject);
 begin
-  TUniPool.reset;
   if not FIOCPConsole.Active then
   begin
     //注册扩展客户端类
@@ -131,8 +121,6 @@ begin
 
     //注册编码器
     TIOCPContextFactory.instance.registerEncoder(FEncoder);
-
-    //FIOCPConsole.WorkerCount := 1;
     FIOCPConsole.Port := StrToInt(edtPort.Text);
     FIOCPConsole.open;
   end;

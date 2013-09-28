@@ -24,7 +24,8 @@ uses
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
   uRunTimeINfoTools in '..\..\Common\uRunTimeINfoTools.pas',
   uMyObject in '..\Common\uMyObject.pas',
-  uMyObjectCoder in 'Coder\uMyObjectCoder.pas';
+  uMyObjectCoder in 'Coder\uMyObjectCoder.pas',
+  uOleVariantConverter in '..\Common\uOleVariantConverter.pas';
 
 {$R *.res}
 
