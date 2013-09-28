@@ -55,6 +55,8 @@ object frmMain: TfrmMain
       ImageIndex = 1
       ExplicitLeft = 0
       ExplicitTop = 28
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
   end
 end

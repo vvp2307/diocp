@@ -48,8 +48,6 @@ var
 begin
   lvMyObj := TMyObject(pvDataObject);
   lvStringLen := Length(lvMyObj.DataString);
-
-
   ouBuf.AddBuffer(@lvStringLen,sizeOf(Integer));
 
 
