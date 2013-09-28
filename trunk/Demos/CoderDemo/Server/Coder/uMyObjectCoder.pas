@@ -3,7 +3,7 @@ unit uMyObjectCoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, uMyObject;
+  uIOCPCentre, uBuffer, uMyObject, Classes, Variants;
 
 type
   TMyObjectDecoder = class(TIOCPDecoder)
@@ -28,9 +28,35 @@ type
     procedure Encode(pvDataObject:TObject; const ouBuf: TBufferLink); override;
   end;
 
+procedure VariantToStream(const Data: OleVariant; Stream: TStream);
+function StreamToVariant(Stream: TStream): OleVariant;
+
 implementation
 
-{ TMyObjectDecoder }
+procedure VariantToStream(const Data: OleVariant; Stream: TStream);
+var p: Pointer;
+begin
+  p := VarArrayLock(Data);
+  try
+    Stream.Write(p^, VarArrayHighBound(Data, 1) + 1); //assuming low bound = 0
+  finally
+    VarArrayUnlock(Data);
+  end;
+end;
+
+function StreamToVariant(Stream: TStream): OleVariant;
+var p: Pointer;
+begin
+  Result := VarArrayCreate([0, Stream.Size - 1], varByte);
+  p := VarArrayLock(Result);
+  try
+    Stream.Position := 0; //start from beginning of stream
+    Stream.ReadBuffer(p^, Stream.Size);
+  finally
+    VarArrayUnlock(Result);
+  end;
+end;
+
 
 function TMyObjectDecoder.Decode(const inBuf: TBufferLink): TObject;
 begin
