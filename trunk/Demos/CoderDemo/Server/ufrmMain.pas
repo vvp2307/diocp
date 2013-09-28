@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
-  ExtCtrls, superobject,
-  ComCtrls, UniDacVcl,SQLServerUniProvider;
+  Dialogs, StdCtrls, uIOCPConsole, uMyObjectCoder,
+  ExtCtrls,
+  ComCtrls;
 
 type
   TfrmMain = class(TForm)
@@ -24,8 +24,8 @@ type
   private
     { Private declarations }
     FIOCPConsole: TIOCPConsole;
-    FDecoder:TIOCPJSonStreamDecoder;
-    FEncoder:TIOCPJSonStreamEncoder;
+    FDecoder:TMyObjectDecoder;
+    FEncoder:TMyObjectEncoder;
   protected
   public
     constructor Create(AOwner: TComponent); override;
@@ -39,15 +39,15 @@ implementation
 
 uses
   uIOCPCentre, uClientContext, uBuffer, uMemPool, uIOCPDebugger,
-  uFMIOCPDebugINfo, Uni, uUniConfigTools, uUniPool;
+  uFMIOCPDebugINfo;
 
 {$R *.dfm}
 
 constructor TfrmMain.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FDecoder := TIOCPJSonStreamDecoder.Create;
-  FEncoder := TIOCPJSonStreamEncoder.Create;
+  FDecoder := TMyObjectDecoder.Create;
+  FEncoder := TMyObjectEncoder.Create;
 
   FIOCPConsole := TIOCPConsole.Create();
 
