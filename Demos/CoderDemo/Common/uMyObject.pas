@@ -6,10 +6,10 @@ type
   TMyObject = class(TObject)
   private
     FDataString:String;
-    FOle:Variant;
+    FOle:OleVariant;
   public
     property DataString:String read FDataString write FDataString;
-    property Ole:Variant read FOle write FOle;
+    property Ole:OleVariant read FOle write FOle;
   end;
 
 implementation

@@ -3,7 +3,7 @@ unit uMyObjectCoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, uMyObject, Classes, Variants;
+  uIOCPCentre, uBuffer, uMyObject, Classes, Variants, uOleVariantConverter;
 
 type
   TMyObjectDecoder = class(TIOCPDecoder)
@@ -24,7 +24,9 @@ type
     ///   编码要发送的对象
     /// </summary>
     /// <param name="pvDataObject"> 要进行编码的对象 </param>
-    /// <param name="ouBuf"> 编码好的数据 </param>
+    /// <param name="ouBuf"> 编码好的数据
+    ///   字符串长度+ole长度 + 字符串数据 + Ole数据
+    /// </param>
     procedure Encode(pvDataObject:TObject; const ouBuf: TBufferLink); override;
   end;
 
@@ -69,15 +71,30 @@ procedure TMyObjectEncoder.Encode(pvDataObject: TObject;
   const ouBuf: TBufferLink);
 var
   lvMyObj:TMyObject;
+  lvOleStream:TMemoryStream;
   lvOleLen, lvStringLen:Integer;
-
 begin
   lvMyObj := TMyObject(pvDataObject);
-  lvStringLen := Length(lvMyObj.DataString);
-  ouBuf.AddBuffer(@lvStringLen,sizeOf(Integer));
 
+  lvOleStream := TMemoryStream.Create;
+  try
+    WriteOleVariant(lvMyObj.Ole, lvOleStream);
+    lvOleLen := lvOleStream.Size;
+    lvOleStream.Position := 0;
 
+    //字符串长度+ole长度 + 字符串数据 + Ole数据
+    lvStringLen := Length(AnsiString(lvMyObj.DataString));
 
+    ouBuf.AddBuffer(@lvStringLen,sizeOf(Integer));
+
+    ouBuf.AddBuffer(@lvOleLen,sizeOf(Integer));
+
+    ouBuf.AddBuffer(PAnsiChar(AnsiString(lvMyObj.DataString)), lvStringLen);
+
+    ouBuf.AddBuffer(lvOleStream.Memory, lvOleLen);
+  finally
+    lvOleStream.Free;
+  end;
 end;
 
 end.

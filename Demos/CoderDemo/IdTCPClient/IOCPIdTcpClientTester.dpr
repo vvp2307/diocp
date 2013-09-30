@@ -16,7 +16,8 @@ uses
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   uIdTcpClientJSonStreamCoder in '..\..\IOCPCoder\uIdTcpClientJSonStreamCoder.pas',
   uIOCPProtocol in '..\..\..\Source\IOCP\uIOCPProtocol.pas',
-  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas';
+  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas',
+  uOleVariantConverter in '..\Common\uOleVariantConverter.pas';
 
 {$R *.res}
 

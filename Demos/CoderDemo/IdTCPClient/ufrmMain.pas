@@ -26,9 +26,14 @@ type
     cdsMain: TClientDataSet;
     dsMain: TDataSource;
     btnOpenSQL: TButton;
+    Button1: TButton;
+    cdsTemp: TClientDataSet;
+    dbgrdTemp: TDBGrid;
+    dsTemp: TDataSource;
     procedure btnCloseSocketClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
     procedure btnOpenSQLClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     procedure refreshState;
   public
@@ -45,7 +50,7 @@ implementation
 uses
   ComObj, superobject, uMemoLogger,
   uSocketTools, JSonStream, IdGlobal, uNetworkTools,
-  uIdTcpClientJSonStreamCoder, uCRCTools, Math;
+  uIdTcpClientJSonStreamCoder, uCRCTools, Math, uOleVariantConverter;
 
 {$R *.dfm}
 
@@ -132,6 +137,34 @@ begin
     lvSendObj.Free;
     lvRecvObj.Free;
   end;
+end;
+
+procedure TfrmMain.Button1Click(Sender: TObject);
+var
+  ole, lvOle02:OleVariant;
+  lvStream:TMemoryStream;
+begin
+
+  lvStream := TMemoryStream.Create;
+  try
+
+    ole :=VarArrayCreate([0, 1], varVariant);
+    ole[0]:= Now();;
+    ole[1]:= cdsMain.Data;
+    WriteOleVariant(ole, lvStream);
+
+    lvStream.Position := 0;
+
+    lvOle02 := ReadOleVariant(lvStream);
+
+    cdsTemp.Data := lvOle02[1];
+
+    showMessage(lvOle02[0]);
+
+  finally
+    lvStream.Free;
+  end;
+
 end;
 
 end.
