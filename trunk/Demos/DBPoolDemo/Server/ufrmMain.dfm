@@ -78,7 +78,6 @@ object frmMain: TfrmMain
         Top = 13
         Width = 185
         Height = 21
-        ItemHeight = 13
         ItemIndex = 0
         TabOrder = 1
         Text = 'account2013'
