@@ -54,7 +54,7 @@ type
     constructor Create;
 
     destructor Destroy; override;
-    
+
     function createContext(ASocket: TSocket): TIOCPClientContext;
 
     procedure getUsingList(pvList:TList);
@@ -176,6 +176,9 @@ type
 
   TIOCPClientContext = class(TObject)
   private
+    //正常释放
+    FNormalFree:Boolean;
+    
     FRemoteAddr:String;
     FRemotePort:Integer;
 
@@ -867,6 +870,12 @@ end;
 
 destructor TIOCPClientContext.Destroy;
 begin
+  if not FNormalFree then
+  begin
+    //非正常Free,记录日志
+    TIOCPFileLogger.logErrMessage('TIOCPClientContext.Destroy,被非正常释放,请检测代码');
+  end;
+  
   closeClientSocket;
   FBuffers.Free;
   FBuffers := nil;
@@ -1160,7 +1169,15 @@ begin
   try
     while FList.Count > 0 do
     begin
-      TIOCPClientContext(FList[0]).Free;
+      try
+        TIOCPClientContext(FList[0]).FNormalFree := true;
+        TIOCPClientContext(FList[0]).Free;
+      except    //屏蔽非法错误
+        on E:Exception do
+        begin
+          TIOCPFileLogger.logDebugMessage('TIOCPContextPool.clear,您的代码存在BUG(非法操作一个TIOCPClientContext对象进行手动释放),释放一个TIOCPClientContext对象时出错,' + e.Message);
+        end;
+      end;
       FList.Delete(0);
     end;
   finally
@@ -1181,28 +1198,38 @@ begin
 //  context := nil;
   FCS.Enter;
   try
-    if not context.FUsing then exit;  //已经回收
-
     try
+      if not context.FUsing then exit;  //已经回收
+
       //关闭
       context.CloseClientSocket;
       context.StateINfo := '关闭连接';
+
+
+      //重置<复位>
+      context.Reset;
+
+      FList.Add(context);
+      context.StateINfo := '已经回归到池!';
+
+      FUsingList.Remove(context);
+
+      Dec(FBusyCount);
     except
       on E:Exception do
       begin
-        TIOCPFileLogger.logErrMessage('回收context时执行CloseClientSocket出现了异常!' + e.Message);
+        TIOCPFileLogger.logErrMessage(
+          '回收context时执行TIOCPContextPool.freeContext出现了异常,对象可能已经被损坏(进行对象的释放)!' + e.Message);
+
+        try
+           if FUsingList.Remove(context) > 0 then Dec(FBusyCount);
+           FList.Remove(context);            
+           TIOCPClientContext(FList[0]).FNormalFree := true;
+           TIOCPClientContext(FList[0]).Free;
+        except
+        end;  
       end;
     end;
-
-    //重置<复位>
-    context.Reset;
-
-    FList.Add(context);
-    context.StateINfo := '已经回归到池!';
-
-    FUsingList.Remove(context);
-
-    Dec(FBusyCount);
   finally
     FCS.Leave;
   end;
