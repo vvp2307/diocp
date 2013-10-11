@@ -16,12 +16,12 @@ type
     edtPort: TEdit;
     btnIOCPAPIRun: TButton;
     btnStopSevice: TButton;
-    btn1: TButton;
+    btnTestOle: TButton;
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure btnStopSeviceClick(Sender: TObject);
-    procedure btn1Click(Sender: TObject);
+    procedure btnTestOleClick(Sender: TObject);
   private
     { Private declarations }
     FIOCPConsole: TIOCPConsole;
@@ -79,7 +79,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TfrmMain.btn1Click(Sender: TObject);
+procedure TfrmMain.btnTestOleClick(Sender: TObject);
 var
   ole, lvOle02:OleVariant;
   lvStream:TMemoryStream;

@@ -49,14 +49,14 @@ object frmMain: TfrmMain
         TabOrder = 2
         OnClick = btnStopSeviceClick
       end
-      object btn1: TButton
-        Left = 352
-        Top = 192
-        Width = 75
+      object btnTestOle: TButton
+        Left = 8
+        Top = 104
+        Width = 129
         Height = 25
-        Caption = 'btn1'
+        Caption = #27979#35797'Ole'#30340#36716#25442
         TabOrder = 3
-        OnClick = btn1Click
+        OnClick = btnTestOleClick
       end
     end
     object tsMoniter: TTabSheet
