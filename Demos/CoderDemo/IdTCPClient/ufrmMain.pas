@@ -9,7 +9,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, 
   IdBaseComponent, IdComponent, IdTCPConnection,
-  IdTCPClient, ExtCtrls, Grids, DBGrids, DB, DBClient;
+  IdTCPClient, ExtCtrls, Grids, DBGrids, DB, DBClient, uMyObjectIdTcpClientCoder;
 
 type
   TfrmMain = class(TForm)
@@ -17,23 +17,13 @@ type
     btnC_01: TButton;
     btnCloseSocket: TButton;
     edtPort: TEdit;
-    mmoSQL: TMemo;
     IdTCPClient: TIdTCPClient;
-    txtAccount: TComboBox;
-    lblaccountID: TLabel;
     pnlTopOperator: TPanel;
-    dbgrdMain: TDBGrid;
-    cdsMain: TClientDataSet;
-    dsMain: TDataSource;
-    btnOpenSQL: TButton;
     Button1: TButton;
-    cdsTemp: TClientDataSet;
-    dbgrdTemp: TDBGrid;
-    dsTemp: TDataSource;
+    btnTestSendMyObject: TButton;
     procedure btnCloseSocketClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
-    procedure btnOpenSQLClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure btnTestSendMyObjectClick(Sender: TObject);
   private
     procedure refreshState;
   public
@@ -48,9 +38,7 @@ var
 implementation
 
 uses
-  ComObj, superobject, uMemoLogger,
-  uSocketTools, JSonStream, IdGlobal, uNetworkTools,
-  uIdTcpClientJSonStreamCoder, uCRCTools, Math, uOleVariantConverter;
+  ComObj, uMyObject,  Math, uOleVariantConverter;
 
 {$R *.dfm}
 
@@ -73,7 +61,7 @@ begin
   btnCloseSocket.Enabled := IdTCPClient.Connected;
   btnC_01.Enabled := not IdTCPClient.Connected;
 
-  btnOpenSQL.Enabled := btnCloseSocket.Enabled;
+  btnTestSendMyObject.Enabled := btnCloseSocket.Enabled;
 end;
 
 procedure TfrmMain.btnCloseSocketClick(Sender: TObject);
@@ -93,78 +81,38 @@ begin
   IdTCPClient.Connect;
 
   refreshState;
-
 end;
 
-procedure TfrmMain.btnOpenSQLClick(Sender: TObject);
+procedure TfrmMain.btnTestSendMyObjectClick(Sender: TObject);
 var
-  lvRecvObj, lvSendObj:TJsonStream;
-  i, l, lvSize:Integer;
-  lvData:AnsiString;
+  lvSendObj, lvRecvObj:TMyObject;
+  ole:OleVariant;
 begin
-  lvSendObj := TJsonStream.Create;
-  lvRecvObj := TJsonStream.Create;
+  lvSendObj := TMyObject.Create;
+  lvRecvObj := TMyObject.Create;
   try
-    lvSendObj.Clear();
 
-    //帐套ID
-    lvSendObj.Json.S['config.accountID'] := txtAccount.Text;
+    //测试数据
+    lvSendObj.DataString := '字符串数据abcd###VVV';
+    ole :=VarArrayCreate([0, 1], varVariant);
+    ole[0]:= Now();
+    ole[1]:= True;
+    lvSendObj.Ole := ole;
 
-    //执行SQL的命令ID
-    lvSendObj.Json.I['cmdIndex'] := 1001;
+    //发送对象
+    TMyObjectCoderTools.Encode(self.IdTCPClient, lvSendObj);
 
-    //要执行的SQL
-    lvSendObj.Json.S['script.sql'] := mmoSQL.Lines.Text;
+    //接收对象
+    TMyObjectCoderTools.Decode(self.IdTCPClient, lvRecvObj);
 
-    //发送到服务端进行处理<使用Indy进行传输>,如果需要使用ICS，可以在IOCPCoder文件夹中找到对应的uICSClientJSonStreamCoder.pas单元
-    TIdTcpClientJSonStreamCoder.Encode(self.IdTCPClient, lvSendObj);
-
-    //接收服务端处理的数据<使用Indy接收数据>
-    TIdTcpClientJSonStreamCoder.Decode(self.IdTCPClient, lvRecvObj);
-    if not lvRecvObj.getResult then
-    begin
-      raise Exception.Create(lvRecvObj.getResultMsg);
-    end;
-
-    //获取数据
-    SetLength(lvData, lvRecvObj.Stream.Size);
-    lvRecvObj.Stream.Position := 0;
-    lvRecvObj.Stream.ReadBuffer(lvData[1], lvRecvObj.Stream.Size);
-
-    //放入CDS的XMLDATA
-    cdsMain.XMLData := lvData;
+    //显示测试数据
+    ShowMessage(lvRecvObj.DataString);
+    ShowMessage(lvRecvObj.Ole[0]);
+    ShowMessage(lvRecvObj.Ole[1]);
   finally
     lvSendObj.Free;
     lvRecvObj.Free;
   end;
-end;
-
-procedure TfrmMain.Button1Click(Sender: TObject);
-var
-  ole, lvOle02:OleVariant;
-  lvStream:TMemoryStream;
-begin
-
-  lvStream := TMemoryStream.Create;
-  try
-
-    ole :=VarArrayCreate([0, 1], varVariant);
-    ole[0]:= Now();;
-    ole[1]:= cdsMain.Data;
-    WriteOleVariant(ole, lvStream);
-
-    lvStream.Position := 0;
-
-    lvOle02 := ReadOleVariant(lvStream);
-
-    cdsTemp.Data := lvOle02[1];
-
-    showMessage(lvOle02[0]);
-
-  finally
-    lvStream.Free;
-  end;
-
 end;
 
 end.
