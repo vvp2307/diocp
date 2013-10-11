@@ -37,14 +37,14 @@ var
 begin
   lvMyObject := TMyObject(pvDataObject);
   try
-
+    //直接回传
+    writeObject(lvMyObject);
   except
     on E:Exception do
     begin
       lvMyObject.DataString := E.Message;
       writeObject(lvMyObject);
     end;
-
   end;
 end;
 

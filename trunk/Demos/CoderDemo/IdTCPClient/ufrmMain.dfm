@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'frmMain'
-  ClientHeight = 426
-  ClientWidth = 654
+  ClientHeight = 212
+  ClientWidth = 684
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,18 +16,12 @@ object frmMain: TfrmMain
   object pnlTopOperator: TPanel
     Left = 0
     Top = 0
-    Width = 654
+    Width = 684
     Height = 209
     Align = alTop
     Caption = 'pnlTopOperator'
     TabOrder = 0
-    object lblaccountID: TLabel
-      Left = 65
-      Top = 40
-      Width = 48
-      Height = 13
-      Caption = #36873#21462#24080#22871
-    end
+    ExplicitTop = -5
     object btnC_01: TButton
       Left = 8
       Top = 8
@@ -62,74 +56,23 @@ object frmMain: TfrmMain
       TabOrder = 3
       Text = '9983'
     end
-    object mmoSQL: TMemo
-      Left = 8
-      Top = 64
-      Width = 529
-      Height = 130
-      Lines.Strings = (
-        'select top 100 * from bas_Material')
-      TabOrder = 4
-    end
-    object txtAccount: TComboBox
-      Left = 119
-      Top = 37
-      Width = 121
-      Height = 21
-      ItemHeight = 13
-      ItemIndex = 0
-      TabOrder = 5
-      Text = 'account2013'
-      Items.Strings = (
-        'account2013'
-        'account2012')
-    end
-    object btnOpenSQL: TButton
-      Left = 543
-      Top = 62
-      Width = 75
-      Height = 25
-      Caption = #25171#24320'SQL'
-      TabOrder = 6
-      OnClick = btnOpenSQLClick
-    end
     object Button1: TButton
       Left = 543
       Top = 169
       Width = 75
       Height = 25
       Caption = 'Button1'
-      TabOrder = 7
-      OnClick = Button1Click
+      TabOrder = 4
     end
-  end
-  object dbgrdMain: TDBGrid
-    Left = 0
-    Top = 209
-    Width = 654
-    Height = 119
-    Align = alClient
-    DataSource = dsMain
-    TabOrder = 1
-    TitleFont.Charset = DEFAULT_CHARSET
-    TitleFont.Color = clWindowText
-    TitleFont.Height = -11
-    TitleFont.Name = 'Tahoma'
-    TitleFont.Style = []
-  end
-  object dbgrdTemp: TDBGrid
-    Left = 0
-    Top = 328
-    Width = 654
-    Height = 98
-    Align = alBottom
-    DataSource = dsTemp
-    TabOrder = 2
-    TitleFont.Charset = DEFAULT_CHARSET
-    TitleFont.Color = clWindowText
-    TitleFont.Height = -11
-    TitleFont.Name = 'Tahoma'
-    TitleFont.Style = []
+    object btnTestSendMyObject: TButton
+      Left = 8
+      Top = 62
+      Width = 105
+      Height = 25
+      Caption = 'SendMyObject'
+      TabOrder = 5
+      OnClick = btnTestSendMyObjectClick
+    end
   end
   object IdTCPClient: TIdTCPClient
     ConnectTimeout = 0
@@ -138,27 +81,5 @@ object frmMain: TfrmMain
     ReadTimeout = -1
     Left = 584
     Top = 8
-  end
-  object cdsMain: TClientDataSet
-    Aggregates = <>
-    Params = <>
-    Left = 328
-    Top = 264
-  end
-  object dsMain: TDataSource
-    DataSet = cdsMain
-    Left = 360
-    Top = 264
-  end
-  object cdsTemp: TClientDataSet
-    Aggregates = <>
-    Params = <>
-    Left = 320
-    Top = 216
-  end
-  object dsTemp: TDataSource
-    DataSet = cdsTemp
-    Left = 352
-    Top = 216
   end
 end
