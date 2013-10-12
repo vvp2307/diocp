@@ -16,7 +16,6 @@ uses
   uBuffer in '..\..\..\Source\IOCP\uBuffer.pas',
   uIOCPCentre in '..\..\..\Source\IOCP\uIOCPCentre.pas',
   uIOCPConsole in '..\..\..\Source\IOCP\uIOCPConsole.pas',
-  uIOCPContextPool in '..\..\..\Source\IOCP\uIOCPContextPool.pas',
   uIOCPFileLogger in '..\..\..\Source\IOCP\uIOCPFileLogger.pas',
   uIOCPProtocol in '..\..\..\Source\IOCP\uIOCPProtocol.pas',
   uIOCPTools in '..\..\..\Source\IOCP\uIOCPTools.pas',
@@ -32,7 +31,8 @@ uses
   CDSOperatorWrapper in '..\Common\CDSOperatorWrapper.pas',
   uDBAccessOperator in '..\Common\uDBAccessOperator.pas',
   uICDSOperator in '..\Common\uICDSOperator.pas',
-  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
+  uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas';
 
 {$R *.res}
 
