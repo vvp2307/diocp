@@ -27,6 +27,8 @@ type
     procedure SetActive(const Value: Boolean);
     { Private declarations }
   public
+    class function createAsChild(pvParent:TWinControl;
+      pvIOCPConsole:TIOCPConsole):TFMIOCPDebugINfo;
     property Active: Boolean read GetActive write SetActive;
     property IOCPConsole: TIOCPConsole read FIOCPConsole write FIOCPConsole; 
     
@@ -42,6 +44,15 @@ uses
 procedure TFMIOCPDebugINfo.btnResetClick(Sender: TObject);
 begin
   TIOCPDebugger.resetDebugINfo;
+end;
+
+class function TFMIOCPDebugINfo.createAsChild(pvParent: TWinControl;
+  pvIOCPConsole: TIOCPConsole): TFMIOCPDebugINfo;
+begin
+  Result := TFMIOCPDebugINfo.Create(pvParent.Owner);
+  Result.Parent := pvParent;
+  Result.Align := alClient;
+  Result.Active := true;
 end;
 
 function TFMIOCPDebugINfo.GetActive: Boolean;
