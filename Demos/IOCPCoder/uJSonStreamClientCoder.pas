@@ -36,7 +36,7 @@ type
 implementation
 
 uses
-  Windows, FileLogger, uTesterTools;
+  Windows, FileLogger;
 
 
 function TJSonStreamClientCoder.Decode(pvSocket: TClientSocket; pvObject:
@@ -67,7 +67,7 @@ begin
   lvJSonLength := TNetworkTools.ntohl(lvJSonLength);
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
 
-  TTesterTools.incRecvBytesSize(SizeOf(Integer) * 2);
+  //TTesterTools.incRecvBytesSize(SizeOf(Integer) * 2);
 
   //TFileLogger.instance.logDebugMessage('1102, ' + InttoStr(lvJSonLength) + ',' + intToStr(lvStreamLength));
 
@@ -85,7 +85,7 @@ begin
       while lvStream.Size < lvJSonLength do
       begin
         l := pvSocket.recvBuffer(@lvBufBytes[0], Min(lvRemain, (SizeOf(lvBufBytes))));
-        TTesterTools.incRecvBytesSize(l);
+        //TTesterTools.incRecvBytesSize(l);
         lvStream.WriteBuffer(lvBufBytes[0], l);
         lvRemain := lvRemain - l;
       end;
@@ -120,7 +120,7 @@ begin
     while lvStream.Size < lvStreamLength do
     begin
       l := pvSocket.recvBuffer(@lvBufBytes[0], Min(lvRemain, (SizeOf(lvBufBytes))));
-      TTesterTools.incRecvBytesSize(l);
+      //TTesterTools.incRecvBytesSize(l);
       lvStream.WriteBuffer(lvBufBytes[0], l);
       lvRemain := lvRemain - l;
     end;
@@ -203,14 +203,14 @@ begin
     //头信息和JSon数据
     pvSocket.sendStream(lvSendStream);
 
-    TTesterTools.incSendbytesSize(lvSendStream.Size);
+    //TTesterTools.incSendbytesSize(lvSendStream.Size);
   finally
     lvSendStream.Free;
   end;
 
   //
   pvSocket.sendStream(lvStream);
-  TTesterTools.incSendbytesSize(lvStream.Size);
+  //TTesterTools.incSendbytesSize(lvStream.Size);
   
 end;
 
