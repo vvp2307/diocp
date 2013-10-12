@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
-  ExtCtrls, uZipTools, types;
+  ExtCtrls, uZipTools, uIOCPProtocol;
 
 type
   TfrmMain = class(TForm)
@@ -110,7 +110,7 @@ end;
 procedure TfrmMain.Button1Click(Sender: TObject);
 var
   lvData:AnsiString;
-  lvBytes:TByteDynArray;
+  lvBytes:TIOCPBytes;
   lvStream:TStream;
 begin
   lvData := 'abcd中国包装总公司' + sLineBreak + '得不偿失11111111111111111111111111111111' + sLineBreak +
