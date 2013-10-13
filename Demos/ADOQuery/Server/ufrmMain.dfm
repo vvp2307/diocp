@@ -70,6 +70,10 @@ object frmMain: TfrmMain
     object tsTester: TTabSheet
       Caption = 'tsTester'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object btnADOQueryTester: TButton
         Left = 16
         Top = 136
