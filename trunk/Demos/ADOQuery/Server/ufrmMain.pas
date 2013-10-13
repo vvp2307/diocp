@@ -81,8 +81,9 @@ var
   lvStream:TMemoryStream;
 begin
   dmMain.qryMain.Active := true;
-  lvStream := TADOTools.saveToStream(dmMain.qryMain);
+  lvStream := TMemoryStream.Create();
   try
+    TADOTools.saveToStream(dmMain.qryMain, lvStream);
     lvStream.Position := 0;
     TADOTools.loadFromStream(self.qryMain, lvStream);
     ShowMessage(IntToStr(self.qryMain.RecordCount));

@@ -69,17 +69,11 @@ begin
         lvDebug := '打开SQL(ADOQuery.Open)耗时:' + intToStr(lvCounter) + sLineBreak;
 
         lvCounter := GetTickCount;
-        lvStream := TADOTools.saveToStream(lvADOQuery);
-        try
-          lvCounter := GetTickCount - lvCounter;
-          lvDebug := 'ADO流数据大小:' + FloatToStr(lvStream.Size/1000.00) + 'KB' + sLineBreak + lvDebug + '打包ADOQuery到流耗时:' + intToStr(lvCounter) + sLineBreak;
-          lvStream.Position := 0;
-          lvJsonStream.Json.S['debug'] := lvDebug;
-          lvJsonStream.Stream.CopyFrom(lvStream, lvStream.Size);
-          lvJsonStream.setResult(True);
-        finally
-          lvStream.Free;
-        end;
+        TADOTools.saveToStream(lvADOQuery, lvJsonStream.Stream);
+        lvCounter := GetTickCount - lvCounter;
+        lvDebug := 'ADO流数据大小:' + FloatToStr(lvJsonStream.Stream.Size/1000.00) + 'KB' + sLineBreak + lvDebug + '打包ADOQuery到流耗时:' + intToStr(lvCounter) + sLineBreak;
+        lvJsonStream.Json.S['debug'] := lvDebug;
+        lvJsonStream.setResult(True);
       finally
         lvADOQuery.Free;
       end;

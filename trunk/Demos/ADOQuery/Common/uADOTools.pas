@@ -8,15 +8,35 @@ uses
 type
   TADOTools = class(TObject)
   public
-    class function saveToStream(pvDataSet:TCustomADODataSet):TMemoryStream;
-    class procedure loadFromStream(pvDataSet:TCustomADODataSet; pvStream:TMemoryStream);
+    class function saveToStream2(pvDataSet:TCustomADODataSet):TMemoryStream;
+    class procedure loadFromStream2(pvDataSet:TCustomADODataSet; pvStream:TMemoryStream);
+
+    class procedure saveToStream(pvDataSet:TCustomADODataSet; pvStream:TStream);
+    class procedure loadFromStream(pvDataSet:TCustomADODataSet; pvStream:TStream);
   end;
 
 implementation
 
 { TADOTools }
 
+class procedure TADOTools.saveToStream(pvDataSet: TCustomADODataSet; pvStream:TStream);
+begin
+   OLEVariant(pvDataSet.Recordset).Save(TStreamAdapter.Create(pvStream) as IUnknown,
+      adPersistADTG);    //adPersistXML
+end;
+
 class procedure TADOTools.loadFromStream(pvDataSet: TCustomADODataSet;
+  pvStream: TStream);
+var
+   AR:_Recordset;
+begin
+   AR:=_Recordset(CoRecordset.Create);
+   pvStream.Position:=0;
+   AR.Open(TStreamAdapter.Create(pvStream) as IUnknown, EmptyParam,adOpenUnspecified, adLockUnspecified, -1);
+   pvDataSet.Recordset:=ADOInt._Recordset(AR);
+end;
+
+class procedure TADOTools.loadFromStream2(pvDataSet: TCustomADODataSet;
   pvStream: TMemoryStream);
 var
    V:OLEVariant;
@@ -24,10 +44,18 @@ var
    AStream:_Stream;
    P:Pointer;
 begin
+   pvStream.Position:=0;
+   OLEVariant(pvDataSet.Recordset).Open(TStreamAdapter.Create(pvStream) as IUnknown, adPersistADTG);
+
+
+   AR.Open(AStream, EmptyParam,adOpenUnspecified, adLockUnspecified, -1);
+   pvDataSet.Recordset:=ADOInt._Recordset(AR);
+
+
    V:=VarArrayCreate([0,pvStream.Size-1], varByte);
    P:=VarArrayLock(V);
    try
-     Move(pvStream.Memory^,P^, pvStream.Size);
+     Move(pvStream.Memory^, P^, pvStream.Size);
    finally
      VarArrayUnLock(V);
    end;
@@ -41,16 +69,19 @@ begin
    AStream.Position:=0;
    AR.Open(AStream,EmptyParam,adOpenUnspecified, adLockUnspecified, -1);
    pvDataSet.Recordset:=ADOInt._Recordset(AR);
+
 end;
 
-class function TADOTools.saveToStream(pvDataSet: TCustomADODataSet):TMemoryStream;
+
+class function TADOTools.saveToStream2(
+  pvDataSet: TCustomADODataSet): TMemoryStream;
 var
    AStream:_Stream;
    V:OLEVariant;
    P:Pointer;
 begin
    AStream:=CoStream.Create;
-   OLEVariant(pvDataSet.Recordset).Save(AStream,adPersistADTG);
+   OLEVariant(pvDataSet.Recordset).Save(AStream, adPersistADTG);
    AStream.Position:=0;
    V:=AStream.Read(AStream.Size);
    result:=TMemoryStream.Create;
