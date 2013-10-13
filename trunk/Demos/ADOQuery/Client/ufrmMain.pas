@@ -131,7 +131,7 @@ begin
       begin
         lvRecvObject.Stream.Position := 0;
         lvCounter := GetTickCount;
-        TADOTools.loadFromStream(qryMain, TMemoryStream(lvRecvObject.Stream));
+        TADOTools.loadFromStream(qryMain, lvRecvObject.Stream);
         lvCounter := GetTickCount-lvCounter;
         lvDebugStr := lvDebugStr + sLineBreak + '解压数据到数据集耗时:' + IntToStr(lvCounter);
       end;
