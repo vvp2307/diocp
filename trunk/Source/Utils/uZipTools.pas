@@ -9,7 +9,7 @@ unit uZipTools;
 interface
 
 uses
-  ZLib, Windows, Types, Classes, SysUtils, uIOCPProtocol;
+  ZLib, Windows, Classes, SysUtils, uIOCPProtocol;
 
 {$if CompilerVersion>= 23}
   {$define NEWZLib}
@@ -105,7 +105,7 @@ class function TZipTools.compressStream(const pvStream, pvZipStream:TStream):
     Boolean;
 var
   lvTmp: string;
-  lvBytes: TBytes;
+  lvBytes: TIOCPBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
   l: Integer;
