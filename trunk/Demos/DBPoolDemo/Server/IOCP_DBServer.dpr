@@ -36,7 +36,8 @@ uses
   uICDSOperator in '..\..\UniDACPool\uICDSOperator.pas',
   uUniConfigTools in '..\..\UniDACPool\uUniConfigTools.pas',
   uUniPool in '..\..\UniDACPool\uUniPool.pas',
-  uRunTimeINfoTools in '..\..\Common\uRunTimeINfoTools.pas';
+  uRunTimeINfoTools in '..\..\Common\uRunTimeINfoTools.pas',
+  CDSOperatorWrapper in '..\..\UniDACPool\CDSOperatorWrapper.pas';
 
 {$R *.res}
 
