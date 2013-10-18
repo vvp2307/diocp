@@ -208,7 +208,14 @@ type
 
     procedure invokeConnect;
     procedure invokeDisconnect;
+    procedure Lock;
+    procedure unLock;
 
+    procedure RecvBuffer(buf:PAnsiChar; len:Cardinal);
+
+    function AppendBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
+
+    function readBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
   protected
     //复位<回收时进行复位>
     procedure Reset; virtual;
@@ -221,8 +228,7 @@ type
     procedure DoDisconnect; virtual;
     procedure DoOnWriteBack; virtual;
   public
-    procedure Lock;
-    procedure unLock;
+
     procedure notifyStopWork; virtual;
 
     constructor Create(ASocket: TSocket = 0);
@@ -243,11 +249,7 @@ type
     /// <param name="pvDataObject"> (TObject) </param>
     procedure writeObject(const pvDataObject:TObject);
 
-    procedure RecvBuffer(buf:PAnsiChar; len:Cardinal);
 
-    function AppendBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
-
-    function readBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
 
     destructor Destroy; override;
 
