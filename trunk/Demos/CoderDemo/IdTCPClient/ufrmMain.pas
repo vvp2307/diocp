@@ -106,9 +106,9 @@ begin
     TMyObjectCoderTools.Decode(self.IdTCPClient, lvRecvObj);
 
     //显示测试数据
-    ShowMessage(lvRecvObj.DataString);
-    ShowMessage(lvRecvObj.Ole[0]);
-    ShowMessage(lvRecvObj.Ole[1]);
+    ShowMessage(lvRecvObj.DataString);   // '字符串数据abcd###VVV';
+    ShowMessage(lvRecvObj.Ole[0]);       // 时间
+    ShowMessage(lvRecvObj.Ole[1]);       // true
   finally
     lvSendObj.Free;
     lvRecvObj.Free;
