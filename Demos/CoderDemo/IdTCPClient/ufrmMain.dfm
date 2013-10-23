@@ -21,7 +21,6 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = 'pnlTopOperator'
     TabOrder = 0
-    ExplicitTop = -5
     object btnC_01: TButton
       Left = 8
       Top = 8
