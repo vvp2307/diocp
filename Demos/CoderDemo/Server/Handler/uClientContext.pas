@@ -37,6 +37,7 @@ var
 begin
   lvMyObject := TMyObject(pvDataObject);
   try
+    //Sleep(1000 * 60);
     //直接回传
     writeObject(lvMyObject);
   except
