@@ -699,7 +699,14 @@ begin
 
     if (lvClientContext<>nil) then
     begin
-      TIOCPContextFactory.instance.freeContext(lvClientContext);
+      //2013年10月24日 14:56:33
+      //如果逻辑正在处理，或者卡死，会导致工作线程被卡死
+      lvClientContext.Lock;
+      try
+        TIOCPContextFactory.instance.freeContext(lvClientContext);
+      finally
+        lvClientContext.unLock;
+      end;
     end;
     if lvIOData<>nil then
     begin
@@ -709,7 +716,14 @@ begin
   begin
     if (lvClientContext <> nil) then
     begin                       //已经关闭
-      TIOCPContextFactory.instance.freeContext(lvClientContext);
+      //2013年10月24日 14:56:33
+      //如果逻辑正在处理，或者卡死，会导致工作线程被卡死
+      lvClientContext.Lock;
+      try
+        TIOCPContextFactory.instance.freeContext(lvClientContext);
+      finally
+        lvClientContext.unLock;
+      end;
       lvClientContext := nil;
     end;
     if lvIOData<>nil then
@@ -818,25 +832,32 @@ var
    lvErr:Integer;
 begin
    if pvClientContext.FPostedCloseQuest then Exit;
-   
-   //初始化数据包
-   lvIOData := TIODataMemPool.instance.borrowIOData;
-   //数据包中的IO类型:关闭请求
-   lvIOData.IO_TYPE := IO_TYPE_Close;
 
-   //通知工作线程,有新的套接字连接<第三个参数>
-   if not PostQueuedCompletionStatus(
-      FIOCoreHandle,
-      1,   ///>>>传1, 0的话会断开连接
-      Cardinal(pvClientContext),
-      POverlapped(lvIOData)) then
-   begin
-     lvErr := GetLastError;
-     TIOCPFileLogger.logErrMessage('PostWSAClose>>PostQueuedCompletionStatus投递关闭请求失败!');
-   end else
-   begin   
-    pvClientContext.FPostedCloseQuest := true;
-    Result := true;
+
+   //启用互斥（避免在处理命令的时候投递关闭消息，并在工作线程中进行了处理)
+   pvClientContext.Lock;
+   try
+     //初始化数据包
+     lvIOData := TIODataMemPool.instance.borrowIOData;
+     //数据包中的IO类型:关闭请求
+     lvIOData.IO_TYPE := IO_TYPE_Close;
+
+     //通知工作线程,有新的套接字连接<第三个参数>
+     if not PostQueuedCompletionStatus(
+        FIOCoreHandle,
+        1,   ///>>>传1, 0的话会断开连接
+        Cardinal(pvClientContext),
+        POverlapped(lvIOData)) then
+     begin
+       lvErr := GetLastError;
+       TIOCPFileLogger.logErrMessage('PostWSAClose>>PostQueuedCompletionStatus投递关闭请求失败!');
+     end else
+     begin
+      pvClientContext.FPostedCloseQuest := true;
+      Result := true;
+     end;
+   finally
+     pvClientContext.unLock;
    end;
 end;
 
@@ -973,7 +994,6 @@ function TIOCPClientContext.PostWSAClose: Boolean;
 begin
   //已经回收
   if self.FUsing = false then Exit;
-
   Result :=FIOCPObject.PostWSAClose(Self);
 end;
 
