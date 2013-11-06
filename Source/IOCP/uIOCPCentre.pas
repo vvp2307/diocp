@@ -365,7 +365,8 @@ begin
       TIOCPTools.socketInitializeHeart(lvSocket);
     end;
 
-    ///
+
+    ///借用一个对象
     lvClientContext := TIOCPContextFactory.instance.createContext(lvSocket);
 
      //将套接字、完成端口客户端对象绑定在一起。
@@ -386,34 +387,6 @@ begin
 
      //有连接进入，投递一个接收
      PostWSARecv(lvClientContext);
-
-//     //初始化数据包
-//     lvIOData := TIODataMemPool.instance.borrowIOData;
-//
-//     //数据包中的IO类型:有连接请求
-//     lvIOData.IO_TYPE := IO_TYPE_Accept;
-//
-//     //通知工作线程,有新的套接字连接<第三个参数>
-//     if not PostQueuedCompletionStatus(
-//        FIOCoreHandle,
-//        1,   ///>>>传1, 0的话会断开连接
-//      {$if defined(NEED_NativeUInt)}
-//        NativeUInt(lvClientContext),
-//      {$ELSE}
-//        Cardinal(lvClientContext),
-//      {$ifend}
-//        POverlapped(lvIOData)) then
-//     begin
-//       //投递失败
-//       lvErr := GetLastError;
-//       TIOCPFileLogger.logErrMessage('acceptClient>>PostQueuedCompletionStatus投递连接请求失败!');
-//
-//       //关闭
-//       TIOCPContextFactory.instance.freeContext(lvClientContext);
-//
-//       //归还
-//       TIODataMemPool.instance.giveBackIOData(lvIOData);
-//     end;
   end;
 end;
 
