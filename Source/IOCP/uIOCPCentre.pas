@@ -182,6 +182,13 @@ type
     FRemoteAddr:String;
     FRemotePort:Integer;
 
+    //正在忙....
+    //是否正在忙
+    FIsBusying:Boolean;
+
+    //等待回收标记,等忙完进行回收
+    FWaitingGiveBack:Boolean;
+
     //正在使用
     FUsing:Boolean;
 
@@ -282,6 +289,9 @@ type
     function createContext(ASocket: TSocket): TIOCPClientContext;
 
     procedure freeContext(context: TIOCPClientContext);
+
+    //尝试进行关闭客户端，并进行回收
+    procedure tryExecuteCloseContext(context: TIOCPClientContext);
 
     /// <summary>
     ///   注册客户端处理类
@@ -674,12 +684,9 @@ begin
     begin
       //2013年10月24日 14:56:33
       //如果逻辑正在处理，或者卡死，会导致工作线程被卡死
-      lvClientContext.Lock;
-      try
-        TIOCPContextFactory.instance.freeContext(lvClientContext);
-      finally
-        lvClientContext.unLock;
-      end;
+      //尝试关闭并归还ClientContext
+      TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+      lvClientContext := nil;
     end;
     if lvIOData<>nil then
     begin
@@ -689,14 +696,9 @@ begin
   begin
     if (lvClientContext <> nil) then
     begin                       //已经关闭
-      //2013年10月24日 14:56:33
-      //如果逻辑正在处理，或者卡死，会导致工作线程被卡死
-      lvClientContext.Lock;
-      try
-        TIOCPContextFactory.instance.freeContext(lvClientContext);
-      finally
-        lvClientContext.unLock;
-      end;
+      //尝试关闭并归还ClientContext
+      TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+
       lvClientContext := nil;
     end;
     if lvIOData<>nil then
@@ -715,12 +717,26 @@ begin
         //已经接收字节数
         TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
         TIOCPDebugger.incRecvBlockCount;
-       
-        //加入到套接字对应的缓存中，处理逻辑
-        lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
-          lvIOData.Overlapped.InternalHigh);
 
-        TIODataMemPool.instance.giveBackIOData(lvIOData);
+        lvClientContext.Lock;
+        try
+          lvClientContext.FIsBusying := true;
+          //加入到套接字对应的缓存中，处理逻辑
+          lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
+            lvIOData.Overlapped.InternalHigh);
+        finally
+          lvClientContext.FIsBusying := false;
+          lvClientContext.unLock;
+        end;
+
+        //需要进行回收
+        if lvClientContext.FWaitingGiveBack then
+        begin
+          TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+        end else
+        begin   //不再进行逻辑的处理
+          TIODataMemPool.instance.giveBackIOData(lvIOData);
+        end;
       except
         ON E:Exception do
         begin
@@ -753,10 +769,9 @@ begin
       //回收数据块
       TIODataMemPool.instance.giveBackIOData(lvIOData);
 
-      //关闭回收lvClientContext,iocp队列中还存在对应socket的接收需求
-      TIOCPContextFactory.instance.freeContext(lvClientContext);
-      //不必要投递接收请求
-    end;    
+      //尝试关闭并归还ClientContext
+      TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+    end;
   end;
 end;
 
@@ -807,8 +822,11 @@ begin
    if pvClientContext.FPostedCloseQuest then Exit;
 
 
-   //启用互斥（避免在处理命令的时候投递关闭消息，并在工作线程中进行了处理)
-   pvClientContext.Lock;
+   //  不进行互斥，只是投递到工作IO队列中
+   //    2013年11月27日 19:25:55
+   //
+   //  启用互斥（避免在处理命令的时候投递关闭消息，并在工作线程中进行了处理)
+   //pvClientContext.Lock;
    try
      //初始化数据包
      lvIOData := TIODataMemPool.instance.borrowIOData;
@@ -830,7 +848,7 @@ begin
       Result := true;
      end;
    finally
-     pvClientContext.unLock;
+      // pvClientContext.unLock;
    end;
 end;
 
@@ -936,6 +954,7 @@ end;
 procedure TIOCPClientContext.Initialize4Use;
 begin
   FPostedCloseQuest := false;
+  FWaitingGiveBack := false;
   FBuffers.clearBuffer;
 end;
 
@@ -979,66 +998,63 @@ procedure TIOCPClientContext.RecvBuffer(buf:PAnsiChar; len:Cardinal);
 var
   lvObject:TObject;
 begin
-  self.Lock;
-  try
-    //加入到套接字对应的缓存
-    FBuffers.AddBuffer(buf, len);
+  //加入到套接字对应的缓存
+  FBuffers.AddBuffer(buf, len);
 
-    self.StateINfo := '接收到数据,准备进行解码';
+  self.StateINfo := '接收到数据,准备进行解码';
 
-    ////避免一次收到多个包时导致只调用了一次逻辑的处理(dataReceived);
-    ///  2013年9月26日 08:57:20
-    ///    感谢群内JOE找到bug。
-    while True do
+  ////避免一次收到多个包时导致只调用了一次逻辑的处理(dataReceived);
+  ///  2013年9月26日 08:57:20
+  ///    感谢群内JOE找到bug。
+  while True do
+  begin
+    lvObject := nil;
+    //调用注册的解码器<进行解码>
+    lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
+    if lvObject <> nil then
     begin
-      lvObject := nil;
-      //调用注册的解码器<进行解码>
-      lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
-      if lvObject <> nil then
-      begin
+      try
         try
-          try
-            self.StateINfo := '解码成功,准备调用dataReceived进行逻辑处理';
+          self.StateINfo := '解码成功,准备调用dataReceived进行逻辑处理';
 
-            TIOCPDebugger.incRecvObjectCount;
+          TIOCPDebugger.incRecvObjectCount;
 
-            //解码成功，调用业务逻辑的处理方法
-            dataReceived(lvObject);
+          //解码成功，调用业务逻辑的处理方法
+          dataReceived(lvObject);
 
-            self.StateINfo := 'dataReceived逻辑处理完成!';
-          except
-            on E:Exception do
-            begin
-              TIOCPFileLogger.logErrMessage('截获处理逻辑异常!' + e.Message);
-            end;
+          self.StateINfo := 'dataReceived逻辑处理完成!';
+        except
+          on E:Exception do
+          begin
+            TIOCPFileLogger.logErrMessage('截获处理逻辑异常!' + e.Message);
           end;
-        finally
-          lvObject.Free;
         end;
-      end else
-      begin
-        //缓存中没有可以使用的完整数据包,跳出循环
-        Break;
+      finally
+        lvObject.Free;
       end;
-    end;
-
-    //清理缓存<如果没有可用的内存块>清理
-    if FBuffers.validCount = 0 then
-    begin
-      FBuffers.clearBuffer;
     end else
     begin
-      FBuffers.clearHaveReadBuffer;
+      //缓存中没有可以使用的完整数据包,跳出循环
+      Break;
     end;
-  finally
-    self.unLock;
   end;
+
+  //清理缓存<如果没有可用的内存块>清理
+  if FBuffers.validCount = 0 then
+  begin
+    FBuffers.clearBuffer;
+  end else
+  begin
+    FBuffers.clearHaveReadBuffer;
+  end;
+
 end;
 
 procedure TIOCPClientContext.Reset;
 begin
   FUsing := false;
   FPostedCloseQuest := false;
+  FWaitingGiveBack := false;
   FBuffers.clearBuffer;
 end;
 
@@ -1065,6 +1081,27 @@ begin
   finally
     lvOutBuffer.Free;
   end;
+end;
+
+procedure TIOCPContextFactory.tryExecuteCloseContext(context:
+    TIOCPClientContext);
+begin
+    //如果正在忙则不进行回收,等待忙完后在进行回收
+    if context.FIsBusying then
+    begin
+      context.FWaitingGiveBack := true;
+    end else
+    begin
+      //如果连接正在处理逻辑,会导致阻塞
+      context.Lock;
+      try
+        //关闭回收lvClientContext,iocp队列中还存在对应socket的接收需求
+        freeContext(context);
+        //不必要投递接收请求
+      finally
+        context.unLock;
+      end;
+    end;
 end;
 
 constructor TIOCPContextFactory.Create;
@@ -1189,8 +1226,8 @@ end;
 
 procedure TIOCPContextPool.freeContext(context: TIOCPClientContext);
 begin
-//  context.Free;
-//  context := nil;
+  //  context.Free;
+  //  context := nil;
   FCS.Enter;
   try
     try
