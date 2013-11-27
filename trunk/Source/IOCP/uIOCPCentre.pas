@@ -714,39 +714,42 @@ begin
     end else if lvIOData.IO_TYPE = IO_TYPE_Recv then
     begin
       try
-        //已经接收字节数
-        TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
-        TIOCPDebugger.incRecvBlockCount;
-
-        lvClientContext.Lock;
         try
-          lvClientContext.FIsBusying := true;
-          //加入到套接字对应的缓存中，处理逻辑
-          lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
-            lvIOData.Overlapped.InternalHigh);
-        finally
-          lvClientContext.FIsBusying := false;
-          lvClientContext.unLock;
-        end;
+          //已经接收字节数
+          TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
+          TIOCPDebugger.incRecvBlockCount;
 
-        //需要进行回收
-        if lvClientContext.FWaitingGiveBack then
-        begin
-          TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
-        end else
-        begin   //不再进行逻辑的处理
-          TIODataMemPool.instance.giveBackIOData(lvIOData);
-        end;
-      except
-        ON E:Exception do
-        begin
-           TIOCPFileLogger.logErrMessage(
-             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:' + e.Message);
-        end;                                          
-      end;
+          lvClientContext.Lock;
+          try
+            lvClientContext.FIsBusying := true;
+            //加入到套接字对应的缓存中，处理逻辑
+            lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
+              lvIOData.Overlapped.InternalHigh);
+          finally
+            lvClientContext.FIsBusying := false;
+            lvClientContext.unLock;
+          end;
 
-      //继续投递接收请求
-      PostWSARecv(lvClientContext);
+          //需要进行回收
+          if lvClientContext.FWaitingGiveBack then
+          begin
+            TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+          end else
+          begin   //不再进行逻辑的处理
+            //继续投递接收请求
+            PostWSARecv(lvClientContext);
+          end;
+        except
+          ON E:Exception do
+          begin
+             TIOCPFileLogger.logErrMessage(
+               'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:' + e.Message);
+          end;
+        end;
+      finally
+        //内存块的回收是必须的
+        TIODataMemPool.instance.giveBackIOData(lvIOData);
+      end;  
     end else if lvIOData.IO_TYPE = IO_TYPE_Send then
     begin    //发送完成数据<WSASend>完成
 
