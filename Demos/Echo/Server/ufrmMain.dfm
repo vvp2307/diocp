@@ -121,6 +121,15 @@ object frmMain: TfrmMain
     Caption = 'Http'#26381#21153#22120
     TabOrder = 4
   end
+  object btnCloseAllConnection: TButton
+    Left = 480
+    Top = 115
+    Width = 201
+    Height = 25
+    Caption = 'btnCloseAllConnection'
+    TabOrder = 5
+    OnClick = btnCloseAllConnectionClick
+  end
   object tmrTestINfo: TTimer
     Enabled = False
     OnTimer = tmrTestINfoTimer

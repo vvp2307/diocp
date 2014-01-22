@@ -175,7 +175,7 @@ end;
 
 procedure TfrmMain.btnUploadClick(Sender: TObject);
 const
-  SEC_SIZE = 1024 * 4;
+  SEC_SIZE = 1024 * 4 * 1000;
   //SEC_SIZE = 10;
 var
   lvFileStream:TFileStream;

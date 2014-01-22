@@ -13,6 +13,9 @@ type
   protected
     function createObject: TObject; override;
   public
+    function beginUseObject: TObject; override;
+
+    procedure endUseObject(const pvObj:TObject); override;
     procedure InitializeConnectionString(pvServerName, pvDBName, pvUser,
         pvPassword: string; pvUseWindowsSecurity: Boolean = false); overload;
     procedure InitializeConnectionString(pvConnectionString:String); overload;
@@ -33,6 +36,13 @@ const
   C_03_DATABASE = 'Initial Catalog=%s;';
   C_04_END = 'Persist Security Info=True';
   C_04_NTLOGIN_END = 'Integrated Security=SSPI;Persist Security Info=False';
+
+function TADOConnectionPool.beginUseObject: TObject;
+begin
+  //暂时不用连接池....
+  // 
+  Result := createObject;  
+end;
 
 function TADOConnectionPool.createObject: TObject;
 begin
@@ -63,6 +73,11 @@ begin
     lvConnString := lvConnString + C_04_END;
 
   InitializeConnectionString(lvConnString);
+end;
+
+procedure TADOConnectionPool.endUseObject(const pvObj: TObject);
+begin
+  pvObj.Free;
 end;
 
 procedure TADOConnectionPool.InitializeConnectionString(

@@ -24,6 +24,8 @@ type
     lblSendAndRecvBytes: TLabel;
     btnReset: TButton;
     lblSendBytes: TLabel;
+    btnCloseAllConnection: TButton;
+    procedure btnCloseAllConnectionClick(Sender: TObject);
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnIOCPAPIRunClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
@@ -85,6 +87,11 @@ begin
   inherited Destroy;
 end;
 
+procedure TfrmMain.btnCloseAllConnectionClick(Sender: TObject);
+begin
+  FIOCPConsole.DisconnectAllClientContext;
+end;
+
 procedure TfrmMain.btnDiscountAllClientClick(Sender: TObject);
 begin
   FIOCPConsole.DisconnectAllClientContext;
@@ -116,7 +123,7 @@ begin
       TIOCPContextFactory.instance.registerEncoder(FEncoder);
     end;
 
-    //FIOCPConsole.WorkerCount := 1;
+    FIOCPConsole.WorkerCount := 2;
     FIOCPConsole.Port := StrToInt(edtPort.Text);
     FIOCPConsole.open;
     tmrTestINfo.Enabled := true;
