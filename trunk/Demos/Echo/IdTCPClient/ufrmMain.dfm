@@ -105,6 +105,15 @@ object frmMain: TfrmMain
     TabOrder = 9
     OnClick = btnSend100Click
   end
+  object btnKasi: TButton
+    Left = 8
+    Top = 376
+    Width = 161
+    Height = 25
+    Caption = #25191#34892#19968#20010#26381#21153#31471#21345#27515#30340#36923#36753
+    TabOrder = 10
+    OnClick = btnKasiClick
+  end
   object IdTCPClient: TIdTCPClient
     ConnectTimeout = 0
     IPVersion = Id_IPv4

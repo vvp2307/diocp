@@ -52,9 +52,9 @@ type
 
     destructor Destroy; override;
     
-    function beginUseObject: TObject;
+    function beginUseObject: TObject; virtual;
 
-    procedure endUseObject(const pvObj:TObject);
+    procedure endUseObject(const pvObj:TObject); virtual;
     
     property Count: Integer read FCount;
 
@@ -117,6 +117,9 @@ begin
   FUsingCount := 0;
   FUsableList := TList.Create;
   FCS := TCriticalSection.Create();
+
+
+
   checkSingle;
 end;
 

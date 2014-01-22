@@ -26,9 +26,11 @@ type
     IdTCPClient: TIdTCPClient;
     lblEchoINfo: TLabel;
     tmrEchoTester: TTimer;
+    btnKasi: TButton;
     procedure btnCloseSocketClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
     procedure btnEchoTesterClick(Sender: TObject);
+    procedure btnKasiClick(Sender: TObject);
     procedure btnSend100Click(Sender: TObject);
     procedure btnSendJSonStreamObjectClick(Sender: TObject);
     procedure btnStopEchoClick(Sender: TObject);
@@ -96,6 +98,41 @@ begin
     lvEchoTester.Client.Port := StrToInt(edtPort.Text);
     lvEchoTester.Resume;
     FTesterList.Add(lvEchoTester);
+  end;
+
+end;
+
+procedure TfrmMain.btnKasiClick(Sender: TObject);
+var
+  lvJSonStream, lvRecvObject:TJsonStream;
+  lvStream:TStream;
+  lvData:String;
+  l, j, x:Integer;
+begin
+  lvJSonStream := TJsonStream.Create;
+  try
+    lvJSonStream.JSon := SO();
+    lvJSonStream.JSon.I['cmdIndex'] := 2000;   //卡死逻辑
+    lvJSonStream.JSon.S['data'] := '测试发送打包数据';
+    lvJSonStream.JSon.S['key'] := CreateClassID;
+
+
+    TIdTcpClientJSonStreamCoder.Encode(self.IdTCPClient, lvJSonStream);
+
+    TMemoLogger.infoMsg('数据发送成功！', mmoLog.Lines);
+    lvRecvObject := TJsonStream.Create;
+    try
+      // TMemoLogger.infoMsg('数据接收成功！', mmoLog.Lines);
+      TIdTcpClientJSonStreamCoder.Decode(self.IdTCPClient, lvRecvObject);
+      
+      TMemoLogger.infoMsg('==============================================' + sLineBreak
+        + lvRecvObject.JSon.AsJSon(True)
+        , mmoLog.Lines);
+    finally
+       lvRecvObject.Free;
+    end;
+  finally
+    lvJSonStream.Free;
   end;
 
 end;

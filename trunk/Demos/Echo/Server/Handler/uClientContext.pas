@@ -46,6 +46,11 @@ begin
     InterlockedIncrement(TesterINfo.__RecvTimes);
     //回写数据
     writeObject(lvJsonStream);
+  end else if lvCmdIndex= 2000 then
+  begin
+    Sleep(1000 * 60 * 1);
+    //回写数据
+    writeObject(lvJsonStream);
   end else
   begin
     //返回数据
