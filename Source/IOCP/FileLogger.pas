@@ -13,6 +13,7 @@ type
     FBasePath: string;
     FLogFile: TextFile;
     FLocker: TCriticalSection;
+    function getThreadPreFile:String;
     function openLogFile(pvPre: String = ''): Boolean;
   public
     constructor Create;
@@ -66,6 +67,11 @@ begin
   inherited Destroy;
 end;
 
+function TFileLogger.getThreadPreFile: String;
+begin                                              
+  Result := Format('PID_%d_TID_%d ', [GetCurrentProcessID(),GetCurrentThreadID()]);
+end;
+
 { TFileLogger }
 
 procedure TFileLogger.checkReady;
@@ -114,8 +120,10 @@ procedure TFileLogger.logMessageWithoutLocker(pvMsg: string; pvLogFilePre:
     string = '');
 var
   lvPre:String;
+  lvFile:String;
 begin
-  if OpenLogFile(pvLogFilePre) then
+  lvFile := pvLogFilePre;//getThreadPreFile + '_' + pvLogFilePre;
+  if OpenLogFile(lvFile) then
   try
     lvPre := FormatDateTime('hh:nn:ss:zzz', Now) + ' ';
     if FAddThreadINfo then

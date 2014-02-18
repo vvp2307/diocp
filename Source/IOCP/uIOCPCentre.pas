@@ -360,7 +360,7 @@ begin
   //  Otherwise, a value of INVALID_SOCKET is returned,
   //  and a specific error code can be retrieved by calling WSAGetLastError.
 
-  addrlen := sizeof(addr);
+  //addrlen := sizeof(addr);
   //lvSocket := Accept(FSSocket, @addr, @addrlen);
   lvSocket := WSAAccept(FSSocket, nil, nil, nil, 0);
   if (lvSocket = INVALID_SOCKET) then
@@ -503,10 +503,13 @@ procedure TIOCPObject.PostWSARecv(const pvClientContext: TIOCPClientContext);
 var
   lvIOData:POVERLAPPEDEx;
   lvRet:Integer;
+  dwFlag:DWORD;
 begin
   /////分配内存<可以加入内存池>
   lvIOData := TIODataMemPool.instance.borrowIOData;
   lvIOData.IO_TYPE := IO_TYPE_Recv;
+
+  dwFlag := 0;
 
   /////异步收取数据
   if (WSARecv(pvClientContext.FSocket,
@@ -514,7 +517,7 @@ begin
      1,
      lvIOData.WorkBytes,
      lvIOData.WorkFlag,
-     @lvIOData^, nil) = SOCKET_ERROR) then
+     @lvIOData.Overlapped, nil) = SOCKET_ERROR) then
   begin
     //MSDN:
     //If no error occurs and the receive operation has completed immediately,
@@ -530,8 +533,8 @@ begin
     //表示数据尚未接收完成，如果有数据接收，GetQueuedCompletionStatus会有返回值
     if (lvRet <> WSA_IO_PENDING) then
     begin
-      TIODataMemPool.instance.giveBackIOData(lvIOData);      
-      
+      TIODataMemPool.instance.giveBackIOData(lvIOData);
+
       TIOCPFileLogger.logErrMessage('TIOCPObject.PostWSARecv,投递WSARecv出现异常,socket进行了关闭, 错误代码:' + IntToStr(lvRet));
 
       pvClientContext.PostWSAClose;
