@@ -28,7 +28,9 @@ uses
   uCRCTools in '..\..\..\..\Common\uCRCTools.pas',
   uFileOperaHandler in '..\..\Handler\uFileOperaHandler.pas',
   Qos in '..\..\..\..\..\Source\WinSock2\Qos.pas',
-  Winsock2 in '..\..\..\..\..\Source\WinSock2\Winsock2.pas';
+  Winsock2 in '..\..\..\..\..\Source\WinSock2\Winsock2.pas',
+  uMyTypes in '..\..\..\..\..\Source\IOCP\uMyTypes.pas',
+  uRunTimeINfoTools in '..\..\..\..\Common\uRunTimeINfoTools.pas';
 
 {$R *.res}
 

@@ -40,6 +40,7 @@
     <DCCReference Include="..\..\..\..\..\Source\IOCP\uIOCPTools.pas" />
     <DCCReference Include="..\..\..\..\..\Source\IOCP\uIOCPWorker.pas" />
     <DCCReference Include="..\..\..\..\..\Source\IOCP\uMemPool.pas" />
+    <DCCReference Include="..\..\..\..\..\Source\IOCP\uMyTypes.pas" />
     <DCCReference Include="..\..\..\..\..\Source\IOCP\uSocketListener.pas" />
     <DCCReference Include="..\..\..\..\..\Source\Utils\FastMM4.pas" />
     <DCCReference Include="..\..\..\..\..\Source\Utils\FastMM4Messages.pas" />
@@ -53,6 +54,7 @@
       <Form>FMIOCPDebugINfo</Form>
       <DesignClass>TFrame</DesignClass>
     </DCCReference>
+    <DCCReference Include="..\..\..\..\Common\uRunTimeINfoTools.pas" />
     <DCCReference Include="..\..\..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas" />
     <DCCReference Include="..\..\..\..\IOCPCoder\uIOCPJSonStreamEncoder.pas" />
     <DCCReference Include="..\..\..\..\IOCPCoder\uNetworkTools.pas" />
