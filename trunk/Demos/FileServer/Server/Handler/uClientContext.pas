@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Winsock2, uBuffer, SyncObjs, Classes, SysUtils,
-  uIOCPCentre, JSonStream;
+  uIOCPCentre, JSonStream, FileLogger;
 
 type
   TClientContext = class(TIOCPClientContext)
@@ -43,7 +43,7 @@ begin
   lvJsonStream := TJSonStream(pvDataObject);
   try
     lvNameSpace := lvJsonStream.Json.S['cmd.namespace'];
-
+    TFileLogger.instance.logDebugMessage(lvNameSpace);
     if SameText(lvNameSpace,'fileOpera') then
     begin
       TFileOperaHandler.Execute(lvJsonStream);
