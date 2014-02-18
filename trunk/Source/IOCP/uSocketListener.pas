@@ -24,20 +24,20 @@ uses
 procedure TSocketListener.Execute;
 begin
   try
-  while not self.Terminated do
-  begin
-    try
+    while not self.Terminated do
+    begin
       try
-        FIOCPObject.acceptClient;
-      except
-        on E:Exception do
-        begin
-          TIOCPFileLogger.logErrMessage('TSocketListener.FIOCPObject.acceptClient, 出现异常:' + e.Message);
+        try
+          FIOCPObject.acceptClient;
+        except
+          on E:Exception do
+          begin
+            TIOCPFileLogger.logErrMessage('TSocketListener.FIOCPObject.acceptClient, 出现异常:' + e.Message);
+          end;
         end;
+      except
       end;
-    except
     end;
-  end;
   finally
     TIOCPFileLogger.logDebugMessage('TSocketListener已经退出!');
   end;
