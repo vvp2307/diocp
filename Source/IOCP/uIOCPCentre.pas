@@ -9,7 +9,7 @@ unit uIOCPCentre;
 interface
 
 uses
-  JwaWinsock2, Windows, SysUtils, uIOCPTools,
+  WinSock2, Windows, SysUtils, uIOCPTools,
   uMemPool,
   uIOCPProtocol, uBuffer, SyncObjs, Classes;
 
@@ -793,14 +793,14 @@ end;
 
 function TIOCPObject.ListenerBind: Boolean;
 var
-  lvAddr:TSockAddr;
+  lvAddr:TSockAddrIn;
   lvAddrSize:Integer;
 begin
   result := false;
   lvAddr.sin_family:=AF_INET;
   lvAddr.sin_port:=htons(FPort);
   lvAddr.sin_addr.s_addr:=htonl(INADDR_ANY);
-  if bind(FSSocket,@lvAddr,sizeof(lvAddr))=SOCKET_ERROR then
+  if bind(FSSocket, TSockAddr(lvAddr),sizeof(lvAddr))=SOCKET_ERROR then
   begin
     TIOCPFileLogger.logWSAError('绑定(bind,FSSocket)出现异常!');
     Closesocket(FSSocket);
@@ -947,7 +947,7 @@ var
   HostEnt: PHostEnt;
 begin
   Size := SizeOf(SockAddrIn);
-  getpeername(FSocket, @SockAddrIn, Size);
+  getpeername(FSocket, TSockAddr(SockAddrIn), Size);
   FRemoteAddr := inet_ntoa(SockAddrIn.sin_addr);
   FRemotePort := ntohs(SockAddrIn.sin_port);
 end;

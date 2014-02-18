@@ -3,7 +3,7 @@ unit uIOCPTools;
 interface
 
 uses
-  JwaWinsock2, Windows, SysUtils, Classes;
+  winsock2, Windows, SysUtils, Classes;
 
 const
   SIO_KEEPALIVE_VALS = IOC_IN or IOC_VENDOR or 4;
@@ -50,7 +50,8 @@ var
 
 class function TIOCPTools.socketInitializeHeart(const socket:TSocket): Boolean;
 var
-  Opt, insize, outsize, outByte: integer;
+  Opt, insize, outsize: integer;
+  outByte: DWORD;
   inKeepAlive, outKeepAlive: TTCP_KEEPALIVE;
 begin
   Result := false;
@@ -73,7 +74,7 @@ begin
      SIO_KEEPALIVE_VALS,
      @inKeepAlive, insize,
      @outKeepAlive,
-    outsize, @outByte, nil, nil) = SOCKET_ERROR then
+    outsize, outByte, nil, nil) = SOCKET_ERROR then
   begin
     TIOCPFileLogger.logWSAError('º”»Î–ƒÃ¯ºÏ≤‚');
     closeSocket(socket);
