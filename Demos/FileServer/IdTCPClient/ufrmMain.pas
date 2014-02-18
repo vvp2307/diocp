@@ -133,7 +133,8 @@ begin
     begin
       lvSendObj.Clear();
       //请求文件下载
-      lvSendObj.Json.I['cmdIndex'] := 1002;
+      lvSendObj.Json.S['cmd.namespace'] := 'fileaccess'; 
+      lvSendObj.Json.I['cmd.index'] := 1;
       lvSendObj.Json.I['start'] := lvFileStream.Position;
       lvSendObj.Json.S['fileName'] := edtRFile.Text;
       lvSendObj.Json.B['config.stream.zip'] := chkZip.Checked;
@@ -210,7 +211,8 @@ begin
     while true do
     begin
       lvSendObj.Clear();
-      lvSendObj.Json.I['cmdIndex'] := 1001;
+      lvSendObj.Json.S['cmd.namespace'] := 'fileaccess'; 
+      lvSendObj.Json.I['cmd.index'] := 2;   //上传文件
       lvSendObj.Json.I['start'] := lvFileStream.Position;
       lvSendObj.Json.S['fileName'] := ExtractFileName(dlgOpen.FileName);
       lvSendObj.Json.B['config.stream.zip'] := chkZip.Checked;
