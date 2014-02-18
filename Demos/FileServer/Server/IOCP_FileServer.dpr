@@ -28,7 +28,8 @@ uses
   uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
   uFrameConfig in 'Common\uFrameConfig.pas',
-  uCRCTools in '..\..\Common\uCRCTools.pas';
+  uCRCTools in '..\..\Common\uCRCTools.pas',
+  uFileOperaHandler in 'Handler\uFileOperaHandler.pas';
 
 {$R *.res}
 

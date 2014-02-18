@@ -59,6 +59,7 @@
     <DCCReference Include="..\..\IOCPCoder\uNetworkTools.pas" />
     <DCCReference Include="Common\uFrameConfig.pas" />
     <DCCReference Include="Handler\uClientContext.pas" />
+    <DCCReference Include="Handler\uFileOperaHandler.pas" />
     <DCCReference Include="ufrmMain.pas">
       <Form>frmMain</Form>
     </DCCReference>
