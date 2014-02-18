@@ -6,7 +6,7 @@ unit uBuffer;
 interface
 
 uses
-  Windows;
+  Windows, uMyTypes;
 
 type
   PBufRecord = ^_BufRecord;
@@ -133,7 +133,7 @@ begin
   lvBuf.nextBuf := nil;
   getMem(lvBuf.buf,len);
   lvBuf.len := len;
-  CopyMemory(lvBuf.buf, Pointer(LongInt(buf)), len);
+  CopyMemory(lvBuf.buf, Pointer(NativeUInt(buf)), len);
   if FHead = nil then
   begin
     FHead := lvBuf;
@@ -155,6 +155,7 @@ function TBufferLink.InnerReadBuf(const pvBufRecord: PBufRecord; pvStartIndex:
     Cardinal; buf: PAnsiChar; len: Cardinal): Cardinal;
 var
   lvValidCount:Cardinal;
+  lvSource:Pointer;
 begin
   Result := 0;
   if pvBufRecord <> nil then
@@ -167,11 +168,14 @@ begin
     begin
       if len <= lvValidCount then
       begin
-        CopyMemory(buf, Pointer(Cardinal(pvBufRecord.buf) + pvStartIndex), len);
+        lvSource := Pointer(NativeUInt(pvBufRecord.buf) + pvStartIndex);
+        Move(lvSource^, buf^, len);
         Result := len;
       end else
       begin
-        CopyMemory(buf, Pointer(Cardinal(pvBufRecord.buf) + pvStartIndex), lvValidCount);
+        lvSource := Pointer(NativeUInt(pvBufRecord.buf) + pvStartIndex);
+        Move(lvSource^, buf^, lvValidCount);
+//        CopyMemory(buf, Pointer(NativeUInt(pvBufRecord.buf) + pvStartIndex), lvValidCount);
         Result := lvValidCount;
       end;
     end;
@@ -204,7 +208,7 @@ begin
     lvRemain := len;
     while lvBuf <> nil do
     begin
-      l := InnerReadBuf(lvBuf, lvPosition, Pointer(Cardinal(buf) + lvReadCount), lvRemain);
+      l := InnerReadBuf(lvBuf, lvPosition, Pointer(NativeUInt(buf) + lvReadCount), lvRemain);
       if l = lvRemain then
       begin
         //∂¡ÕÍ

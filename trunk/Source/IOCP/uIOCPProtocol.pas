@@ -3,7 +3,7 @@ unit uIOCPProtocol;
 interface
 
 uses
-  winsock2, Windows, SysUtils;
+  winsock2, Windows, uMyTypes;
 
 const
   //每次接收最大的字节数
@@ -39,7 +39,7 @@ type
     next:POVERLAPPEDEx;
   end;
 
-  TIOCPBytes = array of Byte;
+  TIOCPBytes = uMyTypes.TBytes;
 
 implementation
 
