@@ -9,7 +9,7 @@ unit uZipTools;
 interface
 
 uses
-  ZLib, Windows, Classes, SysUtils, uIOCPProtocol;
+  ZLib, Windows, Classes, SysUtils, uMyTypes;
 
 {$if CompilerVersion>= 23}
   {$define NEWZLib}
@@ -19,11 +19,10 @@ type
   TZipTools = class(TObject)
   public
     //—πÀı◊÷∑˚¥Æ(”ÎJAVAºÊ»›)
-    class function compressStr(pvData: string): TIOCPBytes;
+    class function compressStr(pvData: string): TBytes;
 
     //Ω‚—π◊÷∑˚¥Æ(”ÎJAVAºÊ»›)
-    class function unCompressStr(pvData: TIOCPBytes; pvDataSize: Integer = 0):
-        string;
+    class function unCompressStr(pvData: TBytes; pvDataSize: Integer = 0): string;
 
     //—πÀı(”ÎJAVAºÊ»›)
     class procedure compressStreamEX(const pvStream:TStream);
@@ -39,19 +38,18 @@ type
 
 
     //—πÀı(”ÎJAVAºÊ»›)
-    class function compressBuf(const Buffer; Count: Longint): TIOCPBytes;
+    class function compressBuf(const Buffer; Count: Longint): TBytes;
 
     //Ω‚—π(”ÎJAVAºÊ»›)
-    class function unCompressBuf(const zipBuffer; Count: Longint): TIOCPBytes;
+    class function unCompressBuf(const zipBuffer; Count: Longint): TBytes;
   end;
 
 implementation
 
-class function TZipTools.compressBuf(const Buffer; Count: Longint):
-    TIOCPBytes;
+class function TZipTools.compressBuf(const Buffer; Count: Longint): TBytes;
 var
   lvTmp: string;
-  lvBytes: TIOCPBytes;
+  lvBytes: TBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 begin
@@ -68,8 +66,7 @@ begin
     end;
 end;
 
-class function TZipTools.unCompressBuf(const zipBuffer; Count: Longint):
-    TIOCPBytes;
+class function TZipTools.unCompressBuf(const zipBuffer; Count: Longint): TBytes;
 var
   lvSize:Cardinal;
   OutBuf: Pointer;
@@ -90,7 +87,7 @@ begin
 
 end;
 
-class function TZipTools.compressStr(pvData: string): TIOCPBytes;
+class function TZipTools.compressStr(pvData: string): TBytes;
 begin
   result := compressBuf(PAnsiChar(AnsiString(pvData))^, Length(AnsiString(pvData)));
 end;
@@ -105,7 +102,7 @@ class function TZipTools.compressStream(const pvStream, pvZipStream:TStream):
     Boolean;
 var
   lvTmp: string;
-  lvBytes: TIOCPBytes;
+  lvBytes: TBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
   l: Integer;
@@ -148,7 +145,7 @@ class function TZipTools.unCompressStream(const pvZipStream, pvStream:TStream):
     Boolean;
 var
   l:Integer;
-  lvBytes: TIOCPBytes;
+  lvBytes: TBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 
@@ -178,11 +175,11 @@ begin
 
 end;
 
-class function TZipTools.unCompressStr(pvData: TIOCPBytes; pvDataSize:
-    Integer = 0): string;
+class function TZipTools.unCompressStr(pvData: TBytes; pvDataSize: Integer =
+    0): string;
 var
   lvSize:Cardinal;
-  lvOutBytes:TIOCPBytes;
+  lvOutBytes:TBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 
