@@ -20,7 +20,7 @@ type
 implementation
 
 uses
-  JwaWinsock2;
+  Winsock2;
 
 var
   FErrLogger:TFileLogger;

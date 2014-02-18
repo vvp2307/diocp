@@ -3,7 +3,7 @@ unit uMemPool;
 interface
 
 uses
-  JwaWinsock2, Windows, SyncObjs, uIOCPProtocol;
+  Winsock2, Windows, SyncObjs, uIOCPProtocol;
 
 
 type

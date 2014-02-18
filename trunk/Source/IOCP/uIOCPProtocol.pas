@@ -3,7 +3,7 @@ unit uIOCPProtocol;
 interface
 
 uses
-  JwaWinsock2, Windows, SysUtils;
+  winsock2, Windows, SysUtils;
 
 const
   //每次接收最大的字节数
