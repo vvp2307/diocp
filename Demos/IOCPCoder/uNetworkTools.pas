@@ -7,7 +7,7 @@ interface
 
 
 uses
-  windows, WinSock, SysUtils, uIOCPProtocol;
+  windows, WinSock, SysUtils,uMyTypes;
 
 type
   //from indy
@@ -37,9 +37,9 @@ type
 
     class function ntohl(v: Integer): Integer; overload;
 
-    class function ansiString2Utf8Bytes(v:AnsiString): TIOCPBytes;
+    class function ansiString2Utf8Bytes(v:AnsiString): TBytes;
 
-    class function Utf8Bytes2AnsiString(pvData: TIOCPBytes): AnsiString;
+    class function Utf8Bytes2AnsiString(pvData: TBytes): AnsiString;
 
     class function Utf8AnsiString2AnsiString(pvData:AnsiString): AnsiString;
   end;
@@ -47,7 +47,7 @@ type
 implementation
 
 
-class function TNetworkTools.ansiString2Utf8Bytes(v:AnsiString): TIOCPBytes;
+class function TNetworkTools.ansiString2Utf8Bytes(v:AnsiString): TBytes;
 var
   lvTemp:AnsiString;
 begin
@@ -56,7 +56,7 @@ begin
   Move(lvTemp[1], Result[0],  Length(lvTemp));
 end;
 
-class function TNetworkTools.Utf8Bytes2AnsiString(pvData: TIOCPBytes):
+class function TNetworkTools.Utf8Bytes2AnsiString(pvData: TBytes):
     AnsiString;
 var
   lvTemp:AnsiString;
