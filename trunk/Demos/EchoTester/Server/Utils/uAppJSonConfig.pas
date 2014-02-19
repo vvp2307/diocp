@@ -13,7 +13,7 @@ unit uAppJSonConfig;
 interface
 
 uses
-  superobject, SysUtils, uJSonTools;
+  superobject, SysUtils;
 
 type
   TAppJSonConfig = class(TObject)
@@ -73,7 +73,7 @@ var
     Result := false;
     if FileExists(pvFile) then
     begin
-      FConfig := TJSonTools.JsnParseFromFile(pvFile);
+      FConfig := TSuperObject.ParseFile(pvFile, False);
       Result := FConfig <> nil;
       if Result then
       begin
@@ -101,7 +101,7 @@ begin
   if FConfig <> nil then
   begin
     ForceDirectories(ExtractFilePath(FFile));    
-    TJSonTools.JsnSaveToFile(FConfig, FFile);
+    FConfig.SaveTo(FFile);
   end;
 end;
 
