@@ -28,7 +28,8 @@ uses
   Qos in '..\..\..\Source\WinSock2\Qos.pas',
   Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas',
   uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas',
-  uAppJSonConfig in 'Utils\uAppJSonConfig.pas';
+  uAppJSonConfig in 'Utils\uAppJSonConfig.pas',
+  superobject in '..\..\Common\superobject.pas';
 
 {$R *.res}
 

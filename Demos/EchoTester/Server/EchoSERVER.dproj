@@ -50,6 +50,7 @@
     <DCCReference Include="..\..\..\Source\WinSock2\Qos.pas" />
     <DCCReference Include="..\..\..\Source\WinSock2\Winsock2.pas" />
     <DCCReference Include="..\..\Common\JSonStream.pas" />
+    <DCCReference Include="..\..\Common\superobject.pas" />
     <DCCReference Include="..\..\Common\uFMIOCPDebugINfo.pas">
       <Form>FMIOCPDebugINfo</Form>
       <DesignClass>TFrame</DesignClass>
