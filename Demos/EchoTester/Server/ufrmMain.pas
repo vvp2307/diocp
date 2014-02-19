@@ -76,7 +76,8 @@ implementation
 
 uses
   uIOCPCentre, uClientContext, uMemPool,
-  uFMIOCPDebugINfo, 
+  uFMIOCPDebugINfo,
+  uAppJSonConfig,
   FileLogger;
                               
 {$R *.dfm}
