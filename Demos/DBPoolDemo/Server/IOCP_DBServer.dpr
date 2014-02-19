@@ -9,7 +9,6 @@ uses
   uIOCPJSonStreamDecoder in '..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas',
   uIOCPJSonStreamEncoder in '..\..\IOCPCoder\uIOCPJSonStreamEncoder.pas',
   JSonStream in '..\..\Common\JSonStream.pas',
-  superobject in '..\..\Common\superobject.pas',
   uNetworkTools in '..\..\IOCPCoder\uNetworkTools.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   uBuffer in '..\..\..\Source\IOCP\uBuffer.pas',
@@ -21,9 +20,6 @@ uses
   uIOCPWorker in '..\..\..\Source\IOCP\uIOCPWorker.pas',
   uMemPool in '..\..\..\Source\IOCP\uMemPool.pas',
   uSocketListener in '..\..\..\Source\IOCP\uSocketListener.pas',
-  JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
-  JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
-  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
   uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
   uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
@@ -37,7 +33,10 @@ uses
   uUniConfigTools in '..\..\UniDACPool\uUniConfigTools.pas',
   uUniPool in '..\..\UniDACPool\uUniPool.pas',
   uRunTimeINfoTools in '..\..\Common\uRunTimeINfoTools.pas',
-  CDSOperatorWrapper in '..\..\UniDACPool\CDSOperatorWrapper.pas';
+  superobject in '..\..\Common\superobject.pas',
+  uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas',
+  Qos in '..\..\..\Source\WinSock2\Qos.pas',
+  Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas';
 
 {$R *.res}
 
