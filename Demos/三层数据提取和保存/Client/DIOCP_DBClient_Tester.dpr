@@ -13,14 +13,10 @@ uses
   uJSonStreamTools in '..\..\Common\uJSonStreamTools.pas',
   uCRCTools in '..\..\Common\uCRCTools.pas',
   superobject in '..\..\Common\superobject.pas',
-  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
-  JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
-  JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   CDSOperatorWrapper in '..\Common\CDSOperatorWrapper.pas',
   uICDSOperator in '..\Common\uICDSOperator.pas',
-  uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
-  uIOCPProtocol in '..\..\..\Source\IOCP\uIOCPProtocol.pas';
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
 
 {$R *.res}
 
