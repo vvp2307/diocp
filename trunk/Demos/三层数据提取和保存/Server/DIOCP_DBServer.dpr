@@ -22,9 +22,6 @@ uses
   uIOCPWorker in '..\..\..\Source\IOCP\uIOCPWorker.pas',
   uMemPool in '..\..\..\Source\IOCP\uMemPool.pas',
   uSocketListener in '..\..\..\Source\IOCP\uSocketListener.pas',
-  JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
-  JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
-  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
   udmMain in 'DB\udmMain.pas' {dmMain: TDataModule},
   uCDSProvider in 'DB\uCDSProvider.pas',
   ADOConnConfig in 'DB\ADOConnConfig.pas',
@@ -32,7 +29,10 @@ uses
   uDBAccessOperator in '..\Common\uDBAccessOperator.pas',
   uICDSOperator in '..\Common\uICDSOperator.pas',
   uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
-  uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas';
+  uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
+  Qos in '..\..\..\Source\WinSock2\Qos.pas',
+  Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas',
+  uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas';
 
 {$R *.res}
 
