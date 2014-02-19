@@ -3,10 +3,11 @@ unit uIdTcpClientJSonStreamCoder;
 interface
 
 uses
-  Classes, JSonStream, superobject, 
+  Classes, JSonStream, SysUtils, superobject, 
   Windows,
+  uMyTypes,
   IdGlobal,
-  uNetworkTools, IdTCPClient, uZipTools, uIOCPProtocol, Math, SysUtils;
+  uNetworkTools, IdTCPClient, uZipTools, Math;
 
 
 const
@@ -52,7 +53,7 @@ var
   lvStream:TStream;
 
   lvJsonStream:TJsonStream;
-  lvBytes:TIOCPBytes;
+  lvBytes:TBytes;
 
   l, lvRemain:Integer;
   lvBufBytes:array[0..1023] of byte;
@@ -150,7 +151,7 @@ var
   lvStream, lvSendStream:TStream;
   lvTempBuf:PAnsiChar;
 
-  lvBytes, lvTempBytes:TIOCPBytes;
+  lvBytes, lvTempBytes:TBytes;
   
   l:Integer;
   lvBufBytes:array[0..1023] of byte;
