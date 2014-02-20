@@ -3,7 +3,7 @@ unit uClientContext;
 interface
 
 uses
-  Windows, JwaWinsock2, uBuffer, SyncObjs, Classes, SysUtils,
+  Windows, uBuffer, SyncObjs, Classes, SysUtils,
   uIOCPCentre, JSonStream;
 
 type
