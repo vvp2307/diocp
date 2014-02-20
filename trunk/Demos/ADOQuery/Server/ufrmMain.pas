@@ -5,8 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
-  ExtCtrls, uZipTools, uIOCPProtocol, uFMIOCPDebugINfo, Vcl.ComCtrls, Data.DB,
-  Data.Win.ADODB, uADOTools;
+  ExtCtrls, uZipTools, uIOCPProtocol, uFMIOCPDebugINfo, ComCtrls, DB,
+  ADODB, uADOTools;
 
 type
   TfrmMain = class(TForm)

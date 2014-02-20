@@ -21,16 +21,17 @@ uses
   uIOCPWorker in '..\..\..\Source\IOCP\uIOCPWorker.pas',
   uMemPool in '..\..\..\Source\IOCP\uMemPool.pas',
   uSocketListener in '..\..\..\Source\IOCP\uSocketListener.pas',
-  JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
-  JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
-  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
   udmMain in 'DB\udmMain.pas' {dmMain: TDataModule},
   ADOConnConfig in 'DB\ADOConnConfig.pas',
   uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
   uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
   uRunTimeINfoTools in '..\..\Common\uRunTimeINfoTools.pas',
-  uADOTools in '..\Common\uADOTools.pas';
+  uADOTools in '..\Common\uADOTools.pas',
+  Qos in '..\..\..\Source\WinSock2\Qos.pas',
+  Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas',
+  uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas',
+  ADODB_TLB in '..\Common\ADODB_TLB.pas';
 
 {$R *.res}
 
