@@ -3,7 +3,7 @@ unit uADOTools;
 interface
 
 uses
-  ADODB, DB, classes, SysUtils, AdoInt, Variants;
+  ADODB, DB, ADODB_TLB, classes, SysUtils, AdoInt,  Variants;
 
 type
   TADOTools = class(TObject)
