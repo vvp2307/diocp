@@ -7,7 +7,7 @@ uses
   Classes, JSonStream, superobject, 
   Windows,
   OverbyteIcsWSocket,
-  uNetworkTools, uZipTools, uIOCPProtocol, Math, SysUtils, uBuffer;
+  uNetworkTools, uZipTools, Math, SysUtils, uBuffer, uMyTypes;
 
 
 const
@@ -62,7 +62,7 @@ var
   lvStream:TStream;
 
   lvJsonStream:TJsonStream;
-  lvBytes:TIOCPBytes;
+  lvBytes:TBytes;
 
   l, lvRemain:Integer;
   lvBufBytes:array[0..1023] of byte;
@@ -161,7 +161,7 @@ var
   lvBufData:PAnsiChar;
   lvStream:TMemoryStream;
   lvJsonStream:TJsonStream;
-  lvBytes:TIOCPBytes;
+  lvBytes:TBytes;
   lvValidCount:Integer;
 begin
   Result := nil;
@@ -247,7 +247,7 @@ var
   lvStream, lvSendStream:TStream;
   lvTempBuf:PAnsiChar;
 
-  lvBytes, lvTempBytes:TIOCPBytes;
+  lvBytes, lvTempBytes:TBytes;
   
   l:Integer;
   lvBufBytes:array[0..1023] of byte;

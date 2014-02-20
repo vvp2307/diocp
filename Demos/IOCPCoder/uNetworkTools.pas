@@ -7,7 +7,7 @@ interface
 
 
 uses
-  windows, WinSock, SysUtils,uMyTypes;
+  windows, WinSock, SysUtils, uMyTypes;
 
 type
   //from indy

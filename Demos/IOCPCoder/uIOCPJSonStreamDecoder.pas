@@ -3,7 +3,7 @@ unit uIOCPJSonStreamDecoder;
 interface
 
 uses
-  uIOCPCentre, uBuffer, Classes, JSonStream, uIOCPFileLogger, SysUtils;
+  uIOCPCentre, uBuffer, Classes, JSonStream, uIOCPFileLogger, SysUtils, uMyTypes;
 
 type
   TIOCPJSonStreamDecoder = class(TIOCPDecoder)
@@ -32,7 +32,7 @@ var
   lvBufData:PAnsiChar;
   lvStream:TMemoryStream;
   lvJsonStream:TJsonStream;
-  lvBytes:TIOCPBytes;
+  lvBytes:TBytes;
   lvValidCount:Integer;
 begin
   Result := nil;

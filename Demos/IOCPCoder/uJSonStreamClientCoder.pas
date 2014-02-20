@@ -9,7 +9,7 @@ interface
 
 uses
   Classes, JSonStream, superobject, uClientSocket,
-  uNetworkTools, uD10ClientSocket, uZipTools, SysUtils, Math, uIOCPProtocol;
+  uNetworkTools, uD10ClientSocket, uZipTools, SysUtils, Math;
 
 type
   TJSonStreamClientCoder = class(TSocketObjectCoder)
@@ -47,7 +47,7 @@ var
   lvStream:TStream;
 
   lvJsonStream:TJsonStream;
-  lvBytes:TIOCPBytes;
+  lvBytes:TBytes;
 
   l, lvRemain:Integer;
   lvBufBytes:array[0..1023] of byte;
@@ -145,7 +145,7 @@ var
   lvStream, lvSendStream:TStream;
   lvTempBuf:PAnsiChar;
 
-  lvBytes, lvTempBytes:TIOCPBytes;
+  lvBytes, lvTempBytes:TBytes;
   
   l:Integer;
   lvBufBytes:array[0..1023] of byte;
