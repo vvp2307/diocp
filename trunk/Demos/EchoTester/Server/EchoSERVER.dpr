@@ -11,7 +11,6 @@ uses
   JSonStream in '..\..\Common\JSonStream.pas',
   uNetworkTools in '..\..\IOCPCoder\uNetworkTools.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
-  uBuffer in '..\..\..\Source\IOCP\uBuffer.pas',
   uIOCPCentre in '..\..\..\Source\IOCP\uIOCPCentre.pas',
   uIOCPConsole in '..\..\..\Source\IOCP\uIOCPConsole.pas',
   uIOCPFileLogger in '..\..\..\Source\IOCP\uIOCPFileLogger.pas',
@@ -29,7 +28,8 @@ uses
   Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas',
   uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas',
   uAppJSonConfig in 'Utils\uAppJSonConfig.pas',
-  superobject in '..\..\Common\superobject.pas';
+  superobject in '..\..\Common\superobject.pas',
+  uBuffer in '..\..\..\Source\IOCP\uBuffer.pas';
 
 {$R *.res}
 
