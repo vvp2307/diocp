@@ -11,7 +11,7 @@ interface
 uses
   ZLib, Windows, Classes, SysUtils, uMyTypes;
 
-{$if CompilerVersion>= 23}
+{$if CompilerVersion>= 21}
   {$define NEWZLib}
 {$IFEND}
 

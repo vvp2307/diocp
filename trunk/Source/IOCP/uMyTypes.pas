@@ -14,7 +14,7 @@ type
      TBytes = array of Byte;
   {$else}
      TBytes = SysUtils.TBytes;
-  {$endif}
+  {$ifend}
 
   ///
   MyInteger = Integer;
