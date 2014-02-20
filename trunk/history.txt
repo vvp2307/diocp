@@ -1,0 +1,3 @@
+2014年2月20日 15:09:11
+   1.移除 jwasocket 使用winsock2代替，可以编译64位程序
+   2.移除 uIOCPProtocol.单元中的TIOCPBytes，使用uMyTypes.pas 中的TBytes代替
