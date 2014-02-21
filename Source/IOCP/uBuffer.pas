@@ -11,7 +11,7 @@ unit uBuffer;
 interface
 
 uses
-  Windows,SyncObjs,SysUtils,Classes;
+  Windows,SyncObjs,SysUtils,Classes, uMyTypes;
 
 type
   TDxMemBlockType = (MB_Small,MB_Normal,MB_Big,MB_SpBig,MB_Large,MB_SPLarge); //内存块模式
@@ -497,12 +497,12 @@ end;
 function TDxMemoryStream.GetBlockSize: DWORD;
 begin
   case FMemBlockType of
-  MB_Small: Result := SmallMemoryPool.FBlockSize;
-  MB_Normal: Result := MemoryPool.FBlockSize;
-  MB_Big: Result := BigMemoryPool.FBlockSize;
-  MB_SpBig: Result := SuperMemoryPool.FBlockSize;
-  MB_Large: Result := LargeMemoryPool.FBlockSize;
-  MB_SPLarge: Result := SuperLargeMemoryPool.FBlockSize;
+    MB_Small: Result := SmallMemoryPool.FBlockSize;
+    MB_Normal: Result := MemoryPool.FBlockSize;
+    MB_Big: Result := BigMemoryPool.FBlockSize;
+    MB_SpBig: Result := SuperMemoryPool.FBlockSize;
+    MB_Large: Result := LargeMemoryPool.FBlockSize;
+    MB_SPLarge: Result := SuperLargeMemoryPool.FBlockSize;
   else Result := 0;
   end;
 end;
@@ -666,7 +666,7 @@ begin
     Result := Count;
     p := @Buffer;
     //先读取当前块剩下的区域
-    pBuf := Pointer(DWORD(FCurBlock^.Memory) + FCurBlockPos);
+    pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
     if Count <= MPool.FBlockSize - FCurBlockPos then //足够写了
     begin
       Move(PBuf^,buffer,Count);
@@ -729,7 +729,7 @@ begin
     if FPosition + Len > FSize then
       Len := FSize - FPosition;
     //先读取当前块剩下的区域
-    pBuf := Pointer(DWORD(FCurBlock^.Memory) + FCurBlockPos);
+    pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
     if Len <= MPool.FBlockSize - FCurBlockPos then //足够写了
     begin
       Stream.WriteBuffer(PBuf^,Len);
@@ -1065,7 +1065,7 @@ begin
   Result := Count;
   tmpBuf := @Buffer;
   //先写满当前未写满的内存块空间
-  pBuf := Pointer(DWORD(FCurBlock^.Memory) + FCurBlockPos);
+  pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
   if Count <= MPool.FBlockSize - FCurBlockPos then //足够写了
   begin
     Move(Buffer,pBuf^,Count);
@@ -1147,7 +1147,7 @@ begin
       Inc(FSize,Len);
   end;
   //先写满当前未写满的内存块空间
-  pBuf := Pointer(DWORD(FCurBlock^.Memory) + FCurBlockPos);
+  pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
   if Len <= MPool.FBlockSize - FCurBlockPos then //足够写了
   begin
     Stream.ReadBuffer(PBuf^,Len);
@@ -1390,12 +1390,12 @@ begin
     begin
       if len <= lvValidCount then //数据全部在本块内存中获取到
       begin
-        CopyMemory(buf, Pointer(Cardinal(pvBufRecord.Memory) + pvStartPostion), len);
+        CopyMemory(buf, Pointer(NativeUInt(pvBufRecord.Memory) + pvStartPostion), len);
         Result := len;
       end
       else
       begin
-        CopyMemory(buf, Pointer(Cardinal(pvBufRecord.Memory) + pvStartPostion), lvValidCount);
+        CopyMemory(buf, Pointer(NativeUInt(pvBufRecord.Memory) + pvStartPostion), lvValidCount);
         Result := lvValidCount; //本块内存中获取的内存数据不够，返回本块读取的剩下的数据，需要到下一块内存继续读取
       end;
     end;
@@ -1422,7 +1422,7 @@ begin
     lvRemain := len;
     while lvBuf <> nil do
     begin
-      l := InnerReadBuf(lvBuf, lvPosition, Pointer(Cardinal(buf) + lvReadCount), lvRemain);
+      l := InnerReadBuf(lvBuf, lvPosition, Pointer(NativeUInt(buf) + lvReadCount), lvRemain);
       if l = lvRemain then
       begin
         //读完
