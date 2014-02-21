@@ -35,6 +35,7 @@ type
     DataBuf: TWSABUF;
     WorkBytes: Cardinal;    //如果是接收，接收的字节数
     WorkFlag: Cardinal;
+    __postTime: Cardinal;   //
     pre:POVERLAPPEDEx;
     next:POVERLAPPEDEx;
   end;
