@@ -72,7 +72,13 @@ begin
   lvStreamLength := 0;
   //TFileLogger.instance.logDebugMessage('1100');
   l := recvBuffer(pvSocket, @lvJSonLength, SizeOf(Integer));
+
+  if l = -1 then exit;
+  
   Result := Result + l;
+
+
+  
 
   l := recvBuffer(pvSocket, @lvStreamLength, SizeOf(Integer));
 
