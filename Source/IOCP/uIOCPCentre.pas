@@ -266,6 +266,7 @@ type
 
     //в╢л╛пео╒
     property StateINfo: String read GetStateINfo write FStateINfo;
+    property Using: Boolean read FUsing;
 
     
     
