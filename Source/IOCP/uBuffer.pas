@@ -1203,7 +1203,7 @@ end;
 procedure TBufferLink.AddBuffer(buf: PAnsiChar; len: Cardinal);
 var
   MemBlock: PMemoryBlock;
-  BlockSize,WSize: integer;
+  BlockSize,WSize: NativeUInt;
   pBuf: PAnsiChar;
   MPool: TDxMemoryPool;
 begin
@@ -1252,9 +1252,11 @@ begin
   else if len <= LargeMemoryPool.FBlockSize then
     MPool := LargeMemoryPool
   else if len <= SuperLargeMemoryPool.FBlockSize then
-    MPool := SuperLargeMemoryPool;
+    MPool := SuperLargeMemoryPool
+  else
+    MPool := nil;
 
-  if len <= SuperLargeMemoryPool.FBlockSize then
+  if MPool <> nil then
   begin
     MemBlock := MPool.GetMemoryBlock;
     MemBlock^.DataLen := len;
