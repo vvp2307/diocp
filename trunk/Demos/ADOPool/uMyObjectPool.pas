@@ -62,6 +62,9 @@ type
     constructor Create(pvObjectClass: TClass = nil);
     destructor Destroy; override;
 
+    /// <summary>
+    ///  ÷ÿ÷√∂‘œÛ≥ÿ
+    /// </summary>
     procedure resetPool;
 
     /// <summary>
