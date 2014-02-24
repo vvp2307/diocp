@@ -78,7 +78,7 @@ begin
     i:=FList.Count -1;
 
     lvItem := PPoolItem(FList[i]);
-    lvItem.obj.waitForGiveBack;
+    lvItem.obj.waitForReleaseSingle;
     lvItem.obj.Free;
     FreeMem(lvItem, SizeOf(__PoolItem));
     FList.Delete(i);
@@ -113,7 +113,7 @@ begin
     Result := Result +
       Format('%s(总数:%d,使用:%d)',
         [lvItem.key, lvItem.obj.Count,
-        lvItem.obj.UsingCount]) + sLineBreak;
+        lvItem.obj.getBusyCount]) + sLineBreak;
   end;
 end;
 
@@ -125,7 +125,7 @@ begin
   for I := 0 to FList.Count - 1 do
   begin
     lvItem := PPoolItem(FList[i]);
-    lvItem.obj.waitForGiveBack;
+    lvItem.obj.waitForReleaseSingle;
   end;
 end;
 
