@@ -153,39 +153,58 @@ var
   i:Integer;
   lvRet:DWORD;
 begin
-  //等待超时
-  lvRet := WaitForSingleObject(FWaitSingle, FWaitTimeOut);
-  if lvRet = WAIT_TIMEOUT then
+  while True do
   begin
-    Result := nil;
-    FErrMsg := '等待超时';
-  end else if lvRet = WAIT_OBJECT_0 then
-  begin
-    lock;
-    try
-      i := FUsableList.Count;
-      if i > 0 then
-      begin
-        Result := TObject(FUsableList[i-1]);
-        FUsableList.Delete(i-1);
-      end else
-      begin
-        Result := createObject;
+    //等待超时
+    lvRet := WaitForSingleObject(FWaitSingle, FWaitTimeOut);
+    if lvRet = WAIT_TIMEOUT then
+    begin
+      Result := nil;
+      FErrMsg := '等待超时';
+      exit;
+    end else if lvRet = WAIT_OBJECT_0 then
+    begin
+      lock;
+      try
+        i := FUsableList.Count;
+        if i > 0 then
+        begin
+          Result := TObject(FUsableList[i-1]);
+          FUsableList.Delete(i-1);
+        end else
+        begin
+          
+          if FCount >= FMaxCount then
+          begin
+            //如果当前有1个可用，100线程同时借用时，都可以直接(checkWaitForUsableSingle)成功。
+            continue;
+            //退出(unLock)后再进行等待....
+            //raise exception.CreateFmt('超出对象池[%s]允许的范围[%d]', [self.ClassName, FMaxNum]);
+          end;
+          
+          Result := createObject;
+          if Result <> nil then
+          begin
+            Inc(FCount);
+          end;
+        end;
+
         if Result <> nil then
         begin
-          Inc(FCount);
+          Inc(FUsingCount);
+          Break;
         end;
-      end;  
-      if Result <> nil then Inc(FUsingCount);
 
-      checkSingle;
-    finally
-      unLock;
+        checkSingle;
+      finally
+        unLock;
+      end;
+    end else
+    begin
+      Result := nil;
+      FErrMsg := '等待异常[' + intToStr(lvRet) + ']';
+      exit;
     end;
-  end else
-  begin
-    Result := nil;
-    FErrMsg := '等待异常[' + intToStr(lvRet) + ']';
   end;
 end;
 
