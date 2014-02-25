@@ -44,9 +44,22 @@ type
     FTimeOut: Integer;
 
 
+    /// <summary>
+    ///  根据当前状态重新设置信号
+    /// </summary>
     procedure makeSingle;
+
+
     function GetCount: Integer;
+
+    /// <summary>
+    ///  加锁
+    /// </summary>
     procedure lock;
+
+    /// <summary>
+    ///  解锁
+    /// </summary>
     procedure unLock;
   protected
     /// <summary>
@@ -63,7 +76,7 @@ type
     destructor Destroy; override;
 
     /// <summary>
-    ///  重置对象池
+    ///   重置对象池
     /// </summary>
     procedure resetPool;
 
@@ -71,6 +84,18 @@ type
     ///  借用一个对象
     /// </summary>
     function borrowObject: TObject;
+
+
+    /// <summary>
+    ///   是否空闲的对象
+    /// </summary>
+    procedure clearFreeObjects;
+
+
+    /// <summary>
+    ///  清楚已经长时间锁定的对象
+    /// </summary>
+    function killDeadLockObjects(pvTimeOut: Integer = 30 * 1000): Integer;
 
 
     /// <summary>
@@ -122,16 +147,38 @@ implementation
 procedure TMyObjectPool.clear;
 var
   lvObj:PObjectBlock;
+  i:Integer;
 begin
   lock;
   try
-    while FUsableList.Count > 0 do
+    for i := 0 to FUsableList.Count -1 do
     begin
-      lvObj := PObjectBlock(FUsableList[FUsableList.Count-1]);
+      lvObj := PObjectBlock(FUsableList[i]);
       lvObj.FObject.Free;
       FreeMem(lvObj, SizeOf(TObjectBlock));
-      FUsableList.Delete(FUsableList.Count-1);
-    end; 
+    end;
+
+    FUsableList.Clear;
+  finally
+    unLock;
+  end;
+end;
+
+procedure TMyObjectPool.clearFreeObjects;
+var
+  lvObj:PObjectBlock;
+  i:Integer;
+begin
+  lock;
+  try
+    for i := 0 to FUsableList.Count -1 do
+    begin
+      lvObj := PObjectBlock(FUsableList[i]);
+      lvObj.FObject.Free;
+      FreeMem(lvObj, SizeOf(TObjectBlock));
+    end;
+
+    FUsableList.Clear;
   finally
     unLock;
   end;
@@ -349,6 +396,34 @@ begin
     raise Exception.CreateFmt('对象池[%s]等待可使用对象超时(%d),使用状态[%d/%d]!',
       [FName, lvRet, getBusyCount, FMaxNum]);
   end;                                                                 
+end;
+
+function TMyObjectPool.killDeadLockObjects(pvTimeOut: Integer = 30 * 1000):
+    Integer;
+var
+  i:Integer;
+  lvCounter:Cardinal;
+  lvObj:PObjectBlock;
+begin
+  Result := 0;
+  lock;
+  try
+    lvCounter := GetTickCount;
+    for i := FBusyList.Count - 1 downto 0 do
+    begin
+      lvObj := PObjectBlock(FBusyList[i]);
+      if (lvCounter - lvObj.FBorrowTime) >= pvTimeOut then
+      begin
+        lvObj.FObject.Free;
+        FreeMem(lvObj, SizeOf(TObjectBlock));
+        FBusyList.Delete(i);
+        Inc(Result);
+      end;
+    end;
+    makeSingle;
+  finally
+    unLock;
+  end;
 end;
 
 end.
