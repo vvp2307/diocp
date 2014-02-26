@@ -16,7 +16,8 @@ uses
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   CDSOperatorWrapper in '..\Common\CDSOperatorWrapper.pas',
   uICDSOperator in '..\Common\uICDSOperator.pas',
-  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas',
+  uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas';
 
 {$R *.res}
 
