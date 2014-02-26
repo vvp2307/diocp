@@ -6,7 +6,12 @@
 
 unit uBuffer;
 
-
+/// 2014Äê2ÔÂ26ÈÕ 11:33:38
+///  ÑîÃ¯·á
+///  inline
+{$IF defined(FPC) or defined(VER170) or defined(VER180) or defined(VER190) or defined(VER200) or defined(VER210)}
+  {$DEFINE HAVE_INLINE}
+{$IFEND}
 
 interface
 
@@ -47,8 +52,8 @@ type
   public
     constructor Create(BlockSize: Integer;InitCount: Integer;BlockType: TDxMemBlockType;MaxFreeBlocks: Integer=50);
     destructor Destroy;override;
-    procedure Lock; inline;
-    procedure Unlock; inline;
+    procedure Lock; {$IFDEF HAVE_INLINE} inline;{$ENDIF}
+    procedure Unlock; {$IFDEF HAVE_INLINE} inline;{$ENDIF}
     function GetMemory(Zero: Boolean): Pointer;
     procedure FreeMemory(P: Pointer);
 

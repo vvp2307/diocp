@@ -105,6 +105,14 @@ const
 // Basic system type definitions, taken from the BSD file sys/types.h.
 //
 
+
+/// 2014年2月26日 11:33:38
+///  杨茂丰
+///  inline
+{$IF defined(FPC) or defined(VER170) or defined(VER180) or defined(VER190) or defined(VER200) or defined(VER210)}
+  {$DEFINE HAVE_INLINE}
+{$IFEND}
+
 type
   u_char = Byte;
   {$EXTERNALSYM u_char}
@@ -117,14 +125,26 @@ type
   u_int64 = Int64; // unsigned __int64 !! TODO For Delphi 7 ??
   {$EXTERNALSYM u_int64}
 
+
+
+
 // 为了向下兼容(从XE5 winApi.windows中copy)
 // D10.天地弦
 // 2014年2月18日 08:46:35
 type
 
-  // D7 下面没有 ULONG_PTR
+  // D7 下面没有 ULONG_PTR, UINT_PTR
   {$if CompilerVersion < 18.5}
-     ULONG_PTR = Cardinal;
+    INT_PTR = Integer;
+    {$EXTERNALSYM INT_PTR}
+    LONG_PTR = Integer;
+    {$EXTERNALSYM LONG_PTR}
+    UINT_PTR = Cardinal;
+    {$EXTERNALSYM UINT_PTR}
+    ULONG_PTR = Cardinal;
+    {$EXTERNALSYM ULONG_PTR}
+    DWORD_PTR = ULONG_PTR;
+    {$EXTERNALSYM DWORD_PTR}
   {$ifend}
 
 
@@ -2803,14 +2823,14 @@ function WSAConnect(s: TSocket; var name: TSockAddr; namelen: Integer; lpCallerD
 {$EXTERNALSYM WSAConnect}
 function WSAConnectByNameW(s: TSocket; nodename, servicename: LPWSTR; var LocalAddressLength: DWORD;
   var LocalAddress: TSockAddr; var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
-  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; inline; overload;
+  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; {$IFDEF HAVE_INLINE} inline;{$ENDIF} overload;
 function WSAConnectByNameW(s: TSocket; nodename, servicename: LPWSTR; var LocalAddressLength: DWORD;
   var LocalAddress: TSockAddr; var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
   timeout: Ptimeval; Reserved: LPWSAOVERLAPPED): BOOL; overload; stdcall;
 {$EXTERNALSYM WSAConnectByNameW}
 function WSAConnectByNameA(s: TSocket; nodename, servicename: LPCSTR; var LocalAddressLength: DWORD;
   var LocalAddress: TSockAddr; var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
-  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; inline; overload;
+  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; {$IFDEF HAVE_INLINE} inline;{$ENDIF} overload;
 function WSAConnectByNameA(s: TSocket; nodename, servicename: LPCSTR; var LocalAddressLength: DWORD;
   var LocalAddress: TSockAddr; var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
   timeout: Ptimeval; Reserved: LPWSAOVERLAPPED): BOOL; overload; stdcall;
@@ -2818,7 +2838,7 @@ function WSAConnectByNameA(s: TSocket; nodename, servicename: LPCSTR; var LocalA
 function WSAConnectByName(s: TSocket; nodename, servicename: LPWSTR;
   var LocalAddressLength: DWORD; var LocalAddress: TSockAddr;
   var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
-  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; inline; overload;
+  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; {$IFDEF HAVE_INLINE} inline;{$ENDIF} overload;
 function WSAConnectByName(s: TSocket; nodename, servicename: LPWSTR;
   var LocalAddressLength: DWORD; var LocalAddress: TSockAddr;
   var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
@@ -2827,7 +2847,7 @@ function WSAConnectByName(s: TSocket; nodename, servicename: LPWSTR;
 function WSAConnectByList(s: TSocket; var SocketAddress: TSocketAddressList;
   var LocalAddressLength: DWORD; var LocalAddress: TSockAddr;
   var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
-  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; inline; overload;
+  const timeout: timeval; Reserved: LPWSAOVERLAPPED): BOOL; {$IFDEF HAVE_INLINE} inline;{$ENDIF} overload;
 function WSAConnectByList(s: TSocket; var SocketAddress: TSocketAddressList;
   var LocalAddressLength: DWORD; var LocalAddress: TSockAddr;
   var RemoteAddressLength: DWORD; var RemoteAddress: TSockAddr;
