@@ -9,7 +9,7 @@ interface
 
 uses
   Classes, JSonStream, superobject, uClientSocket,
-  uNetworkTools, uD10ClientSocket, uZipTools, SysUtils, Math;
+  uNetworkTools, uD10ClientSocket, uZipTools, SysUtils, Math, uMyTypes;
 
 type
   TJSonStreamClientCoder = class(TSocketObjectCoder)
