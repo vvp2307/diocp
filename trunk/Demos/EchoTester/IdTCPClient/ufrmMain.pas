@@ -209,7 +209,10 @@ begin
                          Format('发送次数:%d', [__sendCount]) + sLineBreak +
                          Format('接收次数:%d', [__recvCount]) + sLineBreak +
                          Format('接收错误次数:%d', [__recvErrCount]) + sLineBreak +
-                         Format('工作线程数:%d', [__threadCount]) + sLineBreak
+                         Format('工作线程数:%d', [__threadCount]) + sLineBreak +
+                         Format('最大Echo时间:%d ms', [__maxTime]) + sLineBreak
+
+
 //                         Format('接收/发送对象个数:%d/%d', [__recvObjectCount, __sendObjectCount]) + sLineBreak +
 //                         Format('接收/发送字节数:%d/%d', [__recvbytes_size, __sendbytes_size]) + sLineBreak
                          ;
