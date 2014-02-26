@@ -6,7 +6,7 @@ uses
   Classes, IdTCPClient, SysUtils,
   IdGlobal, superobject,
   Windows, FileLogger, uIdTcpClientJSonStreamCoder,
-  JSonStream;
+  JSonStream, SyncObjs;
 
 type
   TEchoTester = class(TThread)
@@ -37,12 +37,30 @@ var
   __recvErrCount:Integer;
   __errCount:Integer;
 
+  __maxTime:Integer;
+
+  __cs:TCriticalSection;
+
 
 
 implementation
 
 uses
   ComObj, uJSonStreamTools;
+
+procedure setEchoTime(pvTime:Integer);
+begin
+  __cs.Enter;
+  try
+    if pvTime > __maxTime then
+    begin
+      __maxTime := pvTime;
+    end;
+  finally
+    __cs.Leave;
+  end;
+  
+end;
 
 constructor TEchoTester.Create;
 begin
@@ -80,13 +98,24 @@ end;
 procedure TEchoTester.echoWork(pvObject: TJSonStream);
 var
   lvKey:String;
+  lvTickCount:Cardinal;
 begin
   lvKey := CreateClassID;
   pvObject.Json.S['key'] := lvKey;
+  lvTickCount := GetTickCount;
+  pvObject.Json.I['sendTime'] := lvTickCount;
   TIdTcpClientJSonStreamCoder.Encode(FClient, pvObject);
   InterlockedIncrement(__sendCount);
 
   TIdTcpClientJSonStreamCoder.Decode(FClient, pvObject);
+
+  if pvObject.Json.I['sendTime'] <> 0 then
+  begin
+    lvTickCount := pvObject.Json.I['sendTime'];
+  end;
+
+  setEchoTime(GetTickCount - lvTickCount);
+
 
   if (pvObject.Json.S['key'] <> lvKey) then
   begin
@@ -137,5 +166,12 @@ begin
   end;
 
 end;
+
+initialization
+  __cs := TCriticalSection.Create;
+  __maxTime := 0;
+
+finalization
+  __cs.Free;
 
 end.
