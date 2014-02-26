@@ -121,8 +121,16 @@ type
 // D10.天地弦
 // 2014年2月18日 08:46:35
 type
+
+  // D7 下面没有 ULONG_PTR
+  {$if CompilerVersion < 18.5}
+     ULONG_PTR = Cardinal;
+  {$ifend}
+
+
   SIZE_T = ULONG_PTR;
   {$EXTERNALSYM SIZE_T}
+
   LPBYTE = PByte;
   {$EXTERNALSYM LPBYTE}
 //
