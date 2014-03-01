@@ -6,9 +6,18 @@ uses
   DBClient, Provider, SysUtils, ActiveX, Uni;
 
 type
+  TMyUniQuery = class(TUniQuery)
+  protected
+    /// <summary>
+    ///   覆盖掉，避免TDataSetProvider.data时执行PSReset时重复刷新
+    /// </summary>
+    procedure PSReset;override;
+
+  end;
+
   TCDSProvider = class(TObject)
   private
-    FQuery: TUniQuery;
+    FQuery: TMyUniQuery;
     FCDSTemp:TClientDataSet;
     FConnection: TUniConnection;
     FProvider: TDataSetProvider;
@@ -113,6 +122,14 @@ procedure TCDSProvider.SetConnection(const AValue: TUniConnection);
 begin
   FConnection := AValue;
   FQuery.Connection := FConnection;
+end;
+
+{ TMyUniQuery }
+
+procedure TMyUniQuery.PSReset;
+begin
+  //inherited PSReset;
+  
 end;
 
 end.
