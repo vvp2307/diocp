@@ -3,20 +3,27 @@ unit uCDSProvider;
 interface
 
 uses
-  DBClient, Provider, SysUtils, ActiveX, Uni;
+  DBClient, Provider, SysUtils, ActiveX, Uni, DB;
 
 type
+  TMyUniQuery = class(TUniQuery)
+  protected
+    /// <summary>
+    ///   覆盖掉，避免TDataSetProvider.data时执行PSReset时重复刷新
+    /// </summary>
+    procedure PSReset;override;
+
+  end;
+
   TCDSProvider = class(TObject)
   private
-    FQuery: TUniQuery;
+    FQuery: TMyUniQuery;
     FCDSTemp:TClientDataSet;
     FConnection: TUniConnection;
     FProvider: TDataSetProvider;
     procedure SetConnection(const AValue: TUniConnection);
   public
     constructor Create;
-
-    procedure AfterConstruction; override;
     
     destructor Destroy; override;
     
@@ -26,6 +33,10 @@ type
     //获取一个CDS.XMLDATA数据包
     function QueryXMLData(pvCmdText: string): string;
 
+    function Query(pvCmdText: string; pvOperaMsg: string = ''): TDataSet;
+
+    function createQuery(pvCmdText: string; pvOperaMsg: string = ''): TDataSet;
+
     procedure ExecuteScript(pvCmdText:String; pvOperaMsg: string = '');
 
     property Connection: TUniConnection read FConnection write SetConnection;
@@ -33,25 +44,36 @@ type
 
 implementation
 
-procedure TCDSProvider.AfterConstruction;
+constructor TCDSProvider.Create;
 begin
-  inherited;
-  //CoInitialize(nil);
+  inherited Create;
+  CoInitialize(nil);
   FCDSTemp := TClientDataSet.Create(nil);
   FProvider := TDataSetProvider.Create(nil);
   FProvider.Options := FProvider.Options + [poIncFieldProps];
 
-  FQuery := TUniQuery.Create(nil);
+  FQuery := TMyUniQuery.Create(nil);
+
+
   FQuery.DisableControls;
   FQuery.ParamCheck := false;
   FProvider.DataSet := FQuery;
 end;
 
-constructor TCDSProvider.Create;
+function TCDSProvider.createQuery(pvCmdText, pvOperaMsg: string): TDataSet;
 begin
-  inherited Create;
-
-
+  Result := TUniQuery.Create(nil);
+  try
+    TUniQuery(Result).Connection := FConnection;
+    TUniQuery(Result).Close;
+    TUniQuery(Result).SQL.Clear;
+    TUniQuery(Result).SQL.Add(pvCmdText);
+    TUniQuery(Result).Open;
+  except
+    Result.Free;
+    Result := nil;
+    raise;
+  end;
 end;
 
 destructor TCDSProvider.Destroy;
@@ -69,6 +91,21 @@ begin
     FQuery.SQL.Clear;
     FQuery.SQL.Add(pvCmdText);
     FQuery.ExecSQL;
+  except on e: Exception do
+    begin
+       raise;
+    end;
+  end;
+end;
+
+function TCDSProvider.Query(pvCmdText, pvOperaMsg: string): TDataSet;
+begin
+  try
+    FQuery.Close;
+    FQuery.SQL.Clear;
+    FQuery.SQL.Add(pvCmdText);
+    FQuery.Open;
+    Result := FQuery;
   except on e: Exception do
     begin
        raise;
@@ -122,6 +159,12 @@ procedure TCDSProvider.SetConnection(const AValue: TUniConnection);
 begin
   FConnection := AValue;
   FQuery.Connection := FConnection;
+end;
+
+{ TMyUniQuery }
+
+procedure TMyUniQuery.PSReset;
+begin
 end;
 
 end.
