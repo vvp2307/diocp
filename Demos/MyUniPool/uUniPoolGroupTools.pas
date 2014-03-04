@@ -53,7 +53,7 @@ class function TUniPoolGroupTools.loadconfig(const pvPoolGroup:
     TUniConnectionPoolGroup): Boolean;
 var
   lvJSon:ISuperObject;
-  lvItem:TSuperAvlEntry;
+  lvItem:TSuperObjectIter;
   lvConnectString:String;
   lvPool:TUniConnectionPool;
   lvConfigFile:String;
@@ -64,32 +64,43 @@ begin
     Result := false;
     exit;
   end;
+
   lvJSon := JsnParseFromFile(lvConfigFile);
-  for lvItem in lvJSon.AsObject do
-  begin
-    lvPool := TUniConnectionPool.Create;
-    if lvItem.Value.I['maxcount'] <> 0 then
-    begin
-      //最大连接数
-      lvPool.MaxNum := lvItem.Value.I['maxcount'];
-    end else
-    begin
-      lvPool.MaxNum := 5;
-    end;
+
+  try
+    if ObjectFindFirst(lvJSon, lvItem) then
+    repeat
+
+      lvPool := TUniConnectionPool.Create;
+      if lvItem.val.I['maxcount'] <> 0 then
+      begin
+        //最大连接数
+        lvPool.MaxNum := lvItem.val.I['maxcount'];
+      end else
+      begin
+        lvPool.MaxNum := 5;
+      end;
 
     
-    if lvItem.Value.O['connectionString'] <> nil then
-    begin
-      lvPool.InitializeConnectionString(lvItem.Value.S['connectionString']);
-    end else
-    begin
-      raise Exception.CreateFmt(
-        '%s没有设置正确的连接串[connectionString]', [lvItem.Name]);
-    end;
-    pvPoolGroup.Add(lvItem.Name,
-      lvPool
-      );
+      if lvItem.val.O['connectionString'] <> nil then
+      begin
+        lvPool.InitializeConnectionString(lvItem.val.S['connectionString']);
+      end else
+      begin
+        raise Exception.CreateFmt(
+          '%s没有设置正确的连接串[connectionString]', [lvItem.key]);
+      end;
+      pvPoolGroup.Add(lvItem.key,
+        lvPool
+        );
+
+    until not ObjectFindNext(lvItem);
+  finally
+    ObjectFindClose(lvItem);
   end;
+
+
+
   
 end;
 
