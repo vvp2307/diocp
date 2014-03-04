@@ -7,7 +7,6 @@ uses
 
 type
   TObjectBlock = record
-  private
     FObject:TObject;
     FUsing:Boolean;
     FBorrowTime:Cardinal;   //½è³öÊ±¼ä
