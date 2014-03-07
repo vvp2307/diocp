@@ -30,12 +30,8 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="..\..\..\Source\IOCP\FileLogger.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPProtocol.pas" />
     <DCCReference Include="..\..\..\Source\Utils\uMemoLogger.pas" />
     <DCCReference Include="..\..\..\Source\Utils\uSocketTools.pas" />
-    <DCCReference Include="..\..\..\Source\WinSock2\JwaMSWSock.pas" />
-    <DCCReference Include="..\..\..\Source\WinSock2\JwaQos.pas" />
-    <DCCReference Include="..\..\..\Source\WinSock2\JwaWinsock2.pas" />
     <DCCReference Include="..\..\Common\JSonStream.pas" />
     <DCCReference Include="..\..\Common\superobject.pas" />
     <DCCReference Include="..\..\Common\uCRCTools.pas" />

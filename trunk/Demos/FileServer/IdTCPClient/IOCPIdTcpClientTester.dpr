@@ -11,12 +11,8 @@ uses
   uJSonStreamTools in '..\..\Common\uJSonStreamTools.pas',
   uCRCTools in '..\..\Common\uCRCTools.pas',
   superobject in '..\..\Common\superobject.pas',
-  JwaWinsock2 in '..\..\..\Source\WinSock2\JwaWinsock2.pas',
-  JwaMSWSock in '..\..\..\Source\WinSock2\JwaMSWSock.pas',
-  JwaQos in '..\..\..\Source\WinSock2\JwaQos.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   uIdTcpClientJSonStreamCoder in '..\..\IOCPCoder\uIdTcpClientJSonStreamCoder.pas',
-  uIOCPProtocol in '..\..\..\Source\IOCP\uIOCPProtocol.pas',
   uTesterTools in '..\..\IOCPCoder\uTesterTools.pas';
 
 {$R *.res}
