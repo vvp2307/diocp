@@ -1,4 +1,8 @@
 unit uMyObjectPool;
+///
+///
+/// 2014年3月10日 10:47:26
+///    移除等待, 借用对象时，等待
 
 interface
 
@@ -10,8 +14,10 @@ type
   private
     FObject:TObject;
     FUsing:Boolean;
-    FBorrowTime:Cardinal;   //借出时间
-    FRelaseTime:Cardinal;   //归还时间
+    FBorrowTime:Cardinal;       //借出时间
+    FRelaseTime:Cardinal;       //归还时间
+    FMarkWillFreeFlag:Boolean;  //归还是如果标记为true,在归还时释放这对象
+    FThreadID:Cardinal;         //线程ID   
   end;
 
   PObjectBlock = ^TObjectBlock;
@@ -20,28 +26,23 @@ type
   private
     FObjectClass:TClass;
 
+    FCurrentThreadID:Cardinal;
+
     FLocker: TCriticalSection;
+
+    FBusyCount: Integer;
 
     //全部归还信号
     FReleaseSingle: THandle;
 
-    //有可用的对象信号灯
-    FUsableSingle: THandle;
-
     FMaxNum: Integer;
 
     /// <summary>
-    ///   正在使用的对象列表
+    ///   连接池中的对象列表
     /// </summary>
-    FBusyList:TList;
-
-    /// <summary>
-    ///   可以使用的对象列表
-    /// </summary>
-    FUsableList:TList;
+    FObjectList: TList;
 
     FName: String;
-    FTimeOut: Integer;
 
 
     /// <summary>
@@ -57,10 +58,13 @@ type
     /// </summary>
     procedure lock;
 
+    procedure SetMaxNum(const Value: Integer);
+
     /// <summary>
     ///  解锁
     /// </summary>
     procedure unLock;
+    
   protected
     /// <summary>
     ///   清理空闲的对象
@@ -84,6 +88,12 @@ type
     ///  借用一个对象
     /// </summary>
     function borrowObject: TObject;
+
+
+    /// <summary>
+    ///   标志对象需要释放
+    /// </summary>
+    procedure makeObjectWillFree(pvObject:TObject);
 
 
     /// <summary>
@@ -114,11 +124,6 @@ type
     function waitForReleaseSingle: Boolean;
 
     /// <summary>
-    ///   等待全部归还信号灯
-    /// </summary>
-    procedure checkWaitForUsableSingle;
-
-    /// <summary>
     ///  当前总的个数
     /// </summary>
     property Count: Integer read GetCount;
@@ -126,7 +131,7 @@ type
     /// <summary>
     ///  最大对象个数
     /// </summary>
-    property MaxNum: Integer read FMaxNum write FMaxNum;
+    property MaxNum: Integer read FMaxNum write SetMaxNum;
 
 
 
@@ -135,14 +140,12 @@ type
     /// </summary>
     property Name: String read FName write FName;
 
-    /// <summary>
-    ///   等待超时信号灯
-    ///   单位毫秒
-    /// </summary>
-    property TimeOut: Integer read FTimeOut write FTimeOut;
   end;
 
 implementation
+
+uses
+  FileLogger;
 
 procedure TMyObjectPool.clear;
 var
@@ -151,14 +154,14 @@ var
 begin
   lock;
   try
-    for i := 0 to FUsableList.Count -1 do
+    for i := 0 to FObjectList.Count -1 do
     begin
-      lvObj := PObjectBlock(FUsableList[i]);
+      lvObj := PObjectBlock(FObjectList[i]);
       lvObj.FObject.Free;
       FreeMem(lvObj, SizeOf(TObjectBlock));
     end;
 
-    FUsableList.Clear;
+    FObjectList.Clear;
   finally
     unLock;
   end;
@@ -171,14 +174,19 @@ var
 begin
   lock;
   try
-    for i := 0 to FUsableList.Count -1 do
+    for i := FObjectList.Count -1  downto 0 do
     begin
-      lvObj := PObjectBlock(FUsableList[i]);
-      lvObj.FObject.Free;
-      FreeMem(lvObj, SizeOf(TObjectBlock));
+      lvObj := PObjectBlock(FObjectList[i]);
+      if not lvObj.FUsing then
+      begin
+        lvObj.FObject.Free;
+        FreeMem(lvObj, SizeOf(TObjectBlock));
+        FObjectList.Delete(i);
+      end;
     end;
 
-    FUsableList.Clear;
+    //重置信号
+    makeSingle;
   finally
     unLock;
   end;
@@ -190,17 +198,11 @@ begin
   FObjectClass := pvObjectClass;
   
   FLocker := TCriticalSection.Create();
-  FBusyList := TList.Create;
-  FUsableList := TList.Create;
+
+  FObjectList := TList.Create;
 
   //默认可以使用5个
   FMaxNum := 5;
-
-  //等待超时信号灯 5 秒
-  FTimeOut := 5 * 1000;
-
-  //
-  FUsableSingle := CreateEvent(nil, True, True, nil);
 
   //创建信号灯,手动控制
   FReleaseSingle := CreateEvent(nil, True, True, nil);
@@ -222,17 +224,14 @@ begin
   waitForReleaseSingle;  
   clear;
   FLocker.Free;
-  FBusyList.Free;
-  FUsableList.Free;
-
-  CloseHandle(FUsableSingle);
+  FObjectList.Free;
   CloseHandle(FReleaseSingle);
   inherited Destroy;
 end;
 
 function TMyObjectPool.getBusyCount: Integer;
 begin
-  Result := FBusyList.Count;
+  Result := FBusyCount;
 end;
 
 { TMyObjectPool }
@@ -244,22 +243,40 @@ var
 begin
   lock;
   try
-    for i := 0 to FBusyList.Count - 1 do
+    for i := 0 to FObjectList.Count - 1 do
     begin
-      lvObj := PObjectBlock(FBusyList[i]);
+      lvObj := PObjectBlock(FObjectList[i]);
       if lvObj.FObject = pvObject then
       begin
-        FUsableList.Add(lvObj);
-        lvObj.FRelaseTime := GetTickCount;
-        FBusyList.Delete(i);
+        if lvObj.FMarkWillFreeFlag then
+        begin          //需要释放对象
+          try
+            //释放该对象
+            pvObject.Free;
+          except
+            on E:Exception do
+            begin
+              TFileLogger.instance.logMessage(FName + '释放池对象出现了异常:' + e.Message, 'POOL_ERROR_');
+            end;
+          end;
+          lvObj.FObject := nil;
+          FreeMem(lvObj, SizeOf(TObjectBlock));
+          FObjectList.Delete(i);
+        end else
+        begin
+          lvObj.FRelaseTime := GetTickCount;
+          lvObj.FUsing := false;
+        end;
+
+        Dec(FBusyCount);
+        
         Break;
       end;
-    end;             
-
-    makeSingle;
+    end;
   finally
     unLock;
   end;
+  makeSingle;
 end;
 
 procedure TMyObjectPool.resetPool;
@@ -271,6 +288,10 @@ end;
 
 procedure TMyObjectPool.unLock;
 begin
+  if FCurrentThreadID <> GetCurrentThreadId then
+  begin
+    raise Exception.Create('有大问题');
+  end;
   FLocker.Leave;
 end;
 
@@ -279,81 +300,114 @@ var
   i:Integer;
   lvObj:PObjectBlock;
   lvObject:TObject;
+  lvType:Integer;
+  lvThreadID:Cardinal;
 begin
-  Result := nil;
-
-
-  while True do
-  begin
-    //是否有可用的对象
-    checkWaitForUsableSingle;
-    ////如果当前有1个可用，100线程同时借用时，都可以直接进入等待成功。
-
-    lock;
-    try
-      lvObject := nil;
-      if FUsableList.Count > 0 then
+  lock;
+  try
+    lvObject := nil;
+    
+    //是否还有可以直接使用的
+    if (FObjectList.Count - FBusyCount) > 0 then
+    begin
+      for i := 0 to FObjectList.Count - 1 do
       begin
-        lvObj := PObjectBlock(FUsableList[FUsableList.Count-1]);
-        FUsableList.Delete(FUsableList.Count-1);
-        FBusyList.Add(lvObj);
-        lvObj.FBorrowTime := getTickCount;
-        lvObj.FRelaseTime := 0;
-        lvObject := lvObj.FObject;
-      end else
-      begin
-        if GetCount >= FMaxNum then
-        begin
-          //如果当前有1个可用，100线程同时借用时，都可以直接(checkWaitForUsableSingle)成功。
-          continue;
-          //退出(unLock)后再进行等待....
-          //raise exception.CreateFmt('超出对象池[%s]允许的范围[%d]', [self.ClassName, FMaxNum]);
-        end;
-        lvObject := createObject;
-        if lvObject = nil then raise exception.CreateFmt('不能得到对象,对象池[%s]未继承处理createObject函数', [self.ClassName]);
-
-        GetMem(lvObj, SizeOf(TObjectBlock));
-        try
-          ZeroMemory(lvObj, SizeOf(TObjectBlock));
-        
-          lvObj.FObject := lvObject;
-          lvObj.FBorrowTime := GetTickCount;
-          lvObj.FRelaseTime := 0;
-          FBusyList.Add(lvObj);
-        except
-          lvObject.Free;
-          FreeMem(lvObj, SizeOf(TObjectBlock));
-          raise;
+        lvObj := PObjectBlock(FObjectList[i]);
+        if (not lvObj.FUsing)
+          and (not lvObj.FMarkWillFreeFlag)
+          then
+        begin    // 空闲，标志使用
+          lvObject := lvObj.FObject;
+          break;
         end;
       end;
 
-      //设置信号灯
-      makeSingle;
+      if (lvObject = nil) or (lvObj.FUsing) then
+      begin
+         raise Exception.CreateFmt('创建借用,连接池(%s-%s)出现了不应该出现的问题!', [self.ClassName, self.FName]);
+      end;
 
-      Result := lvObject;
-      //获取到
-      Break;
-    finally
-      unLock;
+      lvType := 0;
     end;
+
+    if lvObject = nil then
+    begin         //尝试创建对象
+
+      if GetCount >= FMaxNum then
+      begin
+        raise exception.CreateFmt('超出对象池[%s]允许的范围[%d],不能再创建新的对象', [self.ClassName, FMaxNum]);
+      end;
+
+      lvObject := createObject;
+
+      if lvObject = nil then raise exception.CreateFmt('不能得到对象,对象池[%s]未继承处理createObject函数', [self.ClassName]);
+
+      GetMem(lvObj, SizeOf(TObjectBlock));
+      try
+        ZeroMemory(lvObj, SizeOf(TObjectBlock));
+        lvObj.FObject := lvObject;
+
+
+        FObjectList.Add(lvObj);
+      except
+        lvObject.Free;
+        FreeMem(lvObj, SizeOf(TObjectBlock));
+        raise;
+      end;
+
+      lvType := 1;
+    end;
+
+    if lvObject = nil then
+    begin
+      raise Exception.CreateFmt('创建借用判断对象,连接池(%s-%s)出现了不应该出现的问题!', [self.ClassName, self.FName]);
+    end;
+
+    if lvObj.FUsing then
+    begin
+      raise Exception.CreateFmt('创建借用判断,连接池(%s-%s)出现了不应该出现的问题!', [self.ClassName, self.FName]);
+    end;
+
+
+    //正在使用
+    lvObj.FUsing := true;
+    lvObj.FThreadID := GetCurrentThreadId;
+    lvObj.FMarkWillFreeFlag := False;
+    lvObj.FBorrowTime := GetTickCount;
+    lvObj.FRelaseTime := 0;
+    Inc(FBusyCount);
+
+    Result := lvObject;
+  finally
+    unLock;
+  end;
+
+end;
+
+procedure TMyObjectPool.makeObjectWillFree(pvObject: TObject);
+var
+  i:Integer;
+  lvObj:PObjectBlock;
+begin
+  lock;
+  try
+    for i := 0 to FObjectList.Count - 1 do
+    begin
+      lvObj := PObjectBlock(FObjectList[i]);
+      if (lvObj.FObject = pvObject) then
+      begin
+        lvObj.FMarkWillFreeFlag := true;
+        Break;
+      end;    
+    end;
+  finally
+    unLock;
   end;
 end;
 
 procedure TMyObjectPool.makeSingle;
 begin
-  if (GetCount < FMaxNum)      //还可以创建
-     or (FUsableList.Count > 0)  //还有可使用的
-     then
-  begin
-    //设置有信号
-    SetEvent(FUsableSingle);
-  end else
-  begin
-    //没有信号
-    ResetEvent(FUsableSingle);
-  end;
-
-  if FBusyList.Count > 0 then
+  if FBusyCount > 0 then
   begin
     //没有信号
     ResetEvent(FReleaseSingle);
@@ -366,12 +420,13 @@ end;
 
 function TMyObjectPool.GetCount: Integer;
 begin
-  Result := FUsableList.Count + FBusyList.Count;
+  Result := FObjectList.Count;
 end;
 
 procedure TMyObjectPool.lock;
 begin
   FLocker.Enter;
+  FCurrentThreadID := GetCurrentThreadId;
 end;
 
 function TMyObjectPool.waitForReleaseSingle: Boolean;
@@ -386,18 +441,6 @@ begin
   end;
 end;
 
-procedure TMyObjectPool.checkWaitForUsableSingle;
-var
-  lvRet:DWORD;
-begin
-  lvRet := WaitForSingleObject(FUsableSingle, FTimeOut);
-  if lvRet <> WAIT_OBJECT_0 then
-  begin
-    raise Exception.CreateFmt('对象池[%s]等待可使用对象超时(%d),使用状态[%d/%d]!',
-      [FName, lvRet, getBusyCount, FMaxNum]);
-  end;                                                                 
-end;
-
 function TMyObjectPool.killDeadLockObjects(pvTimeOut: Integer = 30 * 1000):
     Integer;
 var
@@ -409,21 +452,35 @@ begin
   lock;
   try
     lvCounter := GetTickCount;
-    for i := FBusyList.Count - 1 downto 0 do
+    for i := FObjectList.Count - 1 downto 0 do
     begin
-      lvObj := PObjectBlock(FBusyList[i]);
-      if (lvCounter - lvObj.FBorrowTime) >= pvTimeOut then
-      begin
-        lvObj.FObject.Free;
+      lvObj := PObjectBlock(FObjectList[i]);
+      if ((lvCounter - lvObj.FBorrowTime) >= pvTimeOut) or (lvObj.FMarkWillFreeFlag) then
+      begin      //超时
+        if lvObj.FUsing then
+        begin
+          Dec(FBusyCount);
+        end;
+
+        try
+          lvObj.FObject.Free;
+        except
+        end;
         FreeMem(lvObj, SizeOf(TObjectBlock));
-        FBusyList.Delete(i);
-        Inc(Result);
+        FObjectList.Delete(i); 
+        Inc(Result);  
       end;
     end;
     makeSingle;
   finally
     unLock;
   end;
+end;
+
+procedure TMyObjectPool.SetMaxNum(const Value: Integer);
+begin
+  FMaxNum := Value;
+  makeSingle;
 end;
 
 end.
