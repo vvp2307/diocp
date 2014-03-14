@@ -17,6 +17,12 @@ type
     procedure Add(pvKey: string; pvPool: TADOConnectionPool);
     function getPool(pvKey:string): TADOConnectionPool;
     procedure waitForGiveBack;
+
+
+    /// <summary>
+    ///   10分钟还没有执行完的连接将会被删除
+    /// </summary>
+    function killDeadObject(pvTimeOut:Integer = 600 * 1000): string;
     function getPoolINfo():String;
   end;
 
@@ -114,6 +120,22 @@ begin
       Format('%s(总数:%d,使用:%d)',
         [lvItem.key, lvItem.obj.Count,
         lvItem.obj.getBusyCount]) + sLineBreak;
+  end;
+end;
+
+function TADOConnectionPoolGroup.killDeadObject(pvTimeOut:Integer = 600 *
+    1000): string;
+var
+  i, j:Integer;
+  lvItem:PPoolItem;
+
+begin
+  for I := 0 to FList.Count - 1 do
+  begin
+    lvItem := PPoolItem(FList[i]);
+    j := lvItem.obj.killDeadLockObjects(pvTimeOut);
+
+    Result := Result + Format('连接池(%s), 超时检测释放(%d)个对象',[lvItem.key, j]) + sLineBreak;    
   end;
 end;
 
