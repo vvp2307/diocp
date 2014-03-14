@@ -11,9 +11,8 @@ uses
 
 type
   TObjectBlock = record
-  private
     FObject:TObject;
-    FUsing:Boolean;
+    FUsingCounter: Integer;     //连接计数器 <原则上要么是0，要么是1>,如果大于1则表示对象池有缺陷
     FBorrowTime:Cardinal;       //借出时间
     FRelaseTime:Cardinal;       //归还时间
     FMarkWillFreeFlag:Boolean;  //归还是如果标记为true,在归还时释放这对象
@@ -103,7 +102,7 @@ type
 
 
     /// <summary>
-    ///  清楚已经长时间锁定的对象
+    ///   清理已经长时间锁定的对象(默认30秒)
     /// </summary>
     function killDeadLockObjects(pvTimeOut: Integer = 30 * 1000): Integer;
 
@@ -177,7 +176,7 @@ begin
     for i := FObjectList.Count -1  downto 0 do
     begin
       lvObj := PObjectBlock(FObjectList[i]);
-      if not lvObj.FUsing then
+      if lvObj.FUsingCounter = 0 then
       begin
         lvObj.FObject.Free;
         FreeMem(lvObj, SizeOf(TObjectBlock));
@@ -240,6 +239,7 @@ procedure TMyObjectPool.releaseObject(pvObject:TObject);
 var
   i:Integer;
   lvObj:PObjectBlock;
+  lvMsg:String;
 begin
   lock;
   try
@@ -256,7 +256,13 @@ begin
           except
             on E:Exception do
             begin
-              TFileLogger.instance.logMessage(FName + '释放池对象出现了异常:' + e.Message, 'POOL_ERROR_');
+              try
+                lvMsg := FName + '释放池对象出现了异常, 连接池使用计数器:'
+                  + IntToStr(lvObj.FUsingCounter) + ',' + e.Message;
+                TFileLogger.instance.logMessage(lvMsg,
+                  'POOL_ERROR_');
+              except
+              end;
             end;
           end;
           lvObj.FObject := nil;
@@ -265,7 +271,7 @@ begin
         end else
         begin
           lvObj.FRelaseTime := GetTickCount;
-          lvObj.FUsing := false;
+          InterlockedDecrement(lvObj.FUsingCounter);
         end;
 
         Dec(FBusyCount);
@@ -307,13 +313,13 @@ begin
   try
     lvObject := nil;
     
-    //是否还有可以直接使用的
+    ///是否还有可以直接使用的
     if (FObjectList.Count - FBusyCount) > 0 then
     begin
       for i := 0 to FObjectList.Count - 1 do
       begin
         lvObj := PObjectBlock(FObjectList[i]);
-        if (not lvObj.FUsing)
+        if (lvObj.FUsingCounter = 0)
           and (not lvObj.FMarkWillFreeFlag)
           then
         begin    // 空闲，标志使用
@@ -322,7 +328,7 @@ begin
         end;
       end;
 
-      if (lvObject = nil) or (lvObj.FUsing) then
+      if (lvObject = nil) or (lvObj.FUsingCounter > 0) then
       begin
          raise Exception.CreateFmt('创建借用,连接池(%s-%s)出现了不应该出现的问题!', [self.ClassName, self.FName]);
       end;
@@ -330,8 +336,8 @@ begin
       lvType := 0;
     end;
 
-    if lvObject = nil then
-    begin         //尝试创建对象
+    if lvObject = nil then    //尝试创建对象
+    begin
 
       if GetCount >= FMaxNum then
       begin
@@ -346,8 +352,6 @@ begin
       try
         ZeroMemory(lvObj, SizeOf(TObjectBlock));
         lvObj.FObject := lvObject;
-
-
         FObjectList.Add(lvObj);
       except
         lvObject.Free;
@@ -363,18 +367,19 @@ begin
       raise Exception.CreateFmt('创建借用判断对象,连接池(%s-%s)出现了不应该出现的问题!', [self.ClassName, self.FName]);
     end;
 
-    if lvObj.FUsing then
+    if lvObj.FUsingCounter > 0 then
     begin
-      raise Exception.CreateFmt('创建借用判断,连接池(%s-%s)出现了不应该出现的问题!', [self.ClassName, self.FName]);
-    end;
+      raise Exception.CreateFmt('创建借用判断,连接池(%s-%s)出现了不应该出现的问题(lvObj.FUsingCounter> 0)!', [self.ClassName, self.FName]);
+    end;  
 
+    //累计计数器
+    InterlockedIncrement(lvObj.FUsingCounter);
 
-    //正在使用
-    lvObj.FUsing := true;
     lvObj.FThreadID := GetCurrentThreadId;
     lvObj.FMarkWillFreeFlag := False;
     lvObj.FBorrowTime := GetTickCount;
     lvObj.FRelaseTime := 0;
+
     Inc(FBusyCount);
 
     Result := lvObject;
@@ -388,6 +393,7 @@ procedure TMyObjectPool.makeObjectWillFree(pvObject: TObject);
 var
   i:Integer;
   lvObj:PObjectBlock;
+  lvMsg :String;
 begin
   lock;
   try
@@ -396,6 +402,22 @@ begin
       lvObj := PObjectBlock(FObjectList[i]);
       if (lvObj.FObject = pvObject) then
       begin
+        try
+          lvMsg := FName + '池对象被标志释放, 对象使用计数器:'
+            + IntToStr(lvObj.FUsingCounter);
+            
+          if lvObj.FUsingCounter > 1 then
+          begin
+            TFileLogger.instance.logMessage(lvMsg,
+              'POOL_ERROR_');
+          end else
+          begin
+            TFileLogger.instance.logMessage(lvMsg,
+              'POOL_DEBUG_');
+          end;
+        except
+        end;
+        
         lvObj.FMarkWillFreeFlag := true;
         Break;
       end;    
@@ -445,8 +467,10 @@ function TMyObjectPool.killDeadLockObjects(pvTimeOut: Integer = 30 * 1000):
     Integer;
 var
   i:Integer;
-  lvCounter:Cardinal;
+  lvTimeCounter, lvCounter:Cardinal;
   lvObj:PObjectBlock;
+  lvMsg:string;
+
 begin
   Result := 0;
   lock;
@@ -455,20 +479,44 @@ begin
     for i := FObjectList.Count - 1 downto 0 do
     begin
       lvObj := PObjectBlock(FObjectList[i]);
-      if ((lvCounter - lvObj.FBorrowTime) >= pvTimeOut) or (lvObj.FMarkWillFreeFlag) then
-      begin      //超时
-        if lvObj.FUsing then
-        begin
-          Dec(FBusyCount);
-        end;
+      if lvObj.FUsingCounter > 0 then   //正在使用的对象
+      begin
+        lvTimeCounter := (lvCounter - lvObj.FBorrowTime);
+        if (lvTimeCounter >= pvTimeOut) or (lvObj.FMarkWillFreeFlag) then
+        begin      //超时
+          if lvObj.FUsingCounter > 0 then
+          begin
+            Dec(FBusyCount);
+          end;
 
-        try
-          lvObj.FObject.Free;
-        except
+          try
+            lvObj.FObject.Free;
+          except
+            on E:Exception do
+            begin
+              try
+                lvMsg := FName + '释放池对象出现了异常, 连接池使用计数器:'
+                  + IntToStr(lvObj.FUsingCounter) + ',' + e.Message;
+                TFileLogger.instance.logMessage(lvMsg,
+                  'POOL_ERROR_');
+              except
+              end;
+            end;
+          end;
+
+          try
+            lvMsg :=
+              Format('池(%s) 对象超时检测释放, 对象使用计数器:%d, 允许超时TimeOut:%d, 借出计时:%d',
+                [FName, lvObj.FUsingCounter, pvTimeOut, lvTimeCounter]);
+            TFileLogger.instance.logMessage(lvMsg,
+              'POOL_KILL_');
+          except
+          end;
+        
+          FreeMem(lvObj, SizeOf(TObjectBlock));
+          FObjectList.Delete(i); 
+          Inc(Result);
         end;
-        FreeMem(lvObj, SizeOf(TObjectBlock));
-        FObjectList.Delete(i); 
-        Inc(Result);  
       end;
     end;
     makeSingle;

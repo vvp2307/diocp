@@ -73,10 +73,10 @@ begin
     if lvItem.Value.I['maxcount'] <> 0 then
     begin
       //最大连接数
-      lvPool.MaxCount := lvItem.Value.I['maxcount'];
+      lvPool.MaxNum := lvItem.Value.I['maxcount'];
     end else
     begin
-      lvPool.MaxCount := 5;
+      lvPool.MaxNum := 5;
     end;
 
     
