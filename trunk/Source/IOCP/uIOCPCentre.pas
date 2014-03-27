@@ -11,7 +11,7 @@ interface
 uses
   WinSock2, Windows, SysUtils, uIOCPTools,
   uMemPool,
-  uIOCPProtocol, uBuffer, SyncObjs, Classes;
+  uIOCPProtocol, uBuffer, SyncObjs, Classes, uMyTypes;
 
 type
   TIOCPClientContext = class;
@@ -80,10 +80,10 @@ type
     FContextOnLineList: TList;
 
     //服务端套接字
-    FSSocket:Cardinal;
+    FSSocket:TSocket;
 
     //IOCP内核端口
-    FIOCoreHandle:Cardinal;
+    FIOCoreHandle:NativeUInt;
 
     //侦听端口
     FPort: Integer;
@@ -176,6 +176,7 @@ type
 
   TIOCPClientContext = class(TObject)
   private
+
     //正常释放
     FNormalFree:Boolean;
     
@@ -382,7 +383,7 @@ begin
 
      //将套接字、完成端口客户端对象绑定在一起。
      //2013年4月20日 13:45:10
-     lvPerIOPort := CreateIoCompletionPort(lvSocket, FIOCoreHandle, Cardinal(lvClientContext), 0);
+     lvPerIOPort := CreateIoCompletionPort(lvSocket, FIOCoreHandle, NativeUInt(lvClientContext), 0);
      if (lvPerIOPort = 0) then
      begin
         Exit;
@@ -1074,6 +1075,9 @@ procedure TIOCPClientContext.writeObject(const pvDataObject:TObject);
 var
   lvOutBuffer:TBufferLink;
 begin
+  /// <summary>
+  ///   内部分配内存时是使用的内存池
+  /// </summary>
   lvOutBuffer := TBufferLink.Create;
   try
     self.StateINfo := 'TIOCPClientContext.writeObject,准备编码对象到lvOutBuffer';
