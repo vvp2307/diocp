@@ -11,7 +11,7 @@ type
     class procedure checkInitialize;
     class procedure checkFinalize;
     class procedure logErrMessage(pvMsg:string);
-    class procedure logMessage(pvMsg:string);
+    class procedure logMessage(pvMsg: string; pvLogFilePre: string = '');
     class procedure logDebugMessage(pvMsg:string);
 
     class procedure logWSAError(pvPre: String = '');
@@ -81,9 +81,10 @@ begin
   FErrLogger.logMessage(pvMsg);
 end;
 
-class procedure TIOCPFileLogger.logMessage(pvMsg:string);
+class procedure TIOCPFileLogger.logMessage(pvMsg: string; pvLogFilePre: string
+    = '');
 begin
-  FLogger.logMessage(pvMsg);
+  FLogger.logMessage(pvMsg, pvLogFilePre);
 end;
 
 class procedure TIOCPFileLogger.logWSAError(pvPre: String = '');

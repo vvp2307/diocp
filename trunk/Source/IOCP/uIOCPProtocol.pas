@@ -9,7 +9,7 @@ const
   //每次接收最大的字节数
   //OVERLAPPEDEx.DataBuf中每次分配空间数
   //每次发送最大的字节数
-  MAX_OVERLAPPEDEx_BUFFER_SIZE = 1024 * 2;  //8K
+  MAX_OVERLAPPEDEx_BUFFER_SIZE = 1024 * 8;  //8K
 
 const
   IO_TYPE_Accept = 1;
