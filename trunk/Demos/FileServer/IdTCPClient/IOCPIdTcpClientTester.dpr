@@ -13,7 +13,9 @@ uses
   superobject in '..\..\Common\superobject.pas',
   FileLogger in '..\..\..\Source\IOCP\FileLogger.pas',
   uIdTcpClientJSonStreamCoder in '..\..\IOCPCoder\uIdTcpClientJSonStreamCoder.pas',
-  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas';
+  uTesterTools in '..\..\IOCPCoder\uTesterTools.pas',
+  uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas',
+  uZipTools in '..\..\..\Source\Utils\uZipTools.pas';
 
 {$R *.res}
 
