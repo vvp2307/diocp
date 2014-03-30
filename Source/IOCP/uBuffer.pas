@@ -107,6 +107,9 @@ type
   end;
 
 
+  /// <summary>
+  ///   内部分配内存时是使用的内存池
+  /// </summary>
   TBufferLink = class
   private
     FHead: PMemoryBlock; //头部

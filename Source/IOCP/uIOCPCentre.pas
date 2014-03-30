@@ -176,6 +176,28 @@ type
 
   TIOCPClientContext = class(TObject)
   private
+    //发送缓存锁
+    FSendCacheLocker:TCriticalSection;
+
+    //发送缓存<TBufferLink>列表
+    FSendCache:TList;
+
+    /// <summary>
+    ///   当前正在投递的数据
+    /// </summary>
+    FCurrentSendBuffer:TBufferLink;
+
+    /// <summary>
+    ///   从缓存中投开始投递一块数据
+    /// </summary>
+    procedure checkPostWSASendCache;
+
+    /// <summary>
+    ///  清理发送缓存区
+    /// </summary>
+    procedure clearSendCache;
+  private
+
 
     //正常释放
     FNormalFree:Boolean;
@@ -724,7 +746,10 @@ begin
           TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
           TIOCPDebugger.incRecvBlockCount;
 
-          lvClientContext.Lock;
+          //接受不针对单个socket，不需要加锁
+          ///2014年3月30日 17:00:03
+          ///  d10.天地弦
+          //lvClientContext.Lock;
           try
             lvClientContext.FIsBusying := true;
             //加入到套接字对应的缓存中，处理逻辑
@@ -732,7 +757,7 @@ begin
               lvIOData.Overlapped.InternalHigh);
           finally
             lvClientContext.FIsBusying := false;
-            lvClientContext.unLock;
+            //lvClientContext.unLock;
           end;
 
           //需要进行回收
@@ -760,7 +785,7 @@ begin
 
       if lvIOData.DataBuf.len <> lvBytesTransferred then
       begin
-        TIOCPFileLogger.logDebugMessage('发送字节不一致.');
+        TIOCPFileLogger.logMessage('发送字节不一致.', 'IOCP_SEND_ERR_');
       end;
 
       //已经发送字节数
@@ -770,6 +795,9 @@ begin
       //回收数据块
       TIODataMemPool.instance.giveBackIOData(lvIOData);
       //不必要投递接收请求
+
+      //继续投递下一块数据
+      lvClientContext.checkPostWSASendCache;
       
     end else if lvIOData.IO_TYPE = IO_TYPE_Close then
     begin    //关闭请求
@@ -865,6 +893,23 @@ begin
   TIODataMemPool.instance.waiteForGiveBack;
 end;
 
+procedure TIOCPClientContext.clearSendCache;
+var
+  i: Integer;
+begin
+  FSendCacheLocker.Enter;
+  try
+    for i := 0 to FSendCache.Count - 1 do
+    begin
+      TBufferLink(FSendCache[i]).Free;
+    end;
+
+    FSendCache.Clear;
+  finally
+    FSendCacheLocker.Leave;
+  end;
+end;
+
 procedure TIOCPClientContext.close;
 begin
   PostWSAClose;
@@ -884,25 +929,36 @@ end;
 constructor TIOCPClientContext.Create(ASocket: TSocket = 0);
 begin
   inherited Create;
+
+  FSendCache := TList.Create;
   FUsing := false;
   FCS := TCriticalSection.Create;
+  FSendCacheLocker := TCriticalSection.Create;
+  FCurrentSendBuffer := nil;
+
   FSocket := ASocket;
   FBuffers := TBufferLink.Create();
 end;
 
 destructor TIOCPClientContext.Destroy;
 begin
+  clearSendCache;
+
   if not FNormalFree then
   begin
     //非正常Free,记录日志
     TIOCPFileLogger.logErrMessage('TIOCPClientContext.Destroy,被非正常释放,请检测代码');
   end;
-  
+
   closeClientSocket;
   FBuffers.Free;
   FBuffers := nil;
   FCS.Free;
   FCS := nil;
+
+
+  FSendCacheLocker.Free;
+  FSendCacheLocker := nil;
   inherited Destroy;
 end;
 
@@ -964,6 +1020,72 @@ begin
   FPostedCloseQuest := false;
   FWaitingGiveBack := false;
   FBuffers.clearBuffer;
+end;
+
+procedure TIOCPClientContext.checkPostWSASendCache;
+var
+  lvIOData:POVERLAPPEDEx;
+  lvErrCode, lvRet:Integer;
+  lvWrited:Boolean;
+begin
+  lvWrited := false;
+  FSendCacheLocker.Enter;
+  try
+    //检测缓存中是否有需要发送的数据
+    if FCurrentSendBuffer = nil then
+    begin
+      if FSendCache.Count > 0 then
+      begin
+        FCurrentSendBuffer :=TBufferLink(FSendCache.Items[0]);
+      end;
+    end;
+
+    //退出
+    if FCurrentSendBuffer = nil then exit;
+
+    //发送一块内存块
+    if FCurrentSendBuffer.validCount > 0 then
+    begin
+      lvIOData := TIODataMemPool.instance.borrowIOData;
+      lvIOData.IO_TYPE := IO_TYPE_Send;
+      lvIOData.DataBuf.len :=
+        FCurrentSendBuffer.readBuffer(lvIOData.DataBuf.buf, lvIOData.DataBuf.len);
+
+      //发送一个内存块
+      if not FIOCPObject.PostWSASendBlock(FSocket, lvIOData) then
+      begin
+        //发送不成功
+        TIODataMemPool.instance.giveBackIOData(lvIOData);
+        closesocket(FSocket);
+      end;
+    end;
+
+
+    //如果数据都发送完成从发送缓存中移除
+    if FCurrentSendBuffer.validCount = 0 then
+    begin
+
+      FSendCache.Remove(FCurrentSendBuffer);
+
+      //释放发送的内存块
+      FCurrentSendBuffer.Free;
+      FCurrentSendBuffer := nil;
+
+      lvWrited := true;
+      TIOCPDebugger.incSendObjectCount;
+
+      self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';
+    end;
+
+  finally
+    FSendCacheLocker.Leave;
+  end;
+
+  if lvWrited then
+  begin
+    DoOnWriteBack;
+  end;
+  
 end;
 
 procedure TIOCPClientContext.invokeConnect;
@@ -1064,7 +1186,12 @@ begin
   FPostedCloseQuest := false;
   FWaitingGiveBack := false;
   FBuffers.clearBuffer;
+
+  //清理缓存
+  clearSendCache;
 end;
+
+
 
 procedure TIOCPClientContext.unLock;
 begin
@@ -1075,23 +1202,59 @@ procedure TIOCPClientContext.writeObject(const pvDataObject:TObject);
 var
   lvOutBuffer:TBufferLink;
 begin
-  /// <summary>
-  ///   内部分配内存时是使用的内存池
-  /// </summary>
+  //解码
   lvOutBuffer := TBufferLink.Create;
   try
     self.StateINfo := 'TIOCPClientContext.writeObject,准备编码对象到lvOutBuffer';
     TIOCPContextFactory.instance.FEncoder.Encode(pvDataObject, lvOutBuffer);
-    FIOCPObject.PostWSASend(self.FSocket, lvOutBuffer);
-    
-    TIOCPDebugger.incSendObjectCount;
-    
-    self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';
-    DoOnWriteBack;
+  except
+    lvOutBuffer.Free;
+    raise;
+  end;
+
+  FSendCacheLocker.Enter;
+  try
+    //添加到待发送的列表
+    FSendCache.Add(lvOutBuffer);
+
+    if FCurrentSendBuffer = nil then
+    begin
+      FCurrentSendBuffer := lvOutBuffer;
+
+      //准备投递一块数据
+      checkPostWSASendCache;
+    end;
+    //不为nil说明还有需要投递的任务
 
   finally
-    lvOutBuffer.Free;
+    FSendCacheLocker.Leave;
   end;
+
+  self.StateINfo := 'TIOCPClientContext.writeObject,投递到发送缓存';
+
+//  FIOCPObject.PostWSASend(self.FSocket, lvOutBuffer);
+//
+//  TIOCPDebugger.incSendObjectCount;
+//
+//  self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';
+//  DoOnWriteBack;
+
+
+///  之前的代码<一次性投递>
+//  lvOutBuffer := TBufferLink.Create;
+//  try
+//    self.StateINfo := 'TIOCPClientContext.writeObject,准备编码对象到lvOutBuffer';
+//    TIOCPContextFactory.instance.FEncoder.Encode(pvDataObject, lvOutBuffer);
+//    FIOCPObject.PostWSASend(self.FSocket, lvOutBuffer);
+//
+//    TIOCPDebugger.incSendObjectCount;
+//
+//    self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';
+//    DoOnWriteBack;
+//
+//  finally
+//    lvOutBuffer.Free;
+//  end;
 end;
 
 procedure TIOCPContextFactory.tryExecuteCloseContext(context:
