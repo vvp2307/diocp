@@ -13,6 +13,15 @@ uses
   uMemPool,
   uIOCPProtocol, uBuffer, SyncObjs, Classes, uMyTypes;
 
+
+const
+  // Timeout to use with GetQueuedCompletionStatus. Some versions of windows
+  // have a "bug" where a call to GetQueuedCompletionStatus can appear stuck
+  // even though there are events waiting on the queue. Using a timeout helps
+  // to work around the issue.
+  //#include <boost/asio/detail/win_iocp_io_service.hpp> 中的
+  gqcs_timeout = 500;
+
 type
   TIOCPClientContext = class;
   TIOCPClientContextClass = class of TIOCPClientContext;
@@ -386,6 +395,8 @@ begin
 
   //addrlen := sizeof(addr);
   //lvSocket := Accept(FSSocket, @addr, @addrlen);
+
+
   lvSocket := WSAAccept(FSSocket, nil, nil, nil, 0);
   if (lvSocket = INVALID_SOCKET) then
   begin
@@ -679,6 +690,13 @@ begin
   Result := IOCP_RESULT_OK;
 
   //工作者线程会停止到GetQueuedCompletionStatus函数处，直到接受到数据为止
+
+  /// //#include <boost/asio/detail/win_iocp_io_service.hpp> 有一段这样的说明
+  ///   意思是应该把INFINITE用其他代替(500)
+  // Timeout to use with GetQueuedCompletionStatus. Some versions of windows
+  // have a "bug" where a call to GetQueuedCompletionStatus can appear stuck
+  // even though there are events waiting on the queue. Using a timeout helps
+  // to work around the issue.
   lvResultStatus := GetQueuedCompletionStatus(FIOCoreHandle,
     lvBytesTransferred,
     {$if defined(NEED_NativeUInt)}
