@@ -271,9 +271,11 @@ begin
         end else
         begin
           lvObj.FRelaseTime := GetTickCount;
-          InterlockedDecrement(lvObj.FUsingCounter);
+          //置使用标记
+          Dec(lvObj.FUsingCounter);
         end;
 
+        //减少正在忙的个数
         Dec(FBusyCount);
         
         Break;
@@ -344,18 +346,20 @@ begin
         raise exception.CreateFmt('超出对象池[%s]允许的范围[%d],不能再创建新的对象', [self.ClassName, FMaxNum]);
       end;
 
+      lvObj := nil;
       lvObject := createObject;
-
       if lvObject = nil then raise exception.CreateFmt('不能得到对象,对象池[%s]未继承处理createObject函数', [self.ClassName]);
-
-      GetMem(lvObj, SizeOf(TObjectBlock));
       try
+        GetMem(lvObj, SizeOf(TObjectBlock));
         ZeroMemory(lvObj, SizeOf(TObjectBlock));
         lvObj.FObject := lvObject;
         FObjectList.Add(lvObj);
       except
-        lvObject.Free;
-        FreeMem(lvObj, SizeOf(TObjectBlock));
+        try
+          lvObject.Free;
+        except
+        end;
+        if lvObj <> nil then FreeMem(lvObj, SizeOf(TObjectBlock));
         raise;
       end;
 
@@ -373,7 +377,7 @@ begin
     end;  
 
     //累计计数器
-    InterlockedIncrement(lvObj.FUsingCounter);
+    Inc(lvObj.FUsingCounter);
 
     lvObj.FThreadID := GetCurrentThreadId;
     lvObj.FMarkWillFreeFlag := False;
