@@ -1,4 +1,8 @@
 unit uUniConnectionPoolGroup;
+/// <summary>
+///   2014年4月9日17:11:06
+///    添加createConnections
+/// </summary>
 
 interface
 
@@ -18,6 +22,8 @@ type
     function getPool(pvKey:string): TUniConnectionPool;
     procedure waitForGiveBack;
     function getPoolINfo():String;
+
+    procedure createConnections(pvNum:Integer);
   end;
 
 implementation
@@ -40,6 +46,18 @@ constructor TUniConnectionPoolGroup.Create;
 begin
   inherited Create;
   FList := TList.Create();
+end;
+
+procedure TUniConnectionPoolGroup.createConnections(pvNum: Integer);
+var
+  i:Integer;
+  lvItem:PPoolItem;
+begin
+  for I := 0 to FList.Count - 1 do
+  begin
+    lvItem := PPoolItem(FList[i]);
+    lvItem.obj.createObjects(pvNum);
+  end;
 end;
 
 destructor TUniConnectionPoolGroup.Destroy;

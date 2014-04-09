@@ -3,13 +3,15 @@ unit uUniConnectionPool;
 interface
 
 uses
-  uMyObjectPool, SysUtils,ActiveX, Uni;
+  uMyObjectPool, SysUtils,ActiveX, Uni, Classes;
 
 type
   TUniConnectionPool = class(TMyObjectPool)
   private
     FCommandTimeOut: Integer;
     FConnectionString:string;
+    FObject:TObject;
+    procedure innerCreateObject;
   protected
     function createObject: TObject; override;
   public
@@ -28,12 +30,19 @@ implementation
 
 function TUniConnectionPool.createObject: TObject;
 begin
+
+  CoInitialize(nil);
   Result := TUniConnection.Create(nil);
   TUniConnection(Result).ConnectString := FConnectionString;
   if FCommandTimeOut <> 0 then
   begin
     //TUniConnection(Result).CommandTimeout := FCommandTimeOut;
   end;
+
+//  TThread.Synchronize(nil, innerCreateObject);
+//  Result := FObject;
+
+
 end;
 
 procedure TUniConnectionPool.InitializeConnectionString(
@@ -44,6 +53,17 @@ begin
   lvConnectionString := pvConnectionString;
   lvConnectionString := StringReplace(lvConnectionString, '%appPath%', ExtractFilePath(ParamStr(0)), [rfReplaceAll, rfIgnoreCase]);
   FConnectionString := lvConnectionString;
+end;
+
+procedure TUniConnectionPool.innerCreateObject;
+begin
+  CoInitialize(nil);
+  FObject := TUniConnection.Create(nil);
+  TUniConnection(FObject).ConnectString := FConnectionString;
+  if FCommandTimeOut <> 0 then
+  begin
+    //TUniConnection(Result).CommandTimeout := FCommandTimeOut;
+  end;
 end;
 
 end.
