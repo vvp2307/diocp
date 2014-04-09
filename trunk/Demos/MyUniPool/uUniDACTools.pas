@@ -4,6 +4,7 @@ interface
 
 uses
   SysUtils, Classes, uUniConnectionPool,
+  Windows,
   SQLServerUniProvider,
   SQLiteUniProvider,
   uUniConnectionPoolGroup, DBClient, uMyObjectPool, Uni,
@@ -135,24 +136,42 @@ begin
 
   if lvUniPool = nil then
     raise Exception.CreateFmt('无法从数据源池组中找到对应的数据源[%s]', [lvConnID]);
-
-  lvConn := TUniConnection(lvUniPool.borrowObject);
+//
+  lvConn := TUniConnection.Create(nil);  //  (lvUniPool.borrowObject);
   try
+
+    lvConn.ConnectString := 'Provider Name=SQL Server;Data Source=.;Database=haoMail_DIOCP;User ID=sa;Password=sa';
+    lvConn.LoginPrompt := false;
     if not lvConn.Connected then
     begin
       CoInitialize(nil);
       lvConn.Connect;
     end;
-    lvUniOperator := TUniOperator(__UniOperatorPool.borrowObject);
-    try
-      lvUniOperator.Connection :=lvConn;
-      pvCDS.Data := lvUniOperator.CDSProvider.QueryData(pvSQL);
-    finally
-      __UniOperatorPool.releaseObject(lvUniOperator);
-    end;
   finally
-    lvUniPool.releaseObject(lvConn);
+    //CoUninitialize;
+    lvConn.Free;
+    exitthread(0);
   end;
+
+//
+//  lvConn := TUniConnection(lvUniPool.borrowObject);
+//  try
+//    if not lvConn.Connected then
+//    begin
+//      CoInitialize(nil);
+//      lvConn.Connect;
+//    end;
+////    lvUniOperator := TUniOperator(__UniOperatorPool.borrowObject);
+////    try
+////      lvUniOperator.Connection :=lvConn;
+////      pvCDS.Data := lvUniOperator.CDSProvider.QueryData(pvSQL);
+////    finally
+////      __UniOperatorPool.releaseObject(lvUniOperator);
+////    end;
+//  finally
+//    lvUniPool.releaseObject(lvConn);
+//    ExitThread(0);
+//  end;
 end;
 
 class procedure TUniDACTools.releaseConnection(pvConnection: TUniConnection;
