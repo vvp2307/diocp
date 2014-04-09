@@ -72,27 +72,34 @@ type
 implementation
 
 uses
-  uIOCPWorker, uIOCPTools;
+  uIOCPWorker, uIOCPTools, FileLogger;
 
 procedure TIOCPConsole.close;
 begin
+  TFileLogger.instance.logMessage('关闭服务端端口_closeSSocket', 'DIOCP_CLOSE_');
+
   //关闭服务端端口
   FIOCPObject.closeSSocket;
 
+  TFileLogger.instance.logMessage('停止监听_stopListener', 'DIOCP_CLOSE_');
   //停止监听
   stopListener;
 
+  TFileLogger.instance.logMessage('断开所有连接_DisconnectAllClientContext', 'DIOCP_CLOSE_');
   //断开所有连接
   FIOCPObject.DisconnectAllClientContext;
 
+  TFileLogger.instance.logMessage('等待资源的回归_WaiteForResGiveBack', 'DIOCP_CLOSE_');
   //等待资源的回归
   FIOCPObject.WaiteForResGiveBack;
 
+  TFileLogger.instance.logMessage('停止工作线程_stopWorkers', 'DIOCP_CLOSE_');
   //停止工作线程
   stopWorkers;
 
   //标志状态
   FActive := false;
+  TFileLogger.instance.logMessage('关闭成功TIOCPConsole.close', 'DIOCP_CLOSE_');
 end;
 
 constructor TIOCPConsole.Create;
@@ -198,6 +205,7 @@ begin
   for i := 0 to c - 1 do
   begin
     lvWorker := TIOCPWorker.Create(True);
+    lvWorker.FreeOnTerminate := false;
     lvWorker.SetIOCPObject(FIOCPObject);
     lvWorker.Resume;
     FWorkers.Add(lvWorker);
