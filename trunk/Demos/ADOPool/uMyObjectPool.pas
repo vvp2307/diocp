@@ -63,6 +63,9 @@ type
     ///  解锁
     /// </summary>
     procedure unLock;
+
+  private
+    procedure DoGiveBackObject(pvObjBlock:PObjectBlock);
     
   protected
     /// <summary>
@@ -74,6 +77,11 @@ type
     ///  创建一个对象
     /// </summary>
     function createObject: TObject; virtual;
+
+    /// <summary>
+    ///   归还一个对象
+    /// </summary>
+    procedure onGiveBackObject(pvObject:TObject); virtual;
   public
     constructor Create(pvObjectClass: TClass = nil);
     destructor Destroy; override;
@@ -228,6 +236,18 @@ begin
   inherited Destroy;
 end;
 
+procedure TMyObjectPool.DoGiveBackObject(pvObjBlock: PObjectBlock);
+begin
+  try
+    onGiveBackObject(pvObjBlock.FObject);
+  except
+    on e:Exception do
+    begin
+      TFileLogger.instance.logMessage('归还对象时(onGiveBackObject)出现了异常:' + e.Message, 'POOL_ERROR_');
+    end;
+  end;
+end;
+
 function TMyObjectPool.getBusyCount: Integer;
 begin
   Result := FBusyCount;
@@ -271,6 +291,10 @@ begin
         end else
         begin
           lvObj.FRelaseTime := GetTickCount;
+
+          //归还时执行
+          DoGiveBackObject(lvObj);
+
           //置使用标记
           Dec(lvObj.FUsingCounter);
         end;
@@ -442,6 +466,11 @@ begin
     //全部归还有信号
     SetEvent(FReleaseSingle)
   end;
+end;
+
+procedure TMyObjectPool.onGiveBackObject(pvObject: TObject);
+begin
+  ;
 end;
 
 function TMyObjectPool.GetCount: Integer;
