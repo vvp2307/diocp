@@ -31,9 +31,10 @@ implementation
 function TUniConnectionPool.createObject: TObject;
 begin
 
-  CoInitialize(nil);
+
   Result := TUniConnection.Create(nil);
   TUniConnection(Result).ConnectString := FConnectionString;
+  TUniConnection(Result).LoginPrompt := false;
   if FCommandTimeOut <> 0 then
   begin
     //TUniConnection(Result).CommandTimeout := FCommandTimeOut;

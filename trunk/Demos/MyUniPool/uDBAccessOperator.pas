@@ -3,12 +3,12 @@ unit uDBAccessOperator;
 interface
 
 uses
-  uICDSOperator, Classes, SysUtils, Uni;
+  uIDBAccess, Classes, SysUtils, Uni;
 
 type
   TDBAccessOperator = class(TInterfacedObject, IDBAccessOperator)
   private
-    FOutString: String;
+    FOutString: AnsiString;
     FQuery: TUniQuery;
   public
     function executeSQL(pvCmdText:PAnsiChar): Integer; stdcall;
