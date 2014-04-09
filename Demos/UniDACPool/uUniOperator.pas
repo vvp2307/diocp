@@ -3,8 +3,8 @@ unit uUniOperator;
 interface
 
 uses
-  uCDSProvider, uDBAccessOperator, uICDSOperator,
-  ADODB, CDSOperatorWrapper, superobject, Uni;
+  uCDSProvider, uDBAccessOperator, uIDBAccess,
+  superobject, Uni;
 
 type
   TUniOperator = class(TObject)
@@ -18,7 +18,7 @@ type
     
   public
     constructor Create;
-    
+    procedure AfterConstruction; override;
     destructor Destroy; override;
 
     procedure ReOpen;
@@ -33,6 +33,8 @@ type
 
     property Connection: TUniConnection read FConnection write SetConnection;
 
+    property DBAccessOperator: IDBAccessOperator read FDBAccessOperator;
+
     property TraceData: ISuperObject read FTraceData write FTraceData;     
   end;
 
@@ -41,14 +43,20 @@ implementation
 uses
   DBAccess;
 
-constructor TUniOperator.Create;
+procedure TUniOperator.AfterConstruction;
 begin
-  inherited Create;
+  inherited;
   FCDSProvider := TCDSProvider.Create();
 
   //数据解码使用
   FDBAccessObj := TDBAccessOperator.Create;
   FDBAccessOperator := FDBAccessObj;
+end;
+
+constructor TUniOperator.Create;
+begin
+  inherited Create;
+
 end;
 
 destructor TUniOperator.Destroy;
@@ -59,44 +67,17 @@ begin
 end;
 
 procedure TUniOperator.ExecuteApplyUpdate(const pvEncodeData: AnsiString);
-var
-  lvSQL:AnsiString;
 begin
 
-  //进行解码
-  with TCDSOperatorWrapper.createCDSDecode do
-  begin
-    setDBAccessOperator(FDBAccessOperator);
-    setData(PAnsiChar(pvEncodeData));
-
-    Execute;
-    
-    //解析好的SQL脚本
-    lvSQL:= getUpdateSql;
-
-    if FTraceData <> nil then
-    begin
-      FTraceData.S['sqls[]'] := lvSQL;
-    end;
-
-    //事务执行脚本
-    FConnection.StartTransaction;
-    try
-      FDBAccessOperator.executeSQL(PAnsiChar(lvSQL));
-      FConnection.Commit;
-    except
-      FConnection.Rollback;
-      raise;
-    end;
-
-    //避免提前释放
-    lvSQL := '';
-  end;
 end;
 
 procedure TUniOperator.executeScript(pvSQLScript: String);
+var
+  lvSQL:AnsiString;
 begin
-
+  lvSQL := pvSQLScript;
+  FDBAccessOperator.executeSQL(PAnsiChar(lvSQL));
+  lvSQL := '';
 end;
 
 procedure TUniOperator.ReOpen;
