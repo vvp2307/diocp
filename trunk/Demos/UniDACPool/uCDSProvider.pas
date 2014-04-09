@@ -50,10 +50,13 @@ begin
   CoInitialize(nil);
   FCDSTemp := TClientDataSet.Create(nil);
   FProvider := TDataSetProvider.Create(nil);
-  FProvider.Options := FProvider.Options + [poIncFieldProps];
+
+  //TDataPacketWriter.AddIndexDefs打包数据时，不考虑，原有数据集的Order by
+  //        if not (poRetainServerOrder in Options) then
+  //          DefIdx := (DataSet as IProviderSupport).PSGetDefaultOrder
+  FProvider.Options := FProvider.Options + [poIncFieldProps] + [poRetainServerOrder];
 
   FQuery := TMyUniQuery.Create(nil);
-
 
   FQuery.DisableControls;
   FQuery.ParamCheck := false;
@@ -160,8 +163,6 @@ begin
   FConnection := AValue;
   FQuery.Connection := FConnection;
 end;
-
-{ TMyUniQuery }
 
 procedure TMyUniQuery.PSReset;
 begin
