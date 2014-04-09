@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.983,=E:\MyProjects\DIOCP\Demos\MyUniPool\uIErrorGetter.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.546,E:\MyProjects\DIOCP\Demos\UniDACPool\UntThreadTimer.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.593,E:\MyProjects\DIOCP\Demos\UniDACPool\uUniPool.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.108,=E:\MyProjects\DIOCP\Demos\MyUniPool\uICDSOperator.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.483,E:\MyProjects\DIOCP\Demos\UniDACPool\uCDSProvider.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.218,E:\MyProjects\DIOCP\Demos\DBPoolDemo\ServerMyUniPool\DBServer_MyUniPool.dproj=E:\MyProjects\DIOCP\Demos\DBPoolDemo\ServerMyUniPool\IOCP_DBServer.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.968,=E:\MyProjects\DIOCP\Demos\MyUniPool\uCDSProvider.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.515,E:\MyProjects\DIOCP\Demos\UniDACPool\uICDSOperator.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.577,E:\MyProjects\DIOCP\Demos\UniDACPool\uUniOperator.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.530,E:\MyProjects\DIOCP\Demos\UniDACPool\UntCobblerUniPool.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.968,=E:\MyProjects\DIOCP\Demos\MyUniPool\uIDBAccess.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.187,=E:\MyProjects\DIOCP\Demos\MyUniPool\uUniConfigTools.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.280,=E:\MyProjects\DIOCP\Demos\MyUniPool\uUniOperator.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.421,E:\MyProjects\DIOCP\Demos\UniDACPool\CDSOperatorWrapper.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.562,E:\MyProjects\DIOCP\Demos\UniDACPool\uUniConfigTools.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.499,E:\MyProjects\DIOCP\Demos\UniDACPool\uDBAccessOperator.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.030,=E:\MyProjects\DIOCP\Demos\MyUniPool\uDBAccessOperator.pas</Transaction>
+  </Transactions>
+</BorlandProject>

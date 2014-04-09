@@ -18,7 +18,7 @@ object frmMain: TfrmMain
     Top = 0
     Width = 719
     Height = 376
-    ActivePage = tsTester
+    ActivePage = tsBase
     Align = alClient
     TabOrder = 0
     object tsBase: TTabSheet
@@ -78,7 +78,6 @@ object frmMain: TfrmMain
         Top = 13
         Width = 185
         Height = 21
-        ItemHeight = 13
         ItemIndex = 0
         TabOrder = 1
         Text = 'account2013'
@@ -90,8 +89,6 @@ object frmMain: TfrmMain
     object tsTester: TTabSheet
       Caption = 'tsTester'
       ImageIndex = 3
-      ExplicitLeft = 8
-      ExplicitTop = 28
       object mmoSQL: TMemo
         Left = 3
         Top = 3

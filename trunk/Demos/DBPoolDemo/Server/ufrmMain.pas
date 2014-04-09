@@ -50,7 +50,7 @@ implementation
 
 uses
   uIOCPCentre, uClientContext, uBuffer, uMemPool, uIOCPDebugger,
-  uFMIOCPDebugINfo, Uni, uUniConfigTools, uUniPool, FileLogger;
+  uFMIOCPDebugINfo, Uni, uUniConfigTools, uUniPool, FileLogger, uUniDACTools;
 
 {$R *.dfm}
 
@@ -108,7 +108,8 @@ begin
     lvConnectDialog.ConnectButton := '确定';
     lvConnectDialog.CancelButton := '取消';
 
-    lvConnectDialog.SavePassword := true;
+    //lvConnectDialog.SavePassword := true;
+    lvConnectDialog.StoreLogInfo := true;
     if lvConn.ConnectDialog.Execute then
     begin
       lvNewConn := TUniConnection.Create(nil);
