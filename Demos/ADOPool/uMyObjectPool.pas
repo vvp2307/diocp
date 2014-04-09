@@ -1,5 +1,9 @@
 unit uMyObjectPool;
 ///
+///  2014年4月9日17:08:50
+///    添加createObjects
+///    可以创建一些对象事先放入池中<一般由主线程调用>
+///
 ///  2014年4月9日 09:54:08
 ///    添加了OnGiveBack函数可以供继承类使用
 ///
@@ -94,6 +98,13 @@ type
     ///   重置对象池
     /// </summary>
     procedure resetPool;
+
+
+
+    /// <summary>
+    ///  创建一些对象放入池中,一般主线程调用
+    /// </summary>
+    procedure createObjects(pvNum:Integer);
 
     /// <summary>
     ///  借用一个对象
@@ -228,6 +239,46 @@ begin
   begin
     Result := FObjectClass.Create;
   end;      
+end;
+
+procedure TMyObjectPool.createObjects(pvNum: Integer);
+var
+  i:Integer;
+  lvObj:PObjectBlock;
+  lvObject:TObject;
+  lvType:Integer;
+  lvThreadID:Cardinal;
+begin
+  lock;
+  try
+    for i := 0 to pvNum -1 do
+    begin
+      if GetCount >= FMaxNum then
+      begin
+        raise exception.CreateFmt('超出对象池[%s]允许的范围[%d],不能再创建新的对象', [self.ClassName, FMaxNum]);
+      end;
+
+      lvObject := nil;
+      lvObj := nil;
+      lvObject := createObject;
+      if lvObject = nil then raise exception.CreateFmt('不能得到对象,对象池[%s]未继承处理createObject函数', [self.ClassName]);
+      try
+        GetMem(lvObj, SizeOf(TObjectBlock));
+        ZeroMemory(lvObj, SizeOf(TObjectBlock));
+        lvObj.FObject := lvObject;
+        FObjectList.Add(lvObj);
+      except
+        try
+          lvObject.Free;
+        except
+        end;
+        if lvObj <> nil then FreeMem(lvObj, SizeOf(TObjectBlock));
+        raise;
+      end;
+    end;
+  finally
+    unLock;
+  end;
 end;
 
 destructor TMyObjectPool.Destroy;
