@@ -1,8 +1,12 @@
 unit uMyObjectPool;
 ///
+///  2014年4月9日 09:54:08
+///    添加了OnGiveBack函数可以供继承类使用
 ///
 /// 2014年3月10日 10:47:26
 ///    移除等待, 借用对象时，等待
+///
+
 
 interface
 
@@ -63,6 +67,9 @@ type
     ///  解锁
     /// </summary>
     procedure unLock;
+
+  private
+    procedure DoGiveBackObject(pvObjBlock:PObjectBlock);
     
   protected
     /// <summary>
@@ -74,6 +81,11 @@ type
     ///  创建一个对象
     /// </summary>
     function createObject: TObject; virtual;
+
+    /// <summary>
+    ///   归还一个对象
+    /// </summary>
+    procedure onGiveBackObject(pvObject:TObject); virtual;
   public
     constructor Create(pvObjectClass: TClass = nil);
     destructor Destroy; override;
@@ -228,6 +240,18 @@ begin
   inherited Destroy;
 end;
 
+procedure TMyObjectPool.DoGiveBackObject(pvObjBlock: PObjectBlock);
+begin
+  try
+    onGiveBackObject(pvObjBlock.FObject);
+  except
+    on e:Exception do
+    begin
+      TFileLogger.instance.logMessage('归还对象时(onGiveBackObject)出现了异常:' + e.Message, 'POOL_ERROR_');
+    end;
+  end;
+end;
+
 function TMyObjectPool.getBusyCount: Integer;
 begin
   Result := FBusyCount;
@@ -271,9 +295,15 @@ begin
         end else
         begin
           lvObj.FRelaseTime := GetTickCount;
-          InterlockedDecrement(lvObj.FUsingCounter);
+
+          //归还时执行
+          DoGiveBackObject(lvObj);
+
+          //置使用标记
+          Dec(lvObj.FUsingCounter);
         end;
 
+        //减少正在忙的个数
         Dec(FBusyCount);
         
         Break;
@@ -344,18 +374,20 @@ begin
         raise exception.CreateFmt('超出对象池[%s]允许的范围[%d],不能再创建新的对象', [self.ClassName, FMaxNum]);
       end;
 
+      lvObj := nil;
       lvObject := createObject;
-
       if lvObject = nil then raise exception.CreateFmt('不能得到对象,对象池[%s]未继承处理createObject函数', [self.ClassName]);
-
-      GetMem(lvObj, SizeOf(TObjectBlock));
       try
+        GetMem(lvObj, SizeOf(TObjectBlock));
         ZeroMemory(lvObj, SizeOf(TObjectBlock));
         lvObj.FObject := lvObject;
         FObjectList.Add(lvObj);
       except
-        lvObject.Free;
-        FreeMem(lvObj, SizeOf(TObjectBlock));
+        try
+          lvObject.Free;
+        except
+        end;
+        if lvObj <> nil then FreeMem(lvObj, SizeOf(TObjectBlock));
         raise;
       end;
 
@@ -373,7 +405,7 @@ begin
     end;  
 
     //累计计数器
-    InterlockedIncrement(lvObj.FUsingCounter);
+    Inc(lvObj.FUsingCounter);
 
     lvObj.FThreadID := GetCurrentThreadId;
     lvObj.FMarkWillFreeFlag := False;
@@ -438,6 +470,11 @@ begin
     //全部归还有信号
     SetEvent(FReleaseSingle)
   end;
+end;
+
+procedure TMyObjectPool.onGiveBackObject(pvObject: TObject);
+begin
+  ;
 end;
 
 function TMyObjectPool.GetCount: Integer;
