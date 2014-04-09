@@ -24,7 +24,6 @@ uses
   uIOCPDebugger in '..\..\..\Source\IOCP\uIOCPDebugger.pas',
   uFMIOCPDebugINfo in '..\..\Common\uFMIOCPDebugINfo.pas' {FMIOCPDebugINfo: TFrame},
   uCRCTools in '..\..\Common\uCRCTools.pas',
-  uUniOperator in '..\..\UniDACPool\uUniOperator.pas',
   UntCobblerUniPool in '..\..\UniDACPool\UntCobblerUniPool.pas',
   UntThreadTimer in '..\..\UniDACPool\UntThreadTimer.pas',
   uCDSProvider in '..\..\UniDACPool\uCDSProvider.pas',
@@ -36,7 +35,11 @@ uses
   superobject in '..\..\Common\superobject.pas',
   uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas',
   Qos in '..\..\..\Source\WinSock2\Qos.pas',
-  Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas';
+  Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas',
+  CDSOperatorWrapper in '..\..\UniDACPool\CDSOperatorWrapper.pas',
+  uIDBAccess in '..\..\MyUniPool\uIDBAccess.pas',
+  uIErrorGetter in '..\..\MyUniPool\uIErrorGetter.pas',
+  uUniOperator in '..\..\MyUniPool\uUniOperator.pas';
 
 {$R *.res}
 
