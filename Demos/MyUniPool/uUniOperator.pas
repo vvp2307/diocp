@@ -3,7 +3,7 @@ unit uUniOperator;
 interface
 
 uses
-  uCDSProvider, uDBAccessOperator, uICDSOperator,
+  uCDSProvider, uDBAccessOperator, uIDBAccess,
   superobject, Uni;
 
 type
@@ -32,6 +32,8 @@ type
     property CDSProvider: TCDSProvider read FCDSProvider;
 
     property Connection: TUniConnection read FConnection write SetConnection;
+
+    property DBAccessOperator: IDBAccessOperator read FDBAccessOperator;
 
     property TraceData: ISuperObject read FTraceData write FTraceData;     
   end;
