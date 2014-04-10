@@ -7,7 +7,7 @@ uses
 
 type
   TIOCPJSonStreamDecoder = class(TIOCPDecoder)
-  protected
+  public
     /// <summary>
     ///   解码收到的数据,如果有接收到数据,调用该方法,进行解码
     /// </summary>
