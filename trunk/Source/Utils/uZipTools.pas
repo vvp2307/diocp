@@ -48,8 +48,6 @@ implementation
 
 class function TZipTools.compressBuf(const Buffer; Count: Longint): TBytes;
 var
-  lvTmp: string;
-  lvBytes: TBytes;
   OutBuf: Pointer;
   OutBytes: Integer;
 begin
