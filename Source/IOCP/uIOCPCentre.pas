@@ -106,8 +106,6 @@ type
 
     function PostWSASendBlock(pvSocket: TSocket; pvIOData: POVERLAPPEDEx): Boolean;
 
-    procedure interlockIncDebugVar(var v:Cardinal; incValue:Cardinal);
-    procedure interlockDecDebugVar(var v:Cardinal; decValue:Cardinal);
   public
     constructor Create;
 
@@ -252,9 +250,6 @@ type
 
     procedure RecvBuffer(buf:PAnsiChar; len:Cardinal);
 
-    function AppendBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
-
-    function readBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
   protected
     //复位<回收时进行复位>
     procedure Reset; virtual;
@@ -298,9 +293,8 @@ type
 
     //状态信息
     property StateINfo: String read GetStateINfo write FStateINfo;
-    property Using: Boolean read FUsing;
 
-    
+    property Using: Boolean read FUsing;    
     
     //property Socket: TSocket read FSocket;
   end;
@@ -379,14 +373,8 @@ var
 
   lvPerIOPort:THandle;
 
-  lvIOData:POVERLAPPEDEx;
 
   lvClientContext:TIOCPClientContext;
-
-  lvErr:Integer;
-
-  addr: Tsockaddrin;
-  addrlen: integer;
 begin
   //  If no error occurs, WSAAccept returns a value of type SOCKET
   //  that is a descriptor for the accepted socket.
@@ -467,14 +455,12 @@ begin
   Result := false;
   
   FSSocket:=WSASocket(AF_INET,SOCK_STREAM,IPPROTO_IP,Nil,0,WSA_FLAG_OVERLAPPED);
-  if FSSocket=SOCKET_ERROR then
+  if FSSocket = INVALID_SOCKET then
   begin
     TIOCPFileLogger.logWSAError('创建服务端端口!');
     CloseSocket(FSSocket);
     FSSocket := INVALID_HANDLE_VALUE;
-  end;
-
-  if FsystemSocketHeartState then
+  end else if FsystemSocketHeartState then
   begin
     //假如心跳
     if TIOCPTools.socketInitializeHeart(FSSocket) then
@@ -503,26 +489,6 @@ begin
   end;
 end;
 
-procedure TIOCPObject.interlockDecDebugVar(var v: Cardinal; decValue: Cardinal);
-begin
-  FDebug_Locker.Enter;
-  try
-    v := v - decValue;
-  finally
-    FDebug_Locker.Leave;
-  end;
-end;
-
-procedure TIOCPObject.interlockIncDebugVar(var v: Cardinal; incValue: Cardinal);
-begin
-  FDebug_Locker.Enter;
-  try
-    v := v + incValue;
-  finally
-    FDebug_Locker.Leave;
-  end;
-end;
-
 procedure TIOCPObject.PostExitIO;
 begin
    //通知工作线程,有新的套接字连接<第三个参数>
@@ -538,13 +504,11 @@ procedure TIOCPObject.PostWSARecv(const pvClientContext: TIOCPClientContext);
 var
   lvIOData:POVERLAPPEDEx;
   lvRet:Integer;
-  dwFlag:DWORD;
 begin
   /////分配内存<可以加入内存池>
   lvIOData := TIODataMemPool.instance.borrowIOData;
   lvIOData.IO_TYPE := IO_TYPE_Recv;
 
-  dwFlag := 0;
 
   /////异步收取数据
   if (WSARecv(pvClientContext.FSocket,
@@ -580,7 +544,6 @@ end;
 procedure TIOCPObject.PostWSASend(pvSocket: TSocket; const ouBuf: TBufferLink);
 var
   lvIOData:POVERLAPPEDEx;
-  lvErrCode, lvRet:Integer;
 begin
   while ouBuf.validCount > 0 do
   begin
@@ -669,7 +632,8 @@ begin
       Break;
     end else
     begin
-      TIOCPFileLogger.logErrMessage(Format('投递发送数据时发生了错误错误代码:%d', [lvErrCode]));
+      TIOCPFileLogger.logErrMessage(Format('投递发送数据时发生了错误,返回的错误结果:%d',
+         [lvRet]));
       Result := false;
       Break;
     end;
@@ -682,8 +646,6 @@ var
   lvResultStatus:BOOL;
   lvRet:Integer;
   lvIOData:POVERLAPPEDEx;
-
-  lvDataObject:TObject;
 
   lvClientContext:TIOCPClientContext;
 begin
@@ -842,7 +804,6 @@ end;
 function TIOCPObject.ListenerBind: Boolean;
 var
   lvAddr:TSockAddrIn;
-  lvAddrSize:Integer;
 begin
   result := false;
   lvAddr.sin_family:=AF_INET;
@@ -873,15 +834,20 @@ var
    lvIOData:POVERLAPPEDEx;
    lvErr:Integer;
 begin
-   if pvClientContext.FPostedCloseQuest then Exit;
-
-
-   //  不进行互斥，只是投递到工作IO队列中
-   //    2013年11月27日 19:25:55
-   //
-   //  启用互斥（避免在处理命令的时候投递关闭消息，并在工作线程中进行了处理)
-   //pvClientContext.Lock;
+   //保护 FPostedCloseQuest，
+   //   2014年4月10日 14:36:50   
+   pvClientContext.Lock;
    try
+     Result := false;
+     if pvClientContext.FPostedCloseQuest then Exit;
+
+
+     //  不进行互斥，只是投递到工作IO队列中
+     //    2013年11月27日 19:25:55
+     //
+     //  启用互斥（避免在处理命令的时候投递关闭消息，并在工作线程中进行了处理)
+     //pvClientContext.Lock;
+
      //初始化数据包
      lvIOData := TIODataMemPool.instance.borrowIOData;
      //数据包中的IO类型:关闭请求
@@ -895,14 +861,17 @@ begin
         POverlapped(lvIOData)) then
      begin
        lvErr := GetLastError;
-       TIOCPFileLogger.logErrMessage('PostWSAClose>>PostQueuedCompletionStatus投递关闭请求失败!');
+       TIOCPFileLogger.logErrMessage(
+         Format('PostWSAClose>>PostQueuedCompletionStatus投递关闭请求失败, 错误代码:%d!', [lvErr])
+         );
+       Result := false;
      end else
      begin
-      pvClientContext.FPostedCloseQuest := true;
-      Result := true;
+       pvClientContext.FPostedCloseQuest := true;
+       Result := true;
      end;
    finally
-      // pvClientContext.unLock;
+     pvClientContext.unLock;
    end;
 end;
 
@@ -990,11 +959,6 @@ begin
 
 end;
 
-function TIOCPClientContext.AppendBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
-begin
-  FBuffers.AddBuffer(buf, len);
-end;
-
 procedure TIOCPClientContext.notifyStopWork;
 begin
   //禁止进出
@@ -1020,7 +984,7 @@ procedure TIOCPClientContext.getPeerINfo;
 var
   SockAddrIn: TSockAddrIn;
   Size: Integer;
-  HostEnt: PHostEnt;
+  //HostEnt: PHostEnt;
 begin
   Size := SizeOf(SockAddrIn);
   getpeername(FSocket, TSockAddr(SockAddrIn), Size);
@@ -1043,7 +1007,6 @@ end;
 procedure TIOCPClientContext.checkPostWSASendCache;
 var
   lvIOData:POVERLAPPEDEx;
-  lvErrCode, lvRet:Integer;
   lvWrited:Boolean;
 begin
   lvWrited := false;
@@ -1132,14 +1095,10 @@ end;
 
 function TIOCPClientContext.PostWSAClose: Boolean;
 begin
+  Result := false;
   //已经回收
   if self.FUsing = false then Exit;
   Result :=FIOCPObject.PostWSAClose(Self);
-end;
-
-function TIOCPClientContext.readBuffer(buf:PAnsiChar; len:Cardinal): Cardinal;
-begin
-  Result := FBuffers.readBuffer(buf, len);
 end;
 
 procedure TIOCPClientContext.RecvBuffer(buf:PAnsiChar; len:Cardinal);
@@ -1156,7 +1115,6 @@ begin
   ///    感谢群内JOE找到bug。
   while True do
   begin
-    lvObject := nil;
     //调用注册的解码器<进行解码>
     lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
     if lvObject <> nil then

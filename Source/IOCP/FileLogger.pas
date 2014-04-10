@@ -13,7 +13,6 @@ type
     FBasePath: string;
     FLogFile: TextFile;
     FLocker: TCriticalSection;
-    function getThreadPreFile:String;
     function openLogFile(pvPre: String = ''): Boolean;
   public
     constructor Create;
@@ -65,11 +64,6 @@ destructor TFileLogger.Destroy;
 begin
   FLocker.Free;
   inherited Destroy;
-end;
-
-function TFileLogger.getThreadPreFile: String;
-begin                                              
-  Result := Format('PID_%d_TID_%d ', [GetCurrentProcessID(),GetCurrentThreadID()]);
 end;
 
 { TFileLogger }
