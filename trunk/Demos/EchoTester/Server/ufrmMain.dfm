@@ -46,10 +46,6 @@ object frmMain: TfrmMain
     object tsConfig: TTabSheet
       Caption = #22522#26412#37197#32622
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblListenPort: TLabel
         Left = 24
         Top = 37
@@ -108,10 +104,6 @@ object frmMain: TfrmMain
     object tsClientINfo: TTabSheet
       Caption = #36830#25509#20449#24687
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lstClientINfo: TListView
         Left = 0
         Top = 41
@@ -158,10 +150,6 @@ object frmMain: TfrmMain
     object tsMoniter: TTabSheet
       Caption = 'IOCP'#20449#24687
       ImageIndex = 5
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
   end
   object actlstMain: TActionList
@@ -201,7 +189,7 @@ object frmMain: TfrmMain
     Left = 475
     Top = 2
     Bitmap = {
-      494C010101000600640110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010006006C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       00000000000000000000000000000000000000000000000000003E3E3E546868
       6887676767896A6A6AB7818181FF818181FF818181FF818181FF7A7A7AAD6868

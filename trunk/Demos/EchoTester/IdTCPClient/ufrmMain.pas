@@ -26,7 +26,10 @@ type
     IdTCPClient: TIdTCPClient;
     lblEchoINfo: TLabel;
     tmrEchoTester: TTimer;
+    btnConnect: TButton;
+    edtConnectCounter: TEdit;
     procedure btnCloseSocketClick(Sender: TObject);
+    procedure btnConnectClick(Sender: TObject);
     procedure btnC_01Click(Sender: TObject);
     procedure btnEchoTesterClick(Sender: TObject);
     procedure btnKasiClick(Sender: TObject);
@@ -74,6 +77,22 @@ end;
 procedure TfrmMain.btnCloseSocketClick(Sender: TObject);
 begin
   IdTCPClient.Disconnect;
+end;
+
+procedure TfrmMain.btnConnectClick(Sender: TObject);
+var
+  lvIdTcpClient:TIdTCPClient;
+  i:Integer;
+begin
+  for i := 0 to StrToInt(edtConnectCounter.Text) - 1 do
+  begin
+    lvIdTcpClient := TIdTCPClient.Create(Self);
+    lvIdTcpClient.Host := edtIP.Text;
+    lvIdTcpClient.Port := StrToInt(edtPort.Text);
+    lvIdTcpClient.Connect;
+  end;
+
+  ;
 end;
 
 procedure TfrmMain.btnC_01Click(Sender: TObject);
