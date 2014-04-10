@@ -4,7 +4,7 @@ interface
 
 uses
   uIOCPCentre, uBuffer, JSonStream, Classes, uNetworkTools,
-  uZipTools, SysUtils, uIOCPProtocol;
+  uZipTools, SysUtils, uIOCPProtocol, uMyTypes;
 
 type
   TIOCPJSonStreamEncoder = class(TIOCPEncoder)
@@ -28,7 +28,7 @@ var
   sData:String;
   lvStream:TStream;
   lvTempBuf:PAnsiChar;
-  lvBytes, lvTempBytes:TIOCPBytes;
+  lvBytes, lvTempBytes:TBytes;
 begin
   if pvDataObject = nil then exit;
   lvJSonStream := TJsonStream(pvDataObject);
