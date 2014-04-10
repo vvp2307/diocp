@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
   ExtCtrls, ComCtrls, ActnList, Menus, ImgList, uBuffer,
-  Grids, ADODB, DBClient, ComObj, ActiveX, System.Actions;
+  Grids, ADODB, DBClient, ComObj, ActiveX;
 
 type
   TfrmMain = class(TForm)
@@ -212,6 +212,7 @@ begin
   begin
     FIOCPConsole.Port := StrToInt(edtPort.Text);
     FIOCPConsole.WorkerCount := StrToInt(edtWorkCount.Text);
+    FIOCPConsole.setSystemSocketHeartState(false);
     FIOCPConsole.open;
   end;  
   refreshState;

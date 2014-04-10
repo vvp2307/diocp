@@ -105,13 +105,30 @@ object frmMain: TfrmMain
     TabOrder = 9
     OnClick = btnSend100Click
   end
+  object btnConnect: TButton
+    Left = 551
+    Top = 8
+    Width = 75
+    Height = 25
+    Caption = 'btnConnect'
+    TabOrder = 10
+    OnClick = btnConnectClick
+  end
+  object edtConnectCounter: TEdit
+    Left = 424
+    Top = 8
+    Width = 121
+    Height = 21
+    TabOrder = 11
+    Text = '20000'
+  end
   object IdTCPClient: TIdTCPClient
     ConnectTimeout = 0
     IPVersion = Id_IPv4
     Port = 0
     ReadTimeout = -1
-    Left = 512
-    Top = 8
+    Left = 432
+    Top = 312
   end
   object tmrEchoTester: TTimer
     OnTimer = tmrEchoTesterTimer
