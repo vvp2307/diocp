@@ -1,0 +1,39 @@
+11:52:16:580 执行了时间断点:11-29 10:55:36.752, 10:55:36.752, 10:55:36.752, 10:55:36.752, 11:52:16.564
+11:52:16:580 执行了实际超出理解范围:3399812, 3399812, 3399812, 3399812
+/* scriptkey = 20101001, scriptstep = 1 */
+DECLARE @mm_Version bigint
+DECLARE @mm_UpdateVer varchar(50)
+DECLARE @mm_DepotKey uniqueidentifier
+
+ SELECT @mm_Version=''
+ SELECT @mm_UpdateVer=''
+ SELECT @mm_DepotKey='{A283C971-5CC9-4DA4-8688-6FFF1F6E9C0A}'
+------------------------------------------------
+
+
+
+
+
+DECLARE @MAXVER BIGINT
+
+
+
+SELECT @MAXVER = cast(FUpdateVer as bigint) 
+  FROM sys_updateTable 
+  WHERE FTableName = 'Bas_Items'
+       AND FDepotKey = @mm_DepotKey
+  
+IF @MAXVER IS NULL
+  SET @MAXVER = 0
+
+SELECT TOP 100
+     *, CAST(FUpdateTime AS INT) AS __UpdateVer
+  FROM Bas_Items
+  WHERE FUpdateTime > @MAXVER 
+  ORDER BY FUpdateTime   
+
+
+GOTO _OK_END
+_ERR_END:
+_OK_END:
+
