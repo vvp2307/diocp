@@ -5,6 +5,9 @@ interface
 uses
   uIOCPCentre, uBuffer, Classes, JSonStream, uIOCPFileLogger, SysUtils, uMyTypes;
 
+const
+  MAX_OBJECT_SIZE = 1024 * 1024 * 10;  //最大对象大小 10M , 大于10M 则会认为错误的包。 
+
 type
   TIOCPJSonStreamDecoder = class(TIOCPDecoder)
   public
@@ -27,7 +30,8 @@ uses
 function TIOCPJSonStreamDecoder.Decode(const inBuf: TBufferLink): TObject;
 var
   lvJSonLength, lvStreamLength:Integer;
-  lvData:String;
+  lvMsg, lvData:String;
+
   lvBuffer:array of Char;
   lvBufData:PAnsiChar;
   lvStream:TMemoryStream;
@@ -52,6 +56,25 @@ begin
   lvJSonLength := TNetworkTools.ntohl(lvJSonLength);
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
 
+  ///如果数据过大，
+  if (lvJSonLength + lvStreamLength) >= MAX_OBJECT_SIZE  then
+  begin
+    
+    lvMsg := Format('超过服务端允许的最大未处理数据包大小%d, 最大数据包',
+      [(lvJSonLength + lvStreamLength), MAX_OBJECT_SIZE]);
+    TFileLogger.instance.logMessage(lvMsg, 'DECODER_Warning_');
+
+    //清理掉数据
+    inBuf.clearBuffer;
+
+    lvJsonStream := TJsonStream.Create;
+    lvJsonStream.setResult(False);
+    lvJsonStream.setResultMsg('超过服务端允许的最大未处理数据包大小');
+    Result := lvJsonStream;
+    Exit;
+  end;
+  
+
   //如果缓存中的数据不够json的长度和流长度<说明数据还没有收取完毕>解码失败
   lvValidCount := inBuf.validCount;
   if lvValidCount < (lvJSonLength + lvStreamLength) then
@@ -62,7 +85,7 @@ begin
   end else if (lvJSonLength + lvStreamLength) = 0 then
   begin
     //两个都为0<两个0>客户端可以用来作为自动重连使用
-    TIOCPFileLogger.logDebugMessage('接收到一次[00]数据!');
+    TIOCPFileLogger.logMessage('接收到一次[00]数据!', 'DECODER_Warning_');
     Exit;
   end;
 
@@ -84,7 +107,7 @@ begin
     lvJsonStream.Json := SO(lvData);
   end else
   begin
-    TFileLogger.instance.logMessage('接收到一次JSon为空的一次数据请求!', 'IOCP_ALERT_');
+    TFileLogger.instance.logMessage('接收到一次JSon为空的一次数据请求!', 'DECODER_Warning_');
   end;
 
 
