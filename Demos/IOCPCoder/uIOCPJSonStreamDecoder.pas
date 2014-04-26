@@ -32,7 +32,7 @@ var
   lvJSonLength, lvStreamLength:Integer;
   lvMsg, lvData:String;
 
-  lvBuffer:array of Char;
+
   lvBufData:PAnsiChar;
   lvStream:TMemoryStream;
   lvJsonStream:TJsonStream;
@@ -56,12 +56,15 @@ begin
   lvJSonLength := TNetworkTools.ntohl(lvJSonLength);
   lvStreamLength := TNetworkTools.ntohl(lvStreamLength);
 
+
   ///如果数据过大，
-  if (lvJSonLength + lvStreamLength) >= MAX_OBJECT_SIZE  then
+  if (lvJSonLength > MAX_OBJECT_SIZE)
+     or (lvStreamLength > MAX_OBJECT_SIZE)
+     or ((lvJSonLength + lvStreamLength) >= MAX_OBJECT_SIZE)  then
   begin
     
-    lvMsg := Format('超过服务端允许的最大未处理数据包大小%d, 最大数据包',
-      [(lvJSonLength + lvStreamLength), MAX_OBJECT_SIZE]);
+    lvMsg := Format('超过服务端允许的最大未处理数据包大小%d, %d, 最大数据包(%d)',
+      [lvJSonLength , lvStreamLength, MAX_OBJECT_SIZE]);
     TFileLogger.instance.logMessage(lvMsg, 'DECODER_Warning_');
 
     //清理掉数据
