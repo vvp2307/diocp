@@ -3,7 +3,7 @@ unit uHttpClientContext;
 interface
 
 uses
-  Windows, JwaWinsock2, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre;
+  Windows, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre;
 
 type
   THttpClientContext = class(TIOCPClientContext)

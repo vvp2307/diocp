@@ -3,7 +3,7 @@ unit uClientContext;
 interface
 
 uses
-  Windows, JwaWinsock2, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre;
+  Windows, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre;
 
 type
   TClientContext = class(TIOCPClientContext)
