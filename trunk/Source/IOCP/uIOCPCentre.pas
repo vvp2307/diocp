@@ -944,6 +944,9 @@ begin
   FCS := nil;
 
 
+  FSendCache.Free;
+  FSendCache := nil;
+
   FSendCacheLocker.Free;
   FSendCacheLocker := nil;
   inherited Destroy;
