@@ -150,9 +150,10 @@ type
     /// <summary>
     ///    向队列中投递发送数据请求
     /// </summary>
-    /// <param name="pvSocket"> (TSocket) </param>
+    /// <param name="pvClientContext"> (TSocket) </param>
     /// <param name="ouBuf"> (TBufferLink) </param>
-    procedure PostWSASend(pvSocket: TSocket; const ouBuf: TBufferLink);
+    procedure PostWSASend(pvClientContext: TIOCPClientContext; const ouBuf:
+        TBufferLink);
 
     /// <summary>
     ///   向IOCP队列中投递关闭客户端请求
@@ -515,7 +516,7 @@ procedure TIOCPObject.PostWSARecv(const pvClientContext: TIOCPClientContext);
 var
   lvIOData:POVERLAPPEDEx;
   lvRet:Integer;
-  lvDataBuf:TWsaBuf;
+  lvDataBuf:TWSABUF;
 
 begin
   /////分配内存<可以加入内存池>
@@ -559,7 +560,8 @@ begin
   end;
 end;
 
-procedure TIOCPObject.PostWSASend(pvSocket: TSocket; const ouBuf: TBufferLink);
+procedure TIOCPObject.PostWSASend(pvClientContext: TIOCPClientContext; const
+    ouBuf: TBufferLink);
 var
   lvIOData:POVERLAPPEDEx;
 begin
@@ -567,17 +569,20 @@ begin
   begin
     //lvIOData := TIODataMemPool.instance.borrowIOData;
 
-    lvIOData :=
+    lvIOData := pvClientContext.checkGetPerIOData;
     lvIOData.IO_TYPE := IO_TYPE_Send;
     lvIOData.DataBuf.len :=
       ouBuf.readBuffer(lvIOData.DataBuf.buf, lvIOData.DataBuf.len);
 
     //发送一个内存块
-    if not PostWSASendBlock(pvSocket, lvIOData) then
+    if not PostWSASendBlock(pvClientContext.FSocket, lvIOData) then
     begin
       //发送不成功
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
-      closesocket(pvSocket);
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
+      pvClientContext.checkResetPerIOData;
+
+      pvClientContext.closeClientSocket;
+      closesocket(pvClientContext.FSocket);
       Break;
     end;
   end;
@@ -711,6 +716,10 @@ begin
 
     if (lvClientContext<>nil) then
     begin
+      //重置
+      lvClientContext.checkResetPerIOData;
+      lvIOData := nil;
+
       //2013年10月24日 14:56:33
       //如果逻辑正在处理，或者卡死，会导致工作线程被卡死
       //尝试关闭并归还ClientContext
@@ -719,12 +728,18 @@ begin
     end;
     if lvIOData<>nil then
     begin
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+      TIOCPFileLogger.logErrMessage('出现了未归属IO数据(lvResultStatus = False)...');
+
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
     end;
   end else if lvBytesTransferred = 0 then  //客户端断开连接
   begin
     if (lvClientContext <> nil) then
     begin                       //已经关闭
+      //重置
+      lvClientContext.checkResetPerIOData;
+      lvIOData := nil;
+
       //尝试关闭并归还ClientContext
       TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
 
@@ -732,13 +747,17 @@ begin
     end;
     if lvIOData<>nil then
     begin
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+      TIOCPFileLogger.logErrMessage('出现了未归属IO数据(lvBytesTransferred)...');
+
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
     end;
   end else if (lvIOData<>nil) then
   begin
     if lvIOData.IO_TYPE = IO_TYPE_Accept then  //连接请求
     begin
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+      lvClientContext.checkResetPerIOData;
+
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
       PostWSARecv(lvClientContext);
     end else if lvIOData.IO_TYPE = IO_TYPE_Recv then
     begin
@@ -761,27 +780,28 @@ begin
             lvClientContext.FIsBusying := false;
             //lvClientContext.unLock;
           end;
-
-          //需要进行回收
-          if lvClientContext.FWaitingGiveBack then
-          begin
-            TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
-          end else
-          begin   //不再进行逻辑的处理
-            //继续投递接收请求
-            PostWSARecv(lvClientContext);
-          end;
-        except
-          ON E:Exception do
-          begin
-             TIOCPFileLogger.logErrMessage(
-               'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:' + e.Message);
-          end;
+        finally
+          //内存块的回收是必须的
+          //TIODataMemPool.instance.giveBackIOData(lvIOData);
+          lvClientContext.checkResetPerIOData;
         end;
-      finally
-        //内存块的回收是必须的
-        TIODataMemPool.instance.giveBackIOData(lvIOData);
-      end;  
+
+        //需要进行回收
+        if lvClientContext.FWaitingGiveBack then
+        begin
+          TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+        end else
+        begin   //不再进行逻辑的处理
+          //继续投递接收请求
+          PostWSARecv(lvClientContext);
+        end;
+      except
+        ON E:Exception do
+        begin
+           TIOCPFileLogger.logErrMessage(
+             'TIOCPObject.processIOQueued.IO_TYPE_Recv, 出现异常:' + e.Message);
+        end;
+      end;
     end else if lvIOData.IO_TYPE = IO_TYPE_Send then
     begin    //发送完成数据<WSASend>完成
 
@@ -795,17 +815,19 @@ begin
       TIOCPDebugger.incSendBlockCount;
 
       //回收数据块
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+      lvClientContext.checkResetPerIOData;
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
       //不必要投递接收请求
 
       //继续投递下一块数据
       lvClientContext.checkPostWSASendCache;
-      
+
     end else if lvIOData.IO_TYPE = IO_TYPE_Close then
     begin    //关闭请求
 
       //回收数据块
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+      lvClientContext.checkResetPerIOData;
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
 
       //尝试关闭并归还ClientContext
       TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
@@ -902,7 +924,7 @@ end;
 
 procedure TIOCPObject.WaiteForResGiveBack;
 begin
-  TIODataMemPool.instance.waiteForGiveBack;
+   //TIODataMemPool.instance.waiteForGiveBack;
 end;
 
 procedure TIOCPClientContext.clearSendCache;
@@ -934,7 +956,7 @@ begin
     invokeDisconnect;
     closesocket(FSocket);
     FSocket := INVALID_SOCKET;
-    FBuffers.clearBuffer;
+    //FBuffers.clearBuffer;
   end;
 end;
 
