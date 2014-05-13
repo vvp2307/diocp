@@ -539,8 +539,8 @@ begin
 
       TIOCPFileLogger.logErrMessage('TIOCPObject.PostWSARecv,投递WSARecv出现异常,socket进行了关闭, 错误代码:' + IntToStr(lvRet));
 
-      pvClientContext.closeClientSocket;
-      //pvClientContext.PostWSAClose;
+      //pvClientContext.closeClientSocket;
+      pvClientContext.PostWSAClose;
     end;
   end;
 end;
