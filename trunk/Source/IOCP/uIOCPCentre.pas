@@ -726,7 +726,7 @@ begin
           TIOCPDebugger.incRecvBytesSize(lvBytesTransferred);
           TIOCPDebugger.incRecvBlockCount;
 
-          //接受不针对单个socket，不需要加锁
+          //接受针对单个socket，不需要加锁
           ///2014年3月30日 17:00:03
           ///  d10.天地弦
           //lvClientContext.Lock;
@@ -1055,7 +1055,7 @@ begin
       FCurrentSendBuffer.Free;
       FCurrentSendBuffer := nil;
 
-      lvWrited := true;
+      lvWrited := true;                                         
       TIOCPDebugger.incSendObjectCount;
 
       self.StateINfo := 'TIOCPClientContext.writeObject,投递完成';

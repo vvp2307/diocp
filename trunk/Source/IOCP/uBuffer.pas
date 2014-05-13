@@ -91,7 +91,7 @@ type
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
     procedure LoadFromFile(const FileName: string);
-
+    procedure SwapStreamLink(Stream: TDxMemoryStream);
     procedure SetSize(NewSize: Longint); override;
     procedure SaveCurBlock;
     procedure RestoreCurBlock;
@@ -345,11 +345,9 @@ begin
   Lock;
   try
     if p^.PrevEx <> nil then
-    begin
       p^.PrevEx^.NextEx := p^.NextEx;//连接指向下一个
-      if p^.NextEx <> nil then
-        p^.NextEx^.PrevEx := p^.PrevEx;
-    end;
+    if p^.NextEx <> nil then
+      p^.NextEx^.PrevEx := p^.PrevEx;
     //从Use列表中断开,Use列表指向P的节点的下一个
     if p^.Prev <> nil then
       p^.Prev^.Next := p^.Next;
@@ -664,11 +662,22 @@ begin
     end;
     if FPosition + Count > FSize then
       Count := FSize - FPosition;
+    if Count = 0 then
+    begin
+      result := 0;
+      Exit;
+    end;
 
     if FCurBlockPos = MPool.FBlockSize then
     begin
       FCurBlock := FCurBlock^.NextEx;
       FCurBlockPos := 0;
+    end;
+
+    if FCurBlock = nil then
+    begin
+      result := 0;
+      Exit;
     end;
 
     Result := Count;
@@ -691,7 +700,11 @@ begin
       FCurBlock := FCurBlock^.NextEx;
       FCurBlockPos := 0;
     end;
-
+    if FCurBlockPos = MPool.FBlockSize then
+    begin
+      FCurBlock := FCurBlock^.NextEx;
+      FCurBlockPos := 0;
+    end;
     while Count > 0 do
     begin
       if Count > MPool.FBlockSize then
@@ -1041,6 +1054,52 @@ begin
   end;
 end;
 
+
+procedure TDxMemoryStream.SwapStreamLink(Stream: TDxMemoryStream);
+var
+  OldHead,OldLast: PMemoryBlock;
+  OldSize,OldBlockCount: DWORD;
+  OldMtype: TDxMemBlockType;
+  OldFCapacity: LongInt;
+begin
+  FMarkBlokPos := 0;
+  FMarkBlock := nil;
+
+  OldBlockCount := FMemBlockCount;
+  FMemBlockCount := Stream.FMemBlockCount;
+
+  OldMtype := FMemBlockType;
+  FMemBlockType := Stream.FMemBlockType;
+
+  OldFCapacity := FCapacity;
+  FCapacity := Stream.FCapacity;
+
+  OldHead := FHead;
+  FHead := Stream.FHead;
+
+  OldLast := FLast;
+  FLast := Stream.FLast;
+
+  OldSize := FSize;
+  FSize := Stream.Size;
+
+  FCurBlock := nil;
+  FCurBlockPos := 0;
+  FPosition := 0;
+
+  Stream.FHead := OldHead;
+  Stream.FLast := OldLast;
+  Stream.FMarkBlock := 0;
+  Stream.FMarkBlokPos := 0;
+  Stream.FMarkBlock := nil;
+  Stream.FCurBlock := nil;
+  Stream.FCurBlockPos := 0;
+  Stream.FMemBlockCount := OldBlockCount;
+  Stream.FCapacity := OldFCapacity;
+  Stream.FPosition := 0;
+  Stream.FSize := OldSize;
+  Stream.FMemBlockType := OldMtype;
+end;
 
 function TDxMemoryStream.Write(const Buffer; Count: Integer): Longint;
 var
