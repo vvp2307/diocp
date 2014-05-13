@@ -1,4 +1,0 @@
-20:04:30:281 ProcessID: 1196  ThreadID: 2360 GetQueuedCompletionStatus返回False,错误代码:64
-20:05:23:921 ProcessID: 1196  ThreadID: 2360 GetQueuedCompletionStatus返回False,错误代码:121
-20:08:31:734 ProcessID: 1196  ThreadID: 2360 GetQueuedCompletionStatus返回False,错误代码:64
-20:10:38:562 ProcessID: 1196  ThreadID: 2356 GetQueuedCompletionStatus返回False,错误代码:64

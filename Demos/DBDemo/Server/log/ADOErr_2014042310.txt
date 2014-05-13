@@ -1,1 +1,0 @@
-10:03:35:381 ProcessID: 6700  ThreadID: 6960 1001.2014-04-23 10:03:35:lvADOOpera,执行SQL语句时出现了异常:对象名 'B_Materialxxx' 无效。
