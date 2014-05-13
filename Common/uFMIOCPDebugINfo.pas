@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, 
-  Dialogs, StdCtrls, ExtCtrls, uMemPool, uIOCPConsole, uIOCPCentre;
+  Dialogs, StdCtrls, ExtCtrls, uIOCPConsole, uIOCPCentre;
 
 type
   TFMIOCPDebugINfo = class(TFrame)
@@ -90,9 +90,11 @@ begin
         [TIOCPDebugger.WSASendBytes,
          TIOCPDebugger.sendBytes]);
 
-    lblMemINfo.Caption :=   Format(
-       'IO内存块池共(%d),可用(%d)',
-       [TIODataMemPool.instance.getCount, TIODataMemPool.instance.getUseableCount]);
+    lblMemINfo.Visible := false;
+//  不使用
+//    lblMemINfo.Caption :=   Format(
+//       'IO内存块池共(%d),可用(%d)',
+//       [TIODataMemPool.instance.getCount, TIODataMemPool.instance.getUseableCount]);
 
     lvCount := TIOCPContextFactory.instance.IOCPContextPool.count;
     lvBusyCount := TIOCPContextFactory.instance.IOCPContextPool.BusyCount;
