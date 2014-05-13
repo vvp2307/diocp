@@ -344,7 +344,7 @@ type
 implementation
 
 uses
-  uIOCPFileLogger, uIOCPDebugger;
+  uIOCPFileLogger, uIOCPDebugger, FileLogger;
 
 
 var
@@ -737,6 +737,7 @@ begin
           ///  d10.天地弦
           //lvClientContext.Lock;
           try
+            //如果投递了关闭事件会等到Busing = false再进行关闭
             lvClientContext.FIsBusying := true;
             //加入到套接字对应的缓存中，处理逻辑
             lvClientContext.RecvBuffer(lvIOData.DataBuf.buf,
@@ -767,7 +768,7 @@ begin
         TIODataMemPool.instance.giveBackIOData(lvIOData);
       end;  
     end else if lvIOData.IO_TYPE = IO_TYPE_Send then
-    begin    //发送完成数据<WSASend>完成
+    begin    //发送完成数据<WSASend>完成    不需要投递接收请求
 
       if lvIOData.DataBuf.len <> lvBytesTransferred then
       begin
@@ -780,11 +781,19 @@ begin
 
       //回收数据块
       TIODataMemPool.instance.giveBackIOData(lvIOData);
-      //不必要投递接收请求
 
-      //继续投递下一块数据
-      lvClientContext.checkPostWSASendCache;
-      
+
+
+      //需要进行回收
+      if lvClientContext.FWaitingGiveBack then
+      begin
+        TFileLogger.instance.logMessage('IO_TYPE_Send, 发生了FWaitingGiveBack现象...', 'DIOCP_Warning');
+        TIOCPContextFactory.instance.tryExecuteCloseContext(lvClientContext);
+      end else
+      begin   //不再进行逻辑的处理
+        //继续投递下一块数据
+        lvClientContext.checkPostWSASendCache;
+      end;
     end else if lvIOData.IO_TYPE = IO_TYPE_Close then
     begin    //关闭请求
 
