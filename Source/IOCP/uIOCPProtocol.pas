@@ -31,7 +31,7 @@ type
 
   OVERLAPPEDEx = packed record
     Overlapped: OVERLAPPED;
-    IO_TYPE: Cardinal;
+    IO_TYPE: Byte;
     DataBuf: TWSABUF;
     WorkBytes: Cardinal;    //如果是接收，接收的字节数
     WorkFlag: Cardinal;
