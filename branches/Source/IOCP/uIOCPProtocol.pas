@@ -37,9 +37,6 @@ type
     WorkFlag: Cardinal;
     __postTime: Cardinal;   //
     __debug_counter: Integer;  //¼ÆÊýÆ÷
-    pre:POVERLAPPEDEx;
-    next:POVERLAPPEDEx;
-
   end;
 
   TIOCPBytes = uMyTypes.TBytes;
