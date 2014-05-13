@@ -683,7 +683,7 @@ begin
     Result := Count;
     p := @Buffer;
     //先读取当前块剩下的区域
-    pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
+    pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + DWORD(FCurBlockPos));
     if Count <= MPool.FBlockSize - FCurBlockPos then //足够写了
     begin
       Move(PBuf^,buffer,Count);
@@ -750,7 +750,7 @@ begin
     if FPosition + Len > FSize then
       Len := FSize - FPosition;
     //先读取当前块剩下的区域
-    pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
+    pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + DWORD(FCurBlockPos));
     if Len <= MPool.FBlockSize - FCurBlockPos then //足够写了
     begin
       Stream.WriteBuffer(PBuf^,Len);
@@ -1089,7 +1089,7 @@ begin
 
   Stream.FHead := OldHead;
   Stream.FLast := OldLast;
-  Stream.FMarkBlock := 0;
+  Stream.FMarkBlock := nil;
   Stream.FMarkBlokPos := 0;
   Stream.FMarkBlock := nil;
   Stream.FCurBlock := nil;
@@ -1132,7 +1132,7 @@ begin
   Result := Count;
   tmpBuf := @Buffer;
   //先写满当前未写满的内存块空间
-  pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
+  pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + DWORD(FCurBlockPos));
   if Count <= MPool.FBlockSize - FCurBlockPos then //足够写了
   begin
     Move(Buffer,pBuf^,Count);
@@ -1214,7 +1214,7 @@ begin
       Inc(FSize,Len);
   end;
   //先写满当前未写满的内存块空间
-  pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + FCurBlockPos);
+  pBuf := Pointer(NativeUInt(FCurBlock^.Memory) + DWORD(FCurBlockPos));
   if Len <= MPool.FBlockSize - FCurBlockPos then //足够写了
   begin
     Stream.ReadBuffer(PBuf^,Len);
@@ -1308,17 +1308,17 @@ begin
   if len = 0 then
     Exit;
 
-  if len <= SmallMemoryPool.FBlockSize then
+  if len <= DWORD(SmallMemoryPool.FBlockSize) then
     MPool := SmallMemoryPool
-  else if len <= MemoryPool.FBlockSize then
+  else if len <= DWORD(MemoryPool.FBlockSize) then
     MPool := MemoryPool
-  else if len <= BigMemoryPool.FBlockSize then
+  else if len <= DWORD(BigMemoryPool.FBlockSize) then
     MPool := BigMemoryPool
-  else if len <= SuperMemoryPool.FBlockSize then
+  else if len <= DWORD(SuperMemoryPool.FBlockSize) then
     MPool := SuperMemoryPool
-  else if len <= LargeMemoryPool.FBlockSize then
+  else if len <= DWORD(LargeMemoryPool.FBlockSize) then
     MPool := LargeMemoryPool
-  else if len <= SuperLargeMemoryPool.FBlockSize then
+  else if len <= DWORD(SuperLargeMemoryPool.FBlockSize) then
     MPool := SuperLargeMemoryPool
   else
     MPool := nil;
