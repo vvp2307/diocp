@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
   ExtCtrls, ComCtrls, ActnList, Menus, ImgList, uBuffer,
-  Grids, ADODB, DBClient, ComObj, ActiveX;
+  Grids, ADODB, DBClient, ComObj, ActiveX, System.Actions;
 
 type
   TfrmMain = class(TForm)
@@ -75,7 +75,7 @@ var
 implementation
 
 uses
-  uIOCPCentre, uClientContext, uMemPool,
+  uIOCPCentre, uClientContext, //uMemPool,
   uFMIOCPDebugINfo,
   uAppJSonConfig,
   FileLogger;
