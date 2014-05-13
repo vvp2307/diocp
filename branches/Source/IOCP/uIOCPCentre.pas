@@ -10,7 +10,6 @@ interface
 
 uses
   WinSock2, Windows, SysUtils, uIOCPTools,
-  uMemPool,
   uIOCPProtocol, uBuffer, SyncObjs, Classes, uMyTypes;
 
 
@@ -183,6 +182,8 @@ type
 
   TIOCPClientContext = class(TObject)
   private
+    FPerIOData:OVERLAPPEDEx;
+
     //发送缓存锁
     FSendCacheLocker:TCriticalSection;
 
@@ -203,6 +204,16 @@ type
     ///  清理发送缓存区
     /// </summary>
     procedure clearSendCache;
+
+    /// <summary>
+    ///   获取用户读取IO的数据块
+    /// </summary>
+    function checkGetPerIOData():POVERLAPPEDEx;
+
+    /// <summary>
+    ///   重置对象的Io数据块
+    /// </summary>
+    procedure checkResetPerIOData();
   private
 
 
@@ -504,13 +515,19 @@ procedure TIOCPObject.PostWSARecv(const pvClientContext: TIOCPClientContext);
 var
   lvIOData:POVERLAPPEDEx;
   lvRet:Integer;
+  lvDataBuf:TWsaBuf;
+
 begin
   /////分配内存<可以加入内存池>
-  lvIOData := TIODataMemPool.instance.borrowIOData;
+  //lvIOData := TIODataMemPool.instance.borrowIOData;
+  lvIOData := pvClientContext.checkGetPerIOData;
+  lvDataBuf := lvIOData.DataBuf;
+
   lvIOData.IO_TYPE := IO_TYPE_Recv;
 
 
   /////异步收取数据
+  ///  WSARecv要求第二个参数地址对齐，要不然可能会参数10014的错误
   if (WSARecv(pvClientContext.FSocket,
      @lvIOData.DataBuf,
      1,
@@ -532,7 +549,8 @@ begin
     //表示数据尚未接收完成，如果有数据接收，GetQueuedCompletionStatus会有返回值
     if (lvRet <> WSA_IO_PENDING) then
     begin
-      TIODataMemPool.instance.giveBackIOData(lvIOData);
+      //TIODataMemPool.instance.giveBackIOData(lvIOData);
+      pvClientContext.checkResetPerIOData;
 
       TIOCPFileLogger.logErrMessage('TIOCPObject.PostWSARecv,投递WSARecv出现异常,socket进行了关闭, 错误代码:' + IntToStr(lvRet));
 
@@ -547,7 +565,9 @@ var
 begin
   while ouBuf.validCount > 0 do
   begin
-    lvIOData := TIODataMemPool.instance.borrowIOData;
+    //lvIOData := TIODataMemPool.instance.borrowIOData;
+
+    lvIOData :=
     lvIOData.IO_TYPE := IO_TYPE_Send;
     lvIOData.DataBuf.len :=
       ouBuf.readBuffer(lvIOData.DataBuf.buf, lvIOData.DataBuf.len);
@@ -567,15 +587,17 @@ function TIOCPObject.PostWSASendBlock(pvSocket: TSocket; pvIOData:
     POVERLAPPEDEx): Boolean;
 var
   lvErrCode, lvRet, i, l:Integer;
+  lvDataBuf:TWsaBuf;
 begin
   i := 1;
   Result := False;
-  l := pvIOData.DataBuf.len;
+  lvDataBuf := pvIOData.DataBuf;
+  l := lvDataBuf.len;
   while i<=10 do    //尝试10次,如果还不成功就返回false
   begin
     //如果立刻发送成功  0也会触发队列
     lvRet :=WSASend(pvSocket,
-       @pvIOData.DataBuf,
+       @lvDataBuf,
        1,
        pvIOData.WorkBytes,
        pvIOData.WorkFlag,
@@ -849,7 +871,10 @@ begin
      //pvClientContext.Lock;
 
      //初始化数据包
-     lvIOData := TIODataMemPool.instance.borrowIOData;
+     //lvIOData := TIODataMemPool.instance.borrowIOData;
+
+     lvIOData := pvClientContext.checkGetPerIOData;
+
      //数据包中的IO类型:关闭请求
      lvIOData.IO_TYPE := IO_TYPE_Close;
 
@@ -925,6 +950,10 @@ begin
 
   FSocket := ASocket;
   FBuffers := TBufferLink.Create();
+
+
+  GetMem(FPerIOData.DataBuf.buf, MAX_OVERLAPPEDEx_BUFFER_SIZE);
+  FPerIOData.DataBuf.len := MAX_OVERLAPPEDEx_BUFFER_SIZE;
 end;
 
 destructor TIOCPClientContext.Destroy;
@@ -949,6 +978,9 @@ begin
 
   FSendCacheLocker.Free;
   FSendCacheLocker := nil;
+
+  FreeMem(FPerIOData.DataBuf.buf, MAX_OVERLAPPEDEx_BUFFER_SIZE);
+
   inherited Destroy;
 end;
 
@@ -1007,6 +1039,17 @@ begin
   FBuffers.clearBuffer;
 end;
 
+function TIOCPClientContext.checkGetPerIOData: POVERLAPPEDEx;
+begin
+  if FPerIOData.__debug_counter > 0 then
+  begin
+    TIOCPFileLogger.logErrMessage(Format('FPerIOData借出错误,当前计数器:%d', [FPerIOData.__debug_counter]));
+  end;
+  Result := @FPerIOData;
+
+  InterlockedIncrement(FPerIOData.__debug_counter);
+end;
+
 procedure TIOCPClientContext.checkPostWSASendCache;
 var
   lvIOData:POVERLAPPEDEx;
@@ -1030,7 +1073,9 @@ begin
     //发送一块内存块
     if FCurrentSendBuffer.validCount > 0 then
     begin
-      lvIOData := TIODataMemPool.instance.borrowIOData;
+      //lvIOData := TIODataMemPool.instance.borrowIOData;
+
+      lvIOData := checkGetPerIOData;
       lvIOData.IO_TYPE := IO_TYPE_Send;
       lvIOData.DataBuf.len :=
         FCurrentSendBuffer.readBuffer(lvIOData.DataBuf.buf, lvIOData.DataBuf.len);
@@ -1039,7 +1084,10 @@ begin
       if not FIOCPObject.PostWSASendBlock(FSocket, lvIOData) then
       begin
         //发送不成功
-        TIODataMemPool.instance.giveBackIOData(lvIOData);
+        //TIODataMemPool.instance.giveBackIOData(lvIOData);
+        checkResetPerIOData;
+
+
         closesocket(FSocket);
       end;
     end;
@@ -1070,6 +1118,11 @@ begin
     DoOnWriteBack;
   end;
   
+end;
+
+procedure TIOCPClientContext.checkResetPerIOData;
+begin
+  InterlockedDecrement(FPerIOData.__debug_counter);
 end;
 
 procedure TIOCPClientContext.invokeConnect;
