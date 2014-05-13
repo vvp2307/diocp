@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+  <Transactions>
+    <Transaction>2014-04-09 21:13:08.421,E:\MyProjects\DIOCP\Demos\UniDACPool\CDSOperatorWrapper.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.483,E:\MyProjects\DIOCP\Demos\UniDACPool\uCDSProvider.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.499,E:\MyProjects\DIOCP\Demos\UniDACPool\uDBAccessOperator.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.515,E:\MyProjects\DIOCP\Demos\UniDACPool\uICDSOperator.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.530,E:\MyProjects\DIOCP\Demos\UniDACPool\UntCobblerUniPool.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.546,E:\MyProjects\DIOCP\Demos\UniDACPool\UntThreadTimer.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.562,E:\MyProjects\DIOCP\Demos\UniDACPool\uUniConfigTools.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.577,E:\MyProjects\DIOCP\Demos\UniDACPool\uUniOperator.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:08.593,E:\MyProjects\DIOCP\Demos\UniDACPool\uUniPool.pas=</Transaction>
+    <Transaction>2014-04-09 21:13:21.968,=E:\MyProjects\DIOCP\Demos\MyUniPool\uCDSProvider.pas</Transaction>
+    <Transaction>2014-04-09 21:13:22.030,=E:\MyProjects\DIOCP\Demos\MyUniPool\uDBAccessOperator.pas</Transaction>
+    <Transaction>2014-04-09 21:13:22.108,=E:\MyProjects\DIOCP\Demos\MyUniPool\uICDSOperator.pas</Transaction>
+    <Transaction>2014-04-09 21:13:22.187,=E:\MyProjects\DIOCP\Demos\MyUniPool\uUniConfigTools.pas</Transaction>
+    <Transaction>2014-04-09 21:13:49.280,=E:\MyProjects\DIOCP\Demos\MyUniPool\uUniOperator.pas</Transaction>
+  </Transactions>
+</BorlandProject>
