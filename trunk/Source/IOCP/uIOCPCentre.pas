@@ -504,15 +504,18 @@ procedure TIOCPObject.PostWSARecv(const pvClientContext: TIOCPClientContext);
 var
   lvIOData:POVERLAPPEDEx;
   lvRet:Integer;
+  lvDataBuf:TWsaBuf;
 begin
   /////分配内存<可以加入内存池>
   lvIOData := TIODataMemPool.instance.borrowIOData;
   lvIOData.IO_TYPE := IO_TYPE_Recv;
+  lvDataBuf := lvIOData.DataBuf;
 
 
   /////异步收取数据
+  ///  WSARecv要求第二个参数地址对齐，否则会返回10014(MSDN没有这样要求。。。)
   if (WSARecv(pvClientContext.FSocket,
-     @lvIOData.DataBuf,
+     @lvDataBuf,
      1,
      lvIOData.WorkBytes,
      lvIOData.WorkFlag,
@@ -536,7 +539,8 @@ begin
 
       TIOCPFileLogger.logErrMessage('TIOCPObject.PostWSARecv,投递WSARecv出现异常,socket进行了关闭, 错误代码:' + IntToStr(lvRet));
 
-      pvClientContext.PostWSAClose;
+      pvClientContext.closeClientSocket;
+      //pvClientContext.PostWSAClose;
     end;
   end;
 end;
@@ -567,15 +571,17 @@ function TIOCPObject.PostWSASendBlock(pvSocket: TSocket; pvIOData:
     POVERLAPPEDEx): Boolean;
 var
   lvErrCode, lvRet, i, l:Integer;
+  lvDataBuf:TWsaBuf;
 begin
   i := 1;
   Result := False;
+  lvDataBuf := pvIOData.DataBuf;
   l := pvIOData.DataBuf.len;
   while i<=10 do    //尝试10次,如果还不成功就返回false
   begin
     //如果立刻发送成功  0也会触发队列
     lvRet :=WSASend(pvSocket,
-       @pvIOData.DataBuf,
+       @lvDataBuf,
        1,
        pvIOData.WorkBytes,
        pvIOData.WorkFlag,
@@ -909,7 +915,6 @@ begin
     invokeDisconnect;
     closesocket(FSocket);
     FSocket := INVALID_SOCKET;
-    FBuffers.clearBuffer;
   end;
 end;
 
