@@ -1,5 +1,0 @@
-2014年2月20日 15:12:49(升级说明)
-   1.移除jawsocket的单元,
-   2.加入winsock2.pas和qos.pas
-   3.加入uMyTypes.pas到工程
-   4.修改类型 TIOCPBytes->TBytes
