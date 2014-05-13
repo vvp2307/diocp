@@ -31,13 +31,15 @@ type
 
   OVERLAPPEDEx = packed record
     Overlapped: OVERLAPPED;
-    IO_TYPE: Cardinal;
+    IO_TYPE: Byte;
     DataBuf: TWSABUF;
     WorkBytes: Cardinal;    //如果是接收，接收的字节数
     WorkFlag: Cardinal;
     __postTime: Cardinal;   //
+    __debug_counter: Integer;  //计数器
     pre:POVERLAPPEDEx;
     next:POVERLAPPEDEx;
+
   end;
 
   TIOCPBytes = uMyTypes.TBytes;
