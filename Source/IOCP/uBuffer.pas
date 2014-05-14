@@ -148,6 +148,53 @@ type
     procedure FreeObject(Obj: TObject);
   end;
 
+  //环形缓冲流
+  TDxRingStream = class(TStream)
+  private
+    FReadBlock: PMemoryBlock; //读取的块
+    FReadBlockPos: Integer;
+    FMemBlockType: TDxMemBlockType;
+
+    FWriteBlock: PMemoryBlock;
+    FWriteBlockPos: Integer;
+    FSize, FCapacity: Longint;
+    FMemBlockCount: Integer;
+    FHead: PMemoryBlock;
+    FLast: PMemoryBlock;
+    FReadPosition: Integer;
+    FWritePosition: Integer;
+    FMarkRead,FMarkWrite: PMemoryBlock; //标记的内存块
+    FMarkReadPosition,FMarkWritePosition: Cardinal; //标记的内存块位置
+    procedure SetReadPosition(const Value: Integer);
+    procedure SetWritePostion(const Value: Integer);
+    function SeekReadWrite(Offset: Longint; Origin: TSeekOrigin;SeekRead: Boolean): Longint;
+    function GetCanWriteSize: Integer;
+    function GetDataSize: Integer;
+  protected
+    function GetSize: Int64; override;
+  public
+    constructor Create(const RingBufferSize: DWORD; const MemType: TDxMemBlockType = MB_Small);
+    function Read(var Buffer; Count: Longint): Longint; override;
+    function Seek(Offset: Longint; Origin: Word): Longint; override;
+
+    procedure ReadBuffer(var Buffer; Count: Longint);
+    procedure WriteBuffer(const Buffer; Count: Longint);
+
+
+    procedure markReaderIndex;
+    procedure restoreReaderIndex;
+
+    procedure markWriterIndex;
+    procedure restoreWriterIndex;
+
+    function Write(const Buffer; Count: Longint): Longint; override;
+    procedure SetSize(NewSize: Longint); override;
+    property ReadPosition: Integer read FReadPosition write SetReadPosition;
+    property WritePosition: Integer read FWritePosition write SetWritePostion;
+    property CanWriteSize: Integer read GetCanWriteSize; //能写入的数据长度
+    property DataSize: Integer read GetDataSize; //能读取的数据长度
+  end;
+
 
 
 implementation
@@ -1637,6 +1684,584 @@ begin
     LargeMPool.Free;
   if SPLargeMPool <> nil then
     SPLargeMPool.Free;
+end;
+
+{ TDxRingStream }
+
+constructor TDxRingStream.Create(const RingBufferSize: DWORD;
+  const MemType: TDxMemBlockType);
+begin
+  inherited Create;
+  FMemBlockType := MemType;
+  if RingBufferSize <> 0 then
+    SetSize(RingBufferSize);
+end;
+
+function TDxRingStream.GetCanWriteSize: Integer;
+begin
+  if FWritePosition > FReadPosition then
+    Result := FSize - FWritePosition + FReadPosition
+  else if FWritePosition < FReadPosition then
+    Result := FReadPosition - FWritePosition
+  else if FReadPosition = 0 then
+    Result := FSize
+  else Result := 0;
+end;
+
+function TDxRingStream.GetDataSize: Integer;
+begin
+  if FWritePosition > FReadPosition then
+    Result := FWritePosition - FReadPosition
+  else if FWritePosition < FReadPosition then
+    Result := FWritePosition + FSize - FReadPosition
+  else if FWritePosition = 0 then
+    Result := 0
+  else Result := FSize;
+end;
+
+function TDxRingStream.GetSize: Int64;
+begin
+  Result := FSize;
+end;
+
+procedure TDxRingStream.markReaderIndex;
+begin
+  FMarkRead := FReadBlock;
+  FMarkReadPosition := FReadBlockPos;
+end;
+
+procedure TDxRingStream.markWriterIndex;
+begin
+  FMarkWrite := FWriteBlock;
+  FMarkWritePosition := FWriteBlockPos;
+end;
+
+function TDxRingStream.Read(var Buffer; Count: Integer): Longint;
+var
+  p: PAnsiChar;
+  MPool: TDxMemoryPool;
+  pBuf: Pointer;
+  CanReadSize: Integer;
+begin
+  if FReadBlock = nil then
+    Result := 0
+  else
+  begin
+    case FMemBlockType of
+      MB_Small: MPool := SmallMemoryPool;
+      MB_Normal: MPool := MemoryPool;
+      MB_SpBig: MPool := SuperMemoryPool;
+      MB_Large: MPool := LargeMemoryPool;
+      MB_SPLarge: MPool := SuperLargeMemoryPool;
+      else MPool := BigMemoryPool;
+    end;
+    CanReadSize := DataSize;
+    if Count > CanReadSize then
+      Count := CanReadSize;
+    if Count = 0 then
+    begin
+      result := 0;
+      Exit;
+    end;
+
+    if FReadBlockPos = MPool.FBlockSize then
+    begin
+      FReadBlock := FReadBlock^.NextEx;
+      FReadBlockPos := 0;
+    end;
+
+    if FReadBlock = nil then
+    begin
+      result := 0;
+      Exit;
+    end;
+
+    Result := Count;
+    p := @Buffer;
+    //先读取当前块剩下的区域
+    pBuf := Pointer(NativeUInt(FReadBlock^.Memory) + DWORD(FReadBlockPos));
+    if Count <= MPool.FBlockSize - FReadBlockPos then //足够写了
+    begin
+      Move(PBuf^,buffer,Count);
+      Inc(FReadPosition,Count);
+      inc(FReadBlockPos,Count);
+      Count := 0;
+    end
+    else
+    begin
+      Move(PBuf^,Buffer,MPool.FBlockSize - FReadBlockPos);
+      Dec(Count,MPool.FBlockSize - FReadBlockPos);
+      Inc(FReadPosition,MPool.FBlockSize - FReadBlockPos);
+      Inc(p,MPool.FBlockSize - FReadBlockPos);
+      FReadBlock := FReadBlock^.NextEx;
+      FReadBlockPos := 0;
+    end;
+    if FReadBlockPos = MPool.FBlockSize then
+    begin
+      FReadBlock := FReadBlock^.NextEx;
+      FReadBlockPos := 0;
+    end;
+    while Count > 0 do
+    begin
+      if Count > MPool.FBlockSize then
+      begin
+        Move(FReadBlock^.Memory^,p^,MPool.FBlockSize);
+        Dec(Count,MPool.FBlockSize);
+        FReadBlockPos := MPool.FBlockSize;
+        Inc(FReadPosition,MPool.FBlockSize);
+        Inc(p,MPool.FBlockSize);
+      end
+      else
+      begin
+        Move(FReadBlock^.Memory^,p^,Count);
+        Inc(FReadPosition,Count);
+        Inc(p,Count);
+        FReadBlockPos := Count;
+        Count := 0;
+      end;
+      if FReadBlockPos = MPool.FBlockSize then
+      begin
+        FReadBlock := FReadBlock^.NextEx;
+        FReadBlockPos := 0;
+      end;
+    end;
+  end;
+end;
+
+procedure TDxRingStream.ReadBuffer(var Buffer; Count: Integer);
+begin
+  read(buffer,Count);
+end;
+
+procedure TDxRingStream.restoreReaderIndex;
+begin
+  FReadBlock := FMarkRead;
+  FReadBlockPos := FMarkReadPosition;
+end;
+
+procedure TDxRingStream.restoreWriterIndex;
+begin
+  FWriteBlock := FMarkWrite;
+  FWriteBlockPos := FMarkWritePosition;
+end;
+
+function TDxRingStream.Seek(Offset: Integer; Origin: Word): Longint;
+begin
+  Result := 0;
+end;
+
+function TDxRingStream.SeekReadWrite(Offset: Integer; Origin: TSeekOrigin;
+  SeekRead: Boolean): Longint;
+var
+  MPool: TDxMemoryPool;
+  BIndex: integer;
+  FLastSize: Integer;
+begin
+  if FHead <> nil then
+  begin
+    case FMemBlockType of
+      MB_Small: MPool := SmallMemoryPool;
+      MB_Normal: MPool := MemoryPool;
+      MB_SpBig: MPool := SuperMemoryPool;
+      MB_Large: MPool := LargeMemoryPool;
+      MB_SPLarge: MPool := SuperLargeMemoryPool;
+      else MPool := BigMemoryPool;
+    end;
+    case TSeekOrigin(Origin) of
+    soBeginning:
+      begin
+        if Offset < 0 then
+          Offset := 0;
+        if Offset <= FSize then
+        begin
+          BIndex := Offset div MPool.FBlockSize;
+          if SeekRead then
+          begin
+            FReadBlockPos := Offset mod MPool.FBlockSize;
+            FReadBlock := FHead;
+            FReadPosition := FReadBlockPos;
+          end
+          else
+          begin
+            FWriteBlockPos := Offset mod MPool.FBlockSize;
+            FWriteBlock := FHead;
+            FWritePosition := FWriteBlockPos;
+          end;
+          if BIndex > 0 then
+          begin
+            if SeekRead then
+            repeat
+              Inc(FReadPosition,MPool.FBlockSize);
+              Dec(Bindex);
+              FReadBlock := FReadBlock^.NextEx;
+            until (BIndex = 0) or (FReadBlock = nil)
+            else
+            repeat
+              Inc(FWritePosition,MPool.FBlockSize);
+              Dec(Bindex);
+              FWriteBlock := FWriteBlock^.NextEx;
+            until (BIndex = 0) or (FWriteBlock = nil)
+          end;
+        end
+        else
+        begin
+          if SeekRead then
+          begin
+            FReadBlock := FLast;
+            FReadBlockPos := FCapacity - FSize;
+            FReadPosition := Size;
+          end
+          else
+          begin
+            FWriteBlock := FLast;
+            FWriteBlockPos := FCapacity - FSize;
+            FWritePosition := Size;
+          end;
+        end;
+      end;
+    soCurrent:
+      begin
+        if Offset > 0 then
+        begin
+          if SeekRead then
+          begin
+            BIndex := (FReadBlockPos + Offset) div MPool.FBlockSize;
+            Inc(FReadPosition,MPool.FBlockSize - FReadBlockPos);
+            FReadBlockPos := (FReadBlockPos + Offset) mod MPool.FBlockSize;
+            Inc(FReadPosition,FReadBlockPos);
+            while BIndex > 0 do
+            begin
+              FReadBlock := FReadBlock^.NextEx;
+              Dec(BIndex);
+              if BIndex > 0 then
+                Inc(FReadPosition,MPool.FBlockSize);
+            end;
+          end
+          else
+          begin
+            BIndex := (FWriteBlockPos + Offset) div MPool.FBlockSize;
+            Inc(FWritePosition,MPool.FBlockSize - FWriteBlockPos);
+            FWriteBlockPos := (FWriteBlockPos + Offset) mod MPool.FBlockSize;
+            Inc(FWritePosition,FWriteBlockPos);
+            while BIndex > 0 do
+            begin
+              FWRiteBlock := FWRiteBlock^.NextEx;
+              Dec(BIndex);
+              if BIndex > 0 then
+                Inc(FWritePosition,MPool.FBlockSize);
+            end;
+          end;
+        end
+        else
+        begin
+          if SeekRead then
+          begin
+            if Offset + FReadBlockPos >= 0 then
+            begin
+              Inc(FReadPosition,offset);
+              Inc(FReadBlockPos,offset);
+            end
+            else
+            begin
+              FReadBlock := FReadBlock^.PrevEx;
+              if FReadBlock = nil then
+              begin
+                FReadBlockPos := 0;
+                FReadBlock := FHead;
+              end
+              else
+              begin
+                inc(offset,FReadBlockPos);
+                Dec(FReadPosition,FReadBlockPos);
+                FReadBlockPos := MPool.FBlockSize;
+                SeekReadWrite(Offset,soCurrent,SeekRead);
+              end;
+            end;
+          end
+          else
+          begin
+            if Offset + FWriteBlockPos >= 0 then
+            begin
+              Inc(FWritePosition,offset);
+              Inc(FWriteBlockPos,offset);
+            end
+            else
+            begin
+              FWriteBlock := FWriteBlock^.PrevEx;
+              if FWriteBlock = nil then
+              begin
+                FWriteBlockPos := 0;
+                FWriteBlock := FHead;
+              end
+              else
+              begin
+                inc(offset,FWriteBlockPos);
+                Dec(FWritePosition,FWriteBlockPos);
+                FWriteBlockPos := MPool.FBlockSize;
+                SeekReadWrite(Offset,soCurrent,SeekRead);
+              end;
+            end;
+          end;
+        end;
+      end;
+    soEnd:
+      begin
+        if Offset < 0 then
+          Offset := -offset;
+        if Offset < FSize then
+        begin
+          FLastSize := MPool.FBlockSize - FCapacity + FSize; //最后一个大小
+          if Offset <= FLastSize then
+          begin
+            if SeekRead then
+            begin
+              FReadBlockPos := FLastSize - Offset;
+              FReadBlock := FLast;
+              FReadPosition := FSize - Offset;
+            end
+            else
+            begin
+              FWriteBlockPos := FLastSize - Offset;
+              FWriteBlock := FLast;
+              FWritePosition := FSize - Offset;
+            end;
+          end
+          else
+          begin
+            Dec(Offset,FLastSize);
+            if SeekRead then
+            begin
+              FReadBlock := FLast^.PrevEx;
+              FReadPosition := FSize - FLastSize;
+            end
+            else
+            begin
+              FWriteBlock := FLast^.PrevEx;
+              FWritePosition := FSize - FLastSize;
+            end;
+            BIndex := Offset div MPool.FBlockSize;
+            Offset := Offset mod MPool.FBlockSize;
+            if SeekRead then
+            begin
+              FReadBlockPos := MPool.FBlockSize - Offset;
+              Dec(FReadPosition,MPool.FBlockSize - FReadBlockPos);
+              while BIndex > 0 do
+              begin
+                FReadBlock := FReadBlock^.PrevEx;
+                Dec(BIndex);
+                Dec(FReadPosition,MPool.FBlockSize);
+              end;
+            end
+            else
+            begin
+              FWriteBlockPos := MPool.FBlockSize - Offset;
+              Dec(FWritePosition,MPool.FBlockSize - FWriteBlockPos);
+              while BIndex > 0 do
+              begin
+                FWriteBlock := FWriteBlock^.PrevEx;
+                Dec(BIndex);
+                Dec(FWritePosition,MPool.FBlockSize);
+              end;
+            end;
+          end;
+        end
+        else if SeekRead then             
+        begin
+          FReadPosition := 0;
+          FReadBlockPos := 0;
+          FReadBlock := FHead;
+        end
+        else
+        begin
+          FWritePosition := 0;
+          FWriteBlockPos := 0;
+          FWriteBlock := FHead;
+        end;
+      end;
+    end;
+    if SeekRead then
+      Result := FReadPosition
+    else Result := FWritePosition;
+  end
+  else Result := 0;
+end;
+
+procedure TDxRingStream.SetReadPosition(const Value: Integer);
+begin
+  SeekReadWrite(Value, soBeginning,true);
+end;
+
+procedure TDxRingStream.SetSize(NewSize: Integer);
+var
+  CurCount: integer;
+  mBlock: PMemoryBlock;
+  MPool: TDxMemoryPool;
+begin
+  if FSize <> NewSize then
+  begin
+    FSize := NewSize;
+    case FMemBlockType of
+      MB_Small: MPool := SmallMemoryPool;
+      MB_Normal: MPool := MemoryPool;
+      MB_SpBig: MPool := SuperMemoryPool;
+      MB_Large: MPool := LargeMemoryPool;
+      MB_SPLarge: MPool := SuperLargeMemoryPool;
+      else MPool := BigMemoryPool;
+    end;
+    CurCount := FCapacity div MPool.FBlockSize;
+    FMemBlockCount := NewSize div MPool.FBlockSize;
+    if NewSize mod MPool.FBlockSize <> 0 then
+      Inc(FMemBlockCount);
+    if CurCount <> FMemBlockCount then
+    begin
+      while CurCount > FMemBlockCount do
+      begin //内存回收
+        mBlock := FLast;
+        FLast := FLast^.PrevEx;
+        MPool.FreeMemoryBlock(mBlock);
+        Dec(CurCount);
+      end;
+      while CurCount < FMemBlockCount do
+      begin
+        mBlock := MPool.GetMemoryBlock;
+        mBlock.NextEx := nil;
+        mBlock.PrevEx := nil;
+        if FHead = nil then
+        begin
+          FHead := mBlock;
+          FLast := mBlock;
+          FHead.NextEx := nil;
+          FHead.PrevEx := nil;
+        end
+        else
+        begin
+          FLast^.NextEx := mBlock;
+          mBlock^.PrevEx := FLast;
+          FLast := mBlock;
+        end;
+        Inc(CurCount);
+      end;
+      FCapacity := MPool.FBlockSize * FMemBlockCount;
+      if FLast <> nil then //指向头部形成一个环形
+        FLast.NextEx := FHead;
+    end;
+    if NewSize = 0 then
+    begin
+      FReadBlock := nil;
+      FWriteBlock := nil;
+      FHead := nil;
+      FLast := nil;
+      FWriteBlockPos := 0;
+      FReadBlockPos := 0;
+    end
+    else
+    begin
+      if FReadPosition > NewSize then
+        ReadPosition := NewSize;
+      if FReadBlock = nil then
+      begin
+        FReadBlock := FHead;
+        FReadBlockPos := 0;
+        FReadPosition := 0;
+      end;
+
+      if FWritePosition > NewSize then
+        WritePosition := NewSize;
+      if FWriteBlock = nil then
+      begin
+        FWriteBlock := FHead;
+        FWriteBlockPos := 0;
+        FWritePosition := 0;
+      end;
+    end;
+  end;
+end;
+
+procedure TDxRingStream.SetWritePostion(const Value: Integer);
+begin
+  SeekReadWrite(Value, soBeginning,False);
+end;
+
+function TDxRingStream.Write(const Buffer; Count: Integer): Longint;
+var
+  MPool: TDxMemoryPool;
+  pBuf: Pointer;
+  tmpBuf: PByte;
+  CSize: Integer;
+begin
+  CSize := CanWriteSize;
+  if CSize = 0 then
+  begin
+    Result := 0;
+    Exit;
+  end
+  else if Count > CSize then
+    Count := CSize;
+  case FMemBlockType of
+    MB_Small: MPool := SmallMemoryPool;
+    MB_Normal: MPool := MemoryPool;
+    MB_SpBig: MPool := SuperMemoryPool;
+    MB_Large: MPool := LargeMemoryPool;
+    MB_SPLarge: MPool := SuperLargeMemoryPool;
+    else MPool := BigMemoryPool;
+  end;
+
+  if FWriteBlockPos = MPool.FBlockSize then
+  begin
+    FWriteBlock := FWriteBlock^.NextEx;
+    FWriteBlockPos := 0;
+  end;
+
+  Result := Count;
+  tmpBuf := @Buffer;
+  //先写满当前未写满的内存块空间
+  pBuf := Pointer(NativeUInt(FWriteBlock^.Memory) + DWORD(FWriteBlockPos));
+  if Count <= MPool.FBlockSize - FWriteBlockPos then //足够写了
+  begin
+    Move(Buffer,pBuf^,Count);
+    inc(FWriteBlockPos,Count);
+    Inc(FWritePosition,Count);
+    Count := 0;
+  end
+  else
+  begin
+    Move(Buffer,PBuf^,MPool.FBlockSize - FWriteBlockPos);
+    Dec(Count,MPool.FBlockSize - FWriteBlockPos);
+    Inc(tmpBuf,MPool.FBlockSize - FWriteBlockPos);
+
+    Inc(FWritePosition,MPool.FBlockSize - FWriteBlockPos);
+    FWriteBlock := FWriteBlock^.NextEx;
+    FWriteBlockPos := 0;
+  end;
+  while Count > 0 do
+  begin
+    if Count > MPool.FBlockSize then
+    begin
+      Move(tmpBuf^,FWriteBlock^.Memory^,MPool.FBlockSize);
+      Inc(tmpBuf,MPool.FBlockSize);
+      Dec(Count,MPool.FBlockSize);
+      FWriteBlockPos := MPool.FBlockSize;
+      Inc(FWritePosition,MPool.FBlockSize);
+    end
+    else
+    begin
+      Move(tmpBuf^,FWriteBlock^.Memory^,Count);
+      Inc(FWritePosition,Count);
+      Inc(tmpBuf,Count);
+      FWriteBlockPos := Count;
+      Count := 0;
+    end;
+    if FWriteBlockPos = MPool.FBlockSize then
+    begin
+      FWriteBlock := FWriteBlock^.NextEx;
+      FWriteBlockPos := 0;
+    end;
+  end;
+end;
+
+procedure TDxRingStream.WriteBuffer(const Buffer; Count: Integer);
+begin
+  Write(Buffer,Count)
 end;
 
 initialization
