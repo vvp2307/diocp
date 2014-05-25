@@ -41,6 +41,8 @@ var
 
   __cs:TCriticalSection;
 
+  __tester_terminate:Byte;
+
 
 
 implementation
@@ -136,7 +138,7 @@ begin
   i:= 0;
   lvJSonObject := createObject;
   try
-    while (not self.Terminated) do
+    while (not self.Terminated) and (__tester_terminate = 0) do
     begin
       try
         if not FClient.Connected then
