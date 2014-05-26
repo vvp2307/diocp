@@ -21,18 +21,17 @@ procedure dolisten;
 var
   lvZMQContext:TZMQContext;
   lvSocket:TZMQSocket;
+  lvSender:TZMQSocket;
   lvStream:TMemoryStream;
   lvMsg:UTF8String;
   l:Integer;
 begin
-
-//  context := TZMQContext.create;
-//  server := context.socket( stRep );
-//  server.bind( 'tcp://*:5555' );
-
   lvZMQContext := TZMQContext.create;
-  lvSocket := lvZMQContext.Socket(stRep);
-  lvSocket.bind('tcp://*:5555');
+  lvSocket := lvZMQContext.Socket(stPull);
+  lvSocket.connect( 'tcp://localhost:5557' );
+
+  lvSender := lvZMQContext.Socket( stPush );
+  lvSender.connect( 'tcp://localhost:5558' );
 
   lvStream := TMemoryStream.Create;
   try
@@ -40,13 +39,11 @@ begin
     begin
       try
         lvStream.Clear;
-        l := lvSocket.recv(lvMsg);
-        if l > 0 then
-        begin
-          Writeln(lvMsg);
-          lvSocket.send(lvMsg);
-          //dowork(lvStream);
-        end;
+        lvSocket.recv(lvStream);
+
+        lvStream.Position := 0;
+        lvSender.send(lvStream, lvStream.Size);
+
       except
         on E: Exception do
           Writeln(E.ClassName, ': ', E.Message);

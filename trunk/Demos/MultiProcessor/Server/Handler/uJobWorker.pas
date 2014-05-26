@@ -1,6 +1,6 @@
 unit uJobWorker;
 /// <summary>
-///   下面大部分代码来自QDAC的 QWorker
+/// 下面大部分代码来自QDAC的 QWorker
 /// </summary>
 
 interface
@@ -9,14 +9,14 @@ uses
   Classes, SyncObjs, OTLObjectQueue, windows, SysUtils;
 
 type
-  TJobExecuteProc = procedure(pvObj:TObject) of object;
+  TJobExecuteProc = procedure(pvObj: TObject) of object;
 
   TJobWorkerManager = class;
 
   TJobWorker = class(TThread)
   private
-    FKeepAlive:Boolean;
-    FIsBusy:Boolean;
+    FKeepAlive: Boolean;
+    FIsBusy: Boolean;
   protected
     FOwner: TJobWorkerManager;
     FEvent: TEvent;
@@ -27,31 +27,41 @@ type
     destructor Destroy; override;
   end;
 
-
   TJobWorkerManager = class(TObject)
   private
     FJobQueue: TOtlObjectQueue;
-    FCpuCounter:Integer;
+    FCpuCounter: Integer;
+    FEnabled: Boolean;
     FLocker: TCriticalSection;
     FOnJobExecute: TJobExecuteProc;
     FTerminated: Boolean;
     FWorkerCount: Integer;
     FWorkers: array of TJobWorker;
     class function getCPUNumbers: Integer;
+    procedure notifyWorker;
+    procedure SetEnabled(const Value: Boolean);
   protected
     FmaxWorkerCount: Integer;
-    procedure notifyWorker;
     procedure setMaxWorkerCount(const Value: Integer);
     procedure removeWorker(AWorker: TObject);
   public
     constructor Create(AJobQueue: TOtlObjectQueue);
     destructor Destroy; override;
+    procedure Push(pvObject: TObject);
     procedure setThreadUseCPU(AHandle: THandle; ACpuNo: Integer);
-    property maxWorkerCount: Integer read FmaxWorkerCount write setMaxWorkerCount;
+
+    property maxWorkerCount: Integer read FmaxWorkerCount
+      write setMaxWorkerCount;
+
     property Terminated: Boolean read FTerminated write FTerminated;
     property WorkerCount: Integer read FWorkerCount;
 
-    property OnJobExecute: TJobExecuteProc read FOnJobExecute write FOnJobExecute;
+    property OnJobExecute: TJobExecuteProc read FOnJobExecute
+      write FOnJobExecute;
+
+    property Enabled: Boolean read FEnabled write SetEnabled;
+
+
 
   end;
 
@@ -59,14 +69,13 @@ implementation
 
 { TJobWorker }
 
-
 constructor TJobWorker.Create(AOwner: TJobWorkerManager);
 begin
   inherited Create(True);
   FKeepAlive := false;
   FTimeout := 15000;
   FreeOnTerminate := True;
-  FEvent := TEvent.Create(nil, False, False, '');
+  FEvent := TEvent.Create(nil, false, false, '');
   FOwner := AOwner;
 end;
 
@@ -79,61 +88,64 @@ end;
 procedure TJobWorker.Execute;
 var
   wr: TWaitResult;
-  lvObj:TObject;
+  lvObj: TObject;
 begin
   try
     Assert(Assigned(FOwner.FOnJobExecute), 'JobExecute none');
-
-
     while not(Terminated) do
     begin
       wr := FEvent.WaitFor(FTimeout);
 
-      if (wr = wrSignaled)  then
+      if (wr = wrSignaled) then
       begin
         FIsBusy := True;
         try
           repeat
-            if Terminated then Break;
+            if Terminated then break;
+            if not FOwner.Enabled then Break;
             lvObj := FOwner.FJobQueue.Pop;
             if lvObj <> nil then
-            try
-              FOwner.FOnJobExecute(lvObj);
-            finally
-              lvObj.Free;
-            end;
+              try
+                FOwner.FOnJobExecute(lvObj);
+              finally
+                lvObj.Free;
+              end;
           until (lvObj = nil) or Terminated;
         finally
           FIsBusy := false;
         end;
       end
       else if not FKeepAlive then
-      begin    //超时，退出
+      begin // 超时，退出
         self.Terminate;
         Break;
       end;
     end;
   finally
-    FOwner.removeWorker(Self);
+    FOwner.removeWorker(self);
   end;
 end;
 
 constructor TJobWorkerManager.Create(AJobQueue: TOtlObjectQueue);
 begin
   inherited Create;
+  FEnabled := false;
   FLocker := TCriticalSection.Create();
   FJobQueue := AJobQueue;
 
-  FCpuCounter := Self.getCPUNumbers;
+  FCpuCounter := self.getCPUNumbers;
+
+  FmaxWorkerCount := FCpuCounter - 1;
+  if FmaxWorkerCount <2 then FmaxWorkerCount := 2;
 
   FWorkerCount := 2;
   SetLength(FWorkers, FmaxWorkerCount);
-  FWorkers[0] := TJobWorker.Create(Self);
+  FWorkers[0] := TJobWorker.Create(self);
   FWorkers[0].FKeepAlive := True;
-  FWorkers[0].Suspended := False;
-  FWorkers[1] := TJobWorker.Create(Self);
+  FWorkers[0].Suspended := false;
+  FWorkers[1] := TJobWorker.Create(self);
   FWorkers[1].FKeepAlive := True;
-  FWorkers[1].Suspended := False;
+  FWorkers[1].Suspended := false;
 
 end;
 
@@ -173,7 +185,7 @@ begin
       end;
       if (lvIdleWorker = nil) and (FWorkerCount < maxWorkerCount) then
       begin
-        lvIdleWorker := TJobWorker.Create(Self);
+        lvIdleWorker := TJobWorker.Create(self);
         FWorkers[FWorkerCount] := lvIdleWorker;
 
         setThreadUseCPU(lvIdleWorker.Handle, FWorkerCount mod FCpuCounter);
@@ -185,9 +197,15 @@ begin
   end;
   if lvIdleWorker <> nil then
   begin
-    lvIdleWorker.Suspended := False;
+    lvIdleWorker.Suspended := false;
     lvIdleWorker.FEvent.SetEvent;
   end;
+end;
+
+procedure TJobWorkerManager.Push(pvObject: TObject);
+begin
+  FJobQueue.Push(pvObject);
+  notifyWorker;
 end;
 
 procedure TJobWorkerManager.setMaxWorkerCount(const Value: Integer);
@@ -238,6 +256,18 @@ begin
     FLocker.Leave;
   end;
 
+end;
+
+procedure TJobWorkerManager.SetEnabled(const Value: Boolean);
+begin
+  if FEnabled <> Value then
+  begin
+    FEnabled := Value;
+    if Enabled then
+    begin
+      notifyWorker;
+    end;
+  end;
 end;
 
 procedure TJobWorkerManager.setThreadUseCPU(AHandle: THandle; ACpuNo: Integer);
