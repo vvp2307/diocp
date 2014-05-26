@@ -3,7 +3,7 @@ unit uJSonStreamTools;
 interface
 
 uses
-  JSonStream, uCRCTools, SysUtils, Classes;
+  JSonStream, uCRCTools, SysUtils, Classes, uNetworkTools, Windows, superobject;
 
 type
   TJSonStreamTools = class(TObject)
@@ -87,12 +87,13 @@ begin
   end;
 
   lvStreamLength := TNetworkTools.htonl(lvStreamLength);
-  pvStream.WriteBuffer(@lvStreamLength, SizeOf(lvStreamLength));
+  pvStream.WriteBuffer(lvStreamLength, SizeOf(lvStreamLength));
 
   //json bytes
   pvStream.WriteBuffer(lvBytes[0], Length(lvBytes));
   if lvStream.Size > 0 then
   begin
+    lvStream.Position := 0;
     pvStream.CopyFrom(lvStream, lvStream.Size);
   end;
 
@@ -152,14 +153,11 @@ begin
   begin
     SetLength(lvBytes, lvJSonLength);
     ZeroMemory(@lvBytes[0], lvJSonLength);
-    inBuf.readBuffer(@lvBytes[0], lvJSonLength);
+    pvStream.readBuffer(lvBytes[0], lvJSonLength);
 
     lvData := TNetworkTools.Utf8Bytes2AnsiString(lvBytes);
 
     lvJsonStream.Json := SO(lvData);
-  end else
-  begin
-    TFileLogger.instance.logMessage('接收到一次JSon为空的一次数据请求!', 'DECODER_Warning_');
   end;
 
 

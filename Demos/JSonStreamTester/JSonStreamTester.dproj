@@ -1,11 +1,11 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <ProjectGuid>{def29e4e-b58c-4f82-b8f6-f54a94586dcd}</ProjectGuid>
-    <MainSource>EchoSERVER.dpr</MainSource>
+    <ProjectGuid>{0fd65f66-1bc8-4405-882a-2d1a26b64147}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_DependencyCheckOutputName>EchoSERVER.exe</DCC_DependencyCheckOutputName>
+    <DCC_DependencyCheckOutputName>JSonStreamTester.exe</DCC_DependencyCheckOutputName>
+    <MainSource>JSonStreamTester.dpr</MainSource>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Version>7.0</Version>
@@ -20,7 +20,7 @@
   </PropertyGroup>
   <ProjectExtensions>
     <Borland.Personality>Delphi.Personality</Borland.Personality>
-    <Borland.ProjectType>VCLApplication</Borland.ProjectType>
+    <Borland.ProjectType />
     <BorlandProject>
 <BorlandProject xmlns=""> <Delphi.Personality>   <Parameters>
       <Parameters Name="UseLauncher">False</Parameters>
@@ -28,7 +28,7 @@
       <Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
     </Parameters>
     <VersionInfo>
-      <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+      <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
       <VersionInfo Name="AutoIncBuild">False</VersionInfo>
       <VersionInfo Name="MajorVer">1</VersionInfo>
       <VersionInfo Name="MinorVer">0</VersionInfo>
@@ -55,48 +55,26 @@
       <VersionInfoKeys Name="Comments"></VersionInfoKeys>
     </VersionInfoKeys>
     <Source>
-      <Source Name="MainSource">EchoSERVER.dpr</Source>
+      <Source Name="MainSource">JSonStreamTester.dpr</Source>
     </Source>
   </Delphi.Personality> </BorlandProject></BorlandProject>
   </ProjectExtensions>
   <ItemGroup />
   <ItemGroup>
-    <DelphiCompile Include="EchoSERVER.dpr">
+    <DelphiCompile Include="JSonStreamTester.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
-    <DCCReference Include="..\..\..\Source\IOCP\FileLogger.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uBuffer.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPCentre.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPConsole.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPDebugger.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPFileLogger.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPProtocol.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPTools.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uIOCPWorker.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uMemPool.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uMyTypes.pas" />
-    <DCCReference Include="..\..\..\Source\IOCP\uSocketListener.pas" />
-    <DCCReference Include="..\..\..\Source\Utils\FastMM4.pas" />
-    <DCCReference Include="..\..\..\Source\Utils\FastMM4Messages.pas" />
-    <DCCReference Include="..\..\..\Source\Utils\uAppTools.pas" />
-    <DCCReference Include="..\..\..\Source\Utils\uZipTools.pas" />
-    <DCCReference Include="..\..\..\Source\WinSock2\Qos.pas" />
-    <DCCReference Include="..\..\..\Source\WinSock2\Winsock2.pas" />
-    <DCCReference Include="..\..\Common\JSonStream.pas" />
-    <DCCReference Include="..\..\Common\superobject.pas" />
-    <DCCReference Include="..\..\Common\uFMIOCPDebugINfo.pas">
-      <Form>FMIOCPDebugINfo</Form>
-      <DesignClass>TFrame</DesignClass>
-    </DCCReference>
-    <DCCReference Include="..\..\Common\uRunTimeINfoTools.pas" />
-    <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamDecoder.pas" />
-    <DCCReference Include="..\..\IOCPCoder\uIOCPJSonStreamEncoder.pas" />
-    <DCCReference Include="..\..\IOCPCoder\uNetworkTools.pas" />
-    <DCCReference Include="Handler\uClientContext.pas" />
     <DCCReference Include="ufrmMain.pas">
-      <Form>frmMain</Form>
+      <Form>Form1</Form>
     </DCCReference>
-    <DCCReference Include="Utils\uAppJSonConfig.pas" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
 </Project>
+
+<!-- EurekaLog First Line
+[Exception Log]
+EurekaLog Version=7001
+Activate=0
+DeleteMapAfterCompile=1
+Encrypt Password=""
+EurekaLog Last Line -->
