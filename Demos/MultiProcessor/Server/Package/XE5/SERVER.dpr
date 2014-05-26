@@ -35,7 +35,10 @@ uses
   uWorkDispatcher in '..\..\Handler\uWorkDispatcher.pas',
   uJobWorker in '..\..\Handler\uJobWorker.pas',
   zmq in '..\..\zmq\zmq.pas',
-  zmqapi in '..\..\zmq\zmqapi.pas';
+  zmqapi in '..\..\zmq\zmqapi.pas',
+  uJobReceiver in '..\..\Handler\uJobReceiver.pas',
+  uJSonStreamTools in '..\..\..\..\Common\uJSonStreamTools.pas',
+  uCRCTools in '..\..\..\..\Common\uCRCTools.pas';
 
 {$R *.res}
 

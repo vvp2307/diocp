@@ -78,8 +78,8 @@ uses
   uIOCPCentre, uClientContext, uMemPool,
   uFMIOCPDebugINfo,
   uAppJSonConfig,
-  FileLogger;
-                              
+  FileLogger, uWorkDispatcher;
+
 {$R *.dfm}
 
 constructor TfrmMain.Create(AOwner: TComponent);
@@ -214,7 +214,8 @@ begin
     FIOCPConsole.WorkerCount := StrToInt(edtWorkCount.Text);
     FIOCPConsole.setSystemSocketHeartState(false);
     FIOCPConsole.open;
-  end;  
+    workDispatcher.start;
+  end;
   refreshState;
   DoConfigEdit(False);
 end;
@@ -233,6 +234,7 @@ end;
 
 procedure TfrmMain.actStopServiceExecute(Sender: TObject);
 begin
+  workDispatcher.stop;
   FIOCPConsole.close;
   refreshState;
   DoConfigEdit(False);
