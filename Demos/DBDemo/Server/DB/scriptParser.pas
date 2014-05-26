@@ -20,6 +20,8 @@ const
 
 
 type
+  EScriptEmptyExcpeiton = class(Exception);
+
   TParseType = (ptNormal, ptSQL);
 
   /// <summary>
@@ -386,7 +388,7 @@ begin
 
     if pvRaiseIfEmpty and (Trim(FScript) = '') then
     begin
-      raise Exception.CreateFmt('脚本解析出现异常, 脚本(%d.%d)为空值', [FScriptKey, FScriptStep]);
+      raise EScriptEmptyExcpeiton.CreateFmt('脚本解析出现异常, 脚本(%d.%d)为空值', [FScriptKey, FScriptStep]);
     end;
 
     Result := Format('/* scriptkey = %d, scriptstep = %d */', [FScriptKey, FScriptStep]) + sLineBreak;

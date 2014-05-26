@@ -34,6 +34,7 @@
     </DelphiCompile>
     <DCCReference Include="..\..\..\..\..\..\..\01.ERP开发平台\Source\FrameUtils\uADOConnectionTools.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\FileLogger.pas" />
+    <DCCReference Include="..\..\..\Source\IOCP\uBuffer.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uBufferTools.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPCentre.pas" />
     <DCCReference Include="..\..\..\Source\IOCP\uIOCPConsole.pas" />
@@ -80,7 +81,6 @@
     <DCCReference Include="DB\uScriptMgr.pas" />
     <DCCReference Include="Handler\TesterINfo.pas" />
     <DCCReference Include="Handler\uClientContext.pas" />
-    <DCCReference Include="uBuffer.pas" />
     <DCCReference Include="ufrmMain.pas">
       <Form>frmMain</Form>
     </DCCReference>
@@ -97,6 +97,22 @@ boCatchHandledExceptions=1
 DeleteMapAfterCompile=1
 Dialog Class="TRTLHandlerDialog"
 Encrypt Password=""
+Filters_0_Action=0
+Filters_0_Active=1
+Filters_0_BugID=0
+Filters_0_Class=""
+Filters_0_Context=0
+Filters_0_Dialog=""
+Filters_0_Handled=2
+Filters_0_Handler=2
+Filters_0_Message=""
+Filters_0_Module=""
+Filters_0_Properties=""
+Filters_0_Routine=""
+Filters_0_Type="EScriptEmptyExcpeiton"
+Filters_0_Unit=""
+Filters_0_URL=""
+FiltersCount=1
 InjectCode=1
 InjectInfo=1
 InjectOptions=1

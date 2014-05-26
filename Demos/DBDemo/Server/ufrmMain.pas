@@ -7,7 +7,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, uIOCPConsole, uIOCPJSonStreamDecoder, uIOCPJSonStreamEncoder,
   ExtCtrls, ComCtrls, ActnList, Menus, ImgList, uWinService, uBuffer,
-  Grids, ADODB, DBClient, ComObj, ActiveX;
+  Grids, ADODB, DBClient, ComObj, ActiveX, superobject;
 
 type
   TfrmMain = class(TForm)
@@ -57,6 +57,7 @@ type
     btnKILLDeadLock: TButton;
     actKillDeadPoolObject: TAction;
     icnmain: TTrayIcon;
+    btnScripterTester: TButton;
     procedure actConfigEditExecute(Sender: TObject);
     procedure actConfigOKExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -70,6 +71,7 @@ type
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnOpenClick(Sender: TObject);
     procedure btnPoolINfoClick(Sender: TObject);
+    procedure btnScripterTesterClick(Sender: TObject);
     procedure icnmainDblClick(Sender: TObject);
   private
     { Private declarations }
@@ -79,6 +81,9 @@ type
     FEncoder:TIOCPJSonStreamEncoder;
     procedure refreshState;
     procedure DoConfigEdit(pvEditing:Boolean);
+
+
+    procedure processTester_Scripter();
     procedure processTester_debugHaveError;
 
     procedure processTester_debugPool;
@@ -102,7 +107,7 @@ implementation
 uses
   uIOCPCentre, uClientContext, TesterINfo, uMemPool, udmMain,
   uWinServiceTools,uAppJSonConfig, uFMIOCPDebugINfo, uADOOperator,
-  uADOConnectionPool, uADOConnectionTools, FileLogger;
+  uADOConnectionPool, uADOConnectionTools, FileLogger, scriptParser;
 
 {$R *.dfm}
 
@@ -306,6 +311,69 @@ begin
   end;
 end;
 
+procedure TfrmMain.processTester_Scripter;
+var
+  lvScript:ISuperObject;
+  s :String;
+  i, j:Integer;
+  lvDataSet:TClientDataSet;
+  lvADOOpera:TADOOperator;
+  lvConnection:TADOConnection;
+begin
+  try
+    TFileLogger.instance.logMessage(Format('任务开始执行', []), 'scripter_');
+    j:= 0;
+    lvDataSet := TClientDataSet.Create(nil);
+    try
+      //从对象池中借用
+      lvADOOpera := TADOOperator(dmMain.DBOperaPool.borrowObject);
+      try
+        lvConnection := dmMain.beginUseADOConnection('sys');
+        try
+          lvADOOpera.setConnection(lvConnection);
+          lvDataSet.Data := lvADOOpera.CDSProvider.QueryData('select * from sys_Scripts');
+        finally
+          dmMain.endUseADOConnection('sys', lvConnection);
+        end;
+      finally
+        dmMain.DBOperaPool.releaseObject(lvADOOpera);
+      end;
+      lvDataSet.First;
+      while not lvDataSet.Eof do
+      begin
+        for j := 1 to 50 do
+        begin
+          try
+            lvScript := SO();
+            lvScript.I['key'] := lvDataSet.FieldByName('FBianHao').AsInteger;
+            lvScript.I['step'] := j;
+            lvScript.S['params.@mm_Key'] := '{64E95178-00FE-43C3-B478-0B3662F6367E}';
+            s := dmMain.getSQLScript(lvScript);
+            Inc(i);
+          except
+            on E:EScriptEmptyExcpeiton do
+            begin
+              
+              s := '';
+              Break;
+            end;
+          end;
+        end;
+        lvDataSet.Next;
+      end;
+    finally
+      lvDataSet.Free;
+    end;
+  except
+    on E:Exception do
+    begin
+      TFileLogger.instance.logErrMessage(IntToStr(i) + '---' + e.Message);
+    end;
+  end;
+  TFileLogger.instance.logMessage(Format('任务执行完成,共成功解析(%d)', [i]), 'scripter_');
+  s := '';
+end;
+
 destructor TfrmMain.Destroy;
 begin
   FBuffer.Free;
@@ -465,6 +533,11 @@ begin
   FIOCPConsole.DisconnectAllClientContext;
 end;
 
+function ScripterRunner(p: Pointer): Integer;
+begin
+  TfrmMain(p).processTester_Scripter
+end;
+
 
 function f(p: Pointer): Integer;
 begin
@@ -507,6 +580,21 @@ begin
   mmoPoolINfo.Lines.Add(Format('(总数:%d,使用:%d)',
         [dmMain.DBOperaPool.Count,
         dmMain.DBOperaPool.getBusyCount]));
+end;
+
+procedure TfrmMain.btnScripterTesterClick(Sender: TObject);
+var
+  i, iCount: Integer;
+  tid: Cardinal; 
+begin
+  __sql01 := mmoSQL.Lines.Text;
+  __sql02 := mmoSQL2.Lines.Text;
+
+  iCount := StrToInt(edtThreadCount.Text);
+  for i:=1 to iCount do
+  begin
+    BeginThread(nil,0,ScripterRunner,Self,0,tid);
+  end;
 end;
 
 procedure TfrmMain.icnmainDblClick(Sender: TObject);

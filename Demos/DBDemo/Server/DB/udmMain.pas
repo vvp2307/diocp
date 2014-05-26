@@ -170,10 +170,17 @@ begin
 end;
 
 procedure TdmMain.endScriptObject(pvObject: TScriptMgr);
+var
+  lvADOPool:TADOConnectionPool;
+  lvADOConnection:TADOConnection;
 begin
   if pvObject = nil then Exit;
-  pvObject.ConnectionPool.releaseObject(pvObject.Connection);
+
+  lvADOPool := pvObject.ConnectionPool;
+  lvADOConnection := pvObject.Connection;
   FScriptPool.releaseObject(pvObject);
+  lvADOPool.releaseObject(lvADOConnection);
+
 end;
 
 procedure TdmMain.endUseADOConnection(pvConnID: string; pvObject: TObject);
@@ -221,8 +228,8 @@ begin
     Exit;
   end else
   begin
-    pvADOOperator.ConnectionPool.releaseObject(pvADOOperator.Connection);
     FDBOperaPool.releaseObject(pvADOOperator);
+    pvADOOperator.ConnectionPool.releaseObject(pvADOOperator.Connection);
   end;
 end;
 
@@ -245,15 +252,15 @@ begin
   begin
     lvScript := dmMain.beginScriptObject;
     try
-      try
-        lvScript.Connection.Close;
-        lvScript.Connection.Open();
-      except
-        on E:Exception do
-        begin
-          raise Exception.Create('打开Script连接时出现了异常:' + e.Message);
-        end;
-      end;
+//      try
+//        lvScript.Connection.Close;
+//        lvScript.Connection.Open();
+//      except
+//        on E:Exception do
+//        begin
+//          raise Exception.Create('打开Script连接时出现了异常:' + e.Message);
+//        end;
+//      end;
       lvScript.ScriptParser.Clear;
       lvScript.ScriptParser.ScriptKey := pvJSonScript.I['key'];
       lvScript.ScriptParser.ScriptStep := pvJSonScript.I['step'];

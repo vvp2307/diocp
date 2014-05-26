@@ -19,7 +19,7 @@ object frmMain: TfrmMain
     Top = 0
     Width = 632
     Height = 350
-    ActivePage = tsMain
+    ActivePage = tsTester
     Align = alClient
     TabOrder = 0
     object tsMain: TTabSheet
@@ -56,10 +56,6 @@ object frmMain: TfrmMain
     object tsConfig: TTabSheet
       Caption = #22522#26412#37197#32622
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblListenPort: TLabel
         Left = 24
         Top = 37
@@ -118,18 +114,10 @@ object frmMain: TfrmMain
     object tsDBConfig: TTabSheet
       Caption = #25968#25454#24211#37197#32622
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
     object tsClientINfo: TTabSheet
       Caption = #36830#25509#20449#24687
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lstClientINfo: TListView
         Left = 0
         Top = 41
@@ -176,18 +164,10 @@ object frmMain: TfrmMain
     object tsMoniter: TTabSheet
       Caption = 'IOCP'#20449#24687
       ImageIndex = 5
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
     object tsPoolINfo: TTabSheet
       Caption = #27744#20449#24687
       ImageIndex = 6
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object mmoPoolINfo: TMemo
         Left = 3
         Top = 35
@@ -218,10 +198,6 @@ object frmMain: TfrmMain
     object tsTester: TTabSheet
       Caption = 'tsTester'
       ImageIndex = 6
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object mmoSQL: TMemo
         Left = 3
         Top = 5
@@ -327,6 +303,15 @@ object frmMain: TfrmMain
         TabOrder = 3
         Text = '5'
       end
+      object btnScripterTester: TButton
+        Left = 351
+        Top = 104
+        Width = 114
+        Height = 25
+        Caption = 'btnScripterTester'
+        TabOrder = 4
+        OnClick = btnScripterTesterClick
+      end
     end
   end
   object actlstMain: TActionList
@@ -370,7 +355,7 @@ object frmMain: TfrmMain
     Left = 475
     Top = 2
     Bitmap = {
-      494C0101040006005C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000600600110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
