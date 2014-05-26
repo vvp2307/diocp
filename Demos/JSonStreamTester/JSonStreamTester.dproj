@@ -64,6 +64,11 @@
     <DelphiCompile Include="JSonStreamTester.dpr">
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
+    <DCCReference Include="..\..\iocp-Projects\MyEmail\Source\DIOCP\Tools\IOCPCoder\uNetworkTools.pas" />
+    <DCCReference Include="..\Common\JSonStream.pas" />
+    <DCCReference Include="..\Common\superobject.pas" />
+    <DCCReference Include="..\Common\uCRCTools.pas" />
+    <DCCReference Include="..\Common\uJSonStreamTools.pas" />
     <DCCReference Include="ufrmMain.pas">
       <Form>Form1</Form>
     </DCCReference>
