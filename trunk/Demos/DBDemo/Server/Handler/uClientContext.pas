@@ -3,7 +3,7 @@ unit uClientContext;
 interface
 
 uses
-  Windows, JwaWinsock2, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre,
+  Windows, uBuffer, SyncObjs, Classes, SysUtils, uIOCPCentre,
   uScriptMgr, cdsProvider, ADODB, superobject, uADOOperator;
 
 type
@@ -470,7 +470,7 @@ begin
     self.StateINfo := '1001.' + DateTimeToStr(Now()) + ':准备借用一个lvADOOpera!';
       
     //从对象池中借用
-    lvADOOpera := TADOOperator(dmMain.DBOperaPool.borrowObject);              
+    lvADOOpera := TADOOperator(dmMain.DBOperaPool.borrowObject);
     try
       lvConnection := dmMain.beginUseADOConnection(lvID);
       try
@@ -964,15 +964,15 @@ begin
       lvID := lvJsonStream.Json.S['config.dbid'];
     end;
     lvTrace := lvJsonStream.Json.B['config.trace'];
-    lvADOOpera := TADOOperator.Create;
+    lvConnection := dmMain.beginUseADOConnection(lvID);
     try
-      lvConnection := dmMain.beginUseADOConnection(lvID);
+      lvADOOpera := dmMain.DBOperaPool.borrowObject as TADOOperator;
       try
         try
           lvADOOpera.setConnection(lvConnection);
-          lvADOOpera.ReOpen;
-          self.StateINfo :=
-            Format('1005.lvADOOpera打开连接成功,准备执行SQL语句,超时设置[%d]', [lvADOOpera.Connection.CommandTimeout]);
+//          lvADOOpera.ReOpen;
+//          self.StateINfo :=
+//            Format('1005.lvADOOpera打开连接成功,准备执行SQL语句,超时设置[%d]', [lvADOOpera.Connection.CommandTimeout]);
 
           lvADOOpera.Connection.BeginTrans;
           try
@@ -986,22 +986,32 @@ begin
             raise;
           end;
         except
-          TADOConnectionTools.checkRaiseUncontrollableConnectionException(lvADOOpera.Connection);
-          raise;
+          on E:Exception do
+          begin
+            self.StateINfo := '2001.' + DateTimeToStr(Now()) + ':lvADOOpera,执行executeSyncBillINfo时出现了异常:' + e.Message;
+            TFileLogger.instance.logMessage(self.StateINfo, 'ADOErr_');
+
+            if TADOConnectionTools.checkConnectionNeedReconnect(lvConnection) then
+            begin
+              TFileLogger.instance.logMessage('标志释放该连接,' +  Self.StateINfo, 'ADO_ERROR_');
+              dmMain.markWillFree(lvConnection, lvID);
+            end;
+            TADOConnectionTools.checkRaiseUncontrollableConnectionException(lvADOOpera.Connection);
+            raise;
+          end;
         end;
         lvJsonStream.Clear();
         lvJsonStream.Json.O['trace'] := lvTraceData;
         lvJsonStream.setResult(True);
       finally
         lvADOOpera.setConnection(nil);
-        
-        self.StateINfo := '1005.' + DateTimeToStr(Now()) + ':lvADOOpera.ADOConnection,准备归还';
-        //归还到连接池
-        dmMain.endUseADOConnection(lvID, lvConnection);
-        self.StateINfo := '1005.' + DateTimeToStr(Now()) + ':lvADOOpera.ADOConnection,归还成功';
+        dmMain.DBOperaPool.releaseObject(lvADOOpera);
       end;
     finally
-      lvADOOpera.Free;
+      self.StateINfo := '1005.' + DateTimeToStr(Now()) + ':lvADOOpera.ADOConnection,准备归还';
+      //归还到连接池
+      dmMain.endUseADOConnection(lvID, lvConnection);
+      self.StateINfo := '1005.' + DateTimeToStr(Now()) + ':lvADOOpera.ADOConnection,归还成功';
     end;
   except
     on e:Exception do

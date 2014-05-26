@@ -51,8 +51,8 @@ uses
   Qos in '..\..\..\Source\WinSock2\Qos.pas',
   Winsock2 in '..\..\..\Source\WinSock2\Winsock2.pas',
   uMyObjectPool in '..\..\ADOPool\uMyObjectPool.pas',
-  uBuffer in 'uBuffer.pas',
-  uBufferTools in '..\..\..\Source\IOCP\uBufferTools.pas';
+  uBufferTools in '..\..\..\Source\IOCP\uBufferTools.pas',
+  uBuffer in '..\..\..\Source\IOCP\uBuffer.pas';
 
 {$R *.res}
 
