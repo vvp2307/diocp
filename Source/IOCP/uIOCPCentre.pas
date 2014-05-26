@@ -231,7 +231,8 @@ type
 
     FSocket: TSocket;
 
-    FBuffers: TBufferLink;
+    FrecvBuffers: TBufferLink;
+
     FStateINfo: String;
 
     //关闭客户端连接
@@ -248,8 +249,6 @@ type
     procedure Lock;
     procedure unLock;
 
-    procedure RecvBuffer(buf:PAnsiChar; len:Cardinal);
-
   protected
     //复位<回收时进行复位>
     procedure Reset; virtual;
@@ -257,10 +256,18 @@ type
     //借到，调用该函数
     procedure Initialize4Use; virtual;
 
+    function decodeObject: TObject;
+
 
     procedure DoConnect; virtual;
     procedure DoDisconnect; virtual;
     procedure DoOnWriteBack; virtual;
+
+    procedure add2Buffer(buf:PAnsiChar; len:Cardinal);
+
+    procedure clearRecvedBuffer();
+
+    procedure recvBuffer(buf:PAnsiChar; len:Cardinal); virtual;
   public
 
     procedure notifyStopWork; virtual;
@@ -287,7 +294,11 @@ type
 
     destructor Destroy; override;
 
-    property Buffers: TBufferLink read FBuffers;
+    /// <summary>
+    ///   接受的Buffer
+    /// </summary>
+    property Buffers: TBufferLink read FrecvBuffers;
+
     property RemoteAddr: String read FRemoteAddr;
     property RemotePort: Integer read FRemotePort;
 
@@ -895,6 +906,17 @@ begin
   TIODataMemPool.instance.waiteForGiveBack;
 end;
 
+procedure TIOCPClientContext.clearRecvedBuffer;
+begin
+  if FrecvBuffers.validCount = 0 then
+  begin
+    FrecvBuffers.clearBuffer;
+  end else
+  begin
+    FrecvBuffers.clearHaveReadBuffer;
+  end;
+end;
+
 procedure TIOCPClientContext.clearSendCache;
 var
   i: Integer;
@@ -938,7 +960,7 @@ begin
   FCurrentSendBuffer := nil;
 
   FSocket := ASocket;
-  FBuffers := TBufferLink.Create();
+  FrecvBuffers := TBufferLink.Create();
 end;
 
 destructor TIOCPClientContext.Destroy;
@@ -952,8 +974,8 @@ begin
   end;
 
   closeClientSocket;
-  FBuffers.Free;
-  FBuffers := nil;
+  FrecvBuffers.Free;
+  FrecvBuffers := nil;
   FCS.Free;
   FCS := nil;
 
@@ -1018,7 +1040,13 @@ procedure TIOCPClientContext.Initialize4Use;
 begin
   FPostedCloseQuest := false;
   FWaitingGiveBack := false;
-  FBuffers.clearBuffer;
+  FrecvBuffers.clearBuffer;
+end;
+
+procedure TIOCPClientContext.add2Buffer(buf: PAnsiChar; len: Cardinal);
+begin
+  //加入到套接字对应的缓存
+  FrecvBuffers.AddBuffer(buf, len);
 end;
 
 procedure TIOCPClientContext.checkPostWSASendCache;
@@ -1086,6 +1114,11 @@ begin
   
 end;
 
+function TIOCPClientContext.decodeObject: TObject;
+begin
+  Result :=  TIOCPContextFactory.instance.FDecoder.Decode(FrecvBuffers);
+end;
+
 procedure TIOCPClientContext.invokeConnect;
 begin
   FIOCPObject.Add(Self);
@@ -1118,12 +1151,11 @@ begin
   Result :=FIOCPObject.PostWSAClose(Self);
 end;
 
-procedure TIOCPClientContext.RecvBuffer(buf:PAnsiChar; len:Cardinal);
+procedure TIOCPClientContext.recvBuffer(buf:PAnsiChar; len:Cardinal);
 var
   lvObject:TObject;
 begin
-  //加入到套接字对应的缓存
-  FBuffers.AddBuffer(buf, len);
+  add2Buffer(buf, len);
 
   self.StateINfo := '接收到数据,准备进行解码';
 
@@ -1133,7 +1165,7 @@ begin
   while True do
   begin
     //调用注册的解码器<进行解码>
-    lvObject := TIOCPContextFactory.instance.FDecoder.Decode(FBuffers);
+    lvObject := decodeObject;
     if lvObject <> nil then
     begin
       try
@@ -1163,14 +1195,7 @@ begin
   end;
 
   //清理缓存<如果没有可用的内存块>清理
-  if FBuffers.validCount = 0 then
-  begin
-    FBuffers.clearBuffer;
-  end else
-  begin
-    FBuffers.clearHaveReadBuffer;
-  end;
-
+  clearRecvedBuffer;
 end;
 
 procedure TIOCPClientContext.Reset;
@@ -1178,7 +1203,7 @@ begin
   FUsing := false;
   FPostedCloseQuest := false;
   FWaitingGiveBack := false;
-  FBuffers.clearBuffer;
+  FrecvBuffers.clearBuffer;
 
   //清理缓存
   clearSendCache;
