@@ -108,6 +108,7 @@ var
   lvEchoTester:TEchoTester;
   i:Integer;
 begin
+  __echoTerminated := false;
   for I := 1 to StrToInt(edtCount.Text) do
   begin
     lvEchoTester := TEchoTester.Create;
@@ -213,6 +214,7 @@ procedure TfrmMain.ClearTester;
 var
   i:Integer;
 begin
+  __echoTerminated := true;
   for i := 0 to FTesterList.Count - 1 do
   begin
     TEchoTester(FTesterList[i]).Terminate;
