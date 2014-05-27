@@ -11,7 +11,10 @@ uses
   zmqapi in 'zmq\zmqapi.pas',
   JSonStream in '..\..\Common\JSonStream.pas',
   uJSonStreamTools in '..\..\Common\uJSonStreamTools.pas',
-  superobject in '..\..\Common\superobject.pas';
+  superobject in '..\..\Common\superobject.pas',
+  uCRCTools in '..\..\Common\uCRCTools.pas',
+  uNetworkTools in '..\..\IOCPCoder\uNetworkTools.pas',
+  uMyTypes in '..\..\..\Source\IOCP\uMyTypes.pas';
 
 procedure dowork(data:TStream);
 var
