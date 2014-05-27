@@ -159,12 +159,12 @@
         <DCCReference Include="..\..\..\..\Queue\GpLockFreeQueue.pas"/>
         <DCCReference Include="..\..\..\..\Queue\OTLObjectQueue.pas"/>
         <DCCReference Include="..\..\Handler\uWorkDispatcher.pas"/>
-        <DCCReference Include="..\..\Handler\uJobWorker.pas"/>
         <DCCReference Include="..\..\zmq\zmq.pas"/>
         <DCCReference Include="..\..\zmq\zmqapi.pas"/>
-        <DCCReference Include="..\..\Handler\uJobReceiver.pas"/>
         <DCCReference Include="..\..\..\..\Common\uJSonStreamTools.pas"/>
         <DCCReference Include="..\..\..\..\Common\uCRCTools.pas"/>
+        <DCCReference Include="..\..\Handler\uJobPushWorker.pas"/>
+        <DCCReference Include="..\..\Handler\uJobReceiver.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

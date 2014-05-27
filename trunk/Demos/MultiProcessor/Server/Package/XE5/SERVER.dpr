@@ -33,12 +33,12 @@ uses
   GpLockFreeQueue in '..\..\..\..\Queue\GpLockFreeQueue.pas',
   OTLObjectQueue in '..\..\..\..\Queue\OTLObjectQueue.pas',
   uWorkDispatcher in '..\..\Handler\uWorkDispatcher.pas',
-  uJobWorker in '..\..\Handler\uJobWorker.pas',
   zmq in '..\..\zmq\zmq.pas',
   zmqapi in '..\..\zmq\zmqapi.pas',
-  uJobReceiver in '..\..\Handler\uJobReceiver.pas',
   uJSonStreamTools in '..\..\..\..\Common\uJSonStreamTools.pas',
-  uCRCTools in '..\..\..\..\Common\uCRCTools.pas';
+  uCRCTools in '..\..\..\..\Common\uCRCTools.pas',
+  uJobPushWorker in '..\..\Handler\uJobPushWorker.pas',
+  uJobReceiver in '..\..\Handler\uJobReceiver.pas';
 
 {$R *.res}
 
