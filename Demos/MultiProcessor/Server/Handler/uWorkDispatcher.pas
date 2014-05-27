@@ -3,7 +3,8 @@ unit uWorkDispatcher;
 interface
 
 uses
-  OTLObjectQueue, uIOCPCentre, uJobWorker, zmqapi, uJobReceiver, classes;
+  OTLObjectQueue, uIOCPCentre, zmqapi, uJobReceiver, classes,
+  SysUtils, uJobPushWorker;
 
 type
   TJobDataObject = class(TObject)
@@ -23,19 +24,19 @@ type
 
   TWorkDispatcher = class(TObject)
   private
-    FJobQueue: TOTLObjectQueue;
+    FPushQueue: TOTLObjectQueue;
     FContext:TZMQContext;
     FSender:TZMQSocket;
     FReceiver:TZMQSocket;
     FJobReceiver:TJobReceiver;
-    FJobManager: TJobWorkerManager;
+    FJobPusher: TJobPushWorker;
     procedure OnJobExecute(pvDataObj:TObject);
   public
     constructor Create;
     destructor Destroy; override;
     procedure start;
     procedure stop;
-    procedure push(pvDataObject:TObject; pvContext:TIOCPClientContext);
+    procedure Push(pvDataObject:TObject; pvContext:TIOCPClientContext);
 
   end;
 
@@ -45,37 +46,40 @@ var
 implementation
 
 uses
-  JSonStream, uJSonStreamTools;
+  JSonStream, uJSonStreamTools, FileLogger;
 
 
 
 constructor TWorkDispatcher.Create;
 begin
   inherited Create;
-  FJobQueue := TOTLObjectQueue.Create();
-  FJobManager := TJobWorkerManager.Create(FJobQueue);
-  FJobManager.OnJobExecute := self.OnJobExecute;
-
+  FPushQueue := TOTLObjectQueue.Create();
   FContext := TZMQContext.create();
   FSender := FContext.Socket(stPush);
   FReceiver := FContext.Socket(stPull);
 
-  FJobReceiver := TJobReceiver.Create(FReceiver, FJobManager);
+  FJobReceiver := TJobReceiver.Create(FReceiver);
   FJobReceiver.Resume;
+  FJobPusher := TJobPushWorker.Create(FSender, FPushQueue);
+  FJobPusher.Resume;
 end;
 
 destructor TWorkDispatcher.Destroy;
 begin
+
   stop;
-  FJobManager.Terminated := true;
-  FJobManager.Free;
+
+  FJobPusher.notifyTerminate;
+  FJobPusher.WaitFor;
+  FJobPusher.Free;
+
 
   FJobReceiver.notifyTerminate;
   FJobReceiver.WaitFor;
   FJobReceiver.Free;
 
 
-  FJobQueue.Free;
+  FPushQueue.Free;
   FSender.Free;
   FContext.Free;
   inherited Destroy;
@@ -94,25 +98,25 @@ begin
     if lvJobObj = nil then exit;
 
     if lvJobObj.OperaType = 1 then
-    begin
+    begin                     //投递到iocp队列，发送回客户端
       if lvJobObj.FContext = nil then
       begin
         lvJobObj.FContext := TIOCPClientContext(TJsonStream(lvJobObj.FDataObject).Json.I['__contextID']);
       end;
       lvJobObj.FContext.writeObject(TJsonStream(lvJobObj.FDataObject));
-      lvJobObj.FDataObject.Free;
+      //lvJobObj.FDataObject.Free;
     end else
-    begin
+    begin                     //发送到逻辑进程
       TJsonStream(lvJobObj.FDataObject).Json.I['__contextID'] := LongInt(lvJobObj.Context);
       TJSonStreamTools.pack2Stream(TJsonStream(lvJobObj.FDataObject), lvStream);
-      lvJobObj.FDataObject.Free;
+      //lvJobObj.FDataObject.Free;
       lvStream.Position := 0;
       FSender.send(lvStream, lvStream.Size);
 //      lvNewObj := TJobDataObject.Create;
 //      lvNewObj.FType := 1;
 //      lvNewObj.FContext := lvJobObj.FContext;
 //      lvNewObj.FDataObject := lvJobObj.FDataObject;
-//      FJobQueue.Push(lvNewObj);
+//      FPushQueue.Push(lvNewObj);
     end;
     //TJSonStreamTools.pack2Stream()
   finally
@@ -121,15 +125,24 @@ begin
 
 end;
 
-procedure TWorkDispatcher.push(pvDataObject: TObject;
-  pvContext: TIOCPClientContext);
+procedure TWorkDispatcher.Push(pvDataObject:TObject;
+    pvContext:TIOCPClientContext);
 var
   lvObj:TJobDataObject;
 begin
-  lvObj := TJobDataObject.Create;
-  lvObj.FContext := pvContext;
-  lvObj.FDataObject := pvDataObject;
-  FJobManager.Push(lvObj);
+  try
+    lvObj := TJobDataObject.Create;
+    lvObj.FOperaType := 0;
+    lvObj.FContext := pvContext;
+    lvObj.FDataObject := pvDataObject;
+    FPushQueue.Push(lvObj);
+    FJobPusher.notifyWork;
+  except
+    on E:Exception do
+    begin
+      TFileLogger.instance.logMessage('Push:' + E.Message, 'JOB_ERROR_');
+    end;
+  end;
 end;
 
 
@@ -138,17 +151,17 @@ begin
 
   FSender.bind('tcp://*:5557');
   Freceiver.bind('tcp://*:5558');
-  FJobManager.Enabled := true;
   FJobReceiver.Enabled := true;
+  FJobPusher.Enabled := true;
 end;
 
 procedure TWorkDispatcher.stop;
 begin
   FJobReceiver.Enabled := false;
+  FJobPusher.Enabled := false;
   FSender.unbind('tcp://*:5557');
   Freceiver.unbind('tcp://*:5558');
 
-  FJobManager.Enabled := false;
 end;
 
 initialization

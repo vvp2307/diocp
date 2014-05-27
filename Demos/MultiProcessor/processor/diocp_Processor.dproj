@@ -121,6 +121,9 @@
         </DelphiCompile>
         <DCCReference Include="zmq\zmq.pas"/>
         <DCCReference Include="zmq\zmqapi.pas"/>
+        <DCCReference Include="..\..\Common\JSonStream.pas"/>
+        <DCCReference Include="..\..\Common\uJSonStreamTools.pas"/>
+        <DCCReference Include="..\..\Common\superobject.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -65,7 +65,7 @@ begin
         TIOCPDebugger.incRecvObjectCount;
 
         //解码成功，投递到队列
-        workDispatcher.push(lvObject, self);
+        workDispatcher.Push(lvObject, self);
       except
         on E:Exception do
         begin

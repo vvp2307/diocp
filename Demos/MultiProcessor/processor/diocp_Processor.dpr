@@ -8,11 +8,23 @@ uses
   SysUtils,
   Classes,
   zmq in 'zmq\zmq.pas',
-  zmqapi in 'zmq\zmqapi.pas';
-
+  zmqapi in 'zmq\zmqapi.pas',
+  JSonStream in '..\..\Common\JSonStream.pas',
+  uJSonStreamTools in '..\..\Common\uJSonStreamTools.pas',
+  superobject in '..\..\Common\superobject.pas';
 
 procedure dowork(data:TStream);
+var
+  lvJsonStream:TJsonStream;
 begin
+  lvJsonStream := TJsonStream.create();
+  try
+    data.position := 0;
+    TJsonStreamTools.unPackFromStream(lvJsonStream, data);
+    writeln(lvJsonStream.json.S['key']);
+  finally
+    lvJsonStream.Free;
+  end;
 
 
 end;
@@ -40,6 +52,8 @@ begin
       try
         lvStream.Clear;
         lvSocket.recv(lvStream);
+
+        dowork(lvStream);
 
         lvStream.Position := 0;
         lvSender.send(lvStream, lvStream.Size);

@@ -41,6 +41,8 @@ var
 
   __cs:TCriticalSection;
 
+  __echoTerminated:Boolean;
+
 
 
 implementation
@@ -136,7 +138,7 @@ begin
   i:= 0;
   lvJSonObject := createObject;
   try
-    while (not self.Terminated) do
+    while (not self.Terminated) and (not __echoTerminated) do
     begin
       try
         if not FClient.Connected then
