@@ -6,8 +6,7 @@ uses
   Classes, JSonStream, SysUtils, superobject, 
   Windows,
   uMyTypes,
-  IdGlobal,
-  uNetworkTools, IdTCPClient, uZipTools, Math;
+  uNetworkTools, IdTCPClient, Math, uZipTools;
 
 
 const
