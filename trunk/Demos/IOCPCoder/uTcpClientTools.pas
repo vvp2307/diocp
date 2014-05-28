@@ -3,7 +3,7 @@ unit uTcpClientTools;
 interface
 
 uses
-  Sockets, Classes, IdTCPClient, Windows, SysUtils;
+  Sockets, Classes,  Windows, SysUtils;
 
 
 type
