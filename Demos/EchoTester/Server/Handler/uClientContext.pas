@@ -36,7 +36,6 @@ implementation
 procedure TClientContext.dataReceived(const pvDataObject:TObject);
 var
   lvJsonStream:TJSonStream;
-  lvFile, lvNameSpace:String;
 begin
   lvJsonStream := TJSonStream(pvDataObject);
   try
