@@ -1003,10 +1003,13 @@ begin
   //禁止进出
   shutdown(FSocket, SD_BOTH);
 
-  //投递关闭事件
-  postWSAClose;
-  //shutdown(FSocket, SD_BOTH);
   //CancelIo(FSocket);
+
+  self.closeClientSocket;
+
+  //投递关闭事件
+  //postWSAClose;
+  //shutdown(FSocket, SD_BOTH);
 end;
 
 procedure TIOCPClientContext.dataReceived(const pvDataObject:TObject);
