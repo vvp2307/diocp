@@ -3,7 +3,7 @@ unit uTcpClientTools;
 interface
 
 uses
-  Sockets, Classes,  Windows, SysUtils;
+  Sockets, Classes,  Windows, SysUtils, winsock;
 
 
 type
@@ -24,15 +24,20 @@ const
 class function TTcpClientTools.recvBuffer(pvSocket: TTcpClient; buf: Pointer;
     len: Cardinal): Integer;
 begin
-  pvSocket.ReceiveBuf(buf^, len);
-  Result := len;
+  Result := pvSocket.ReceiveBuf(buf^, len);
+  if Result = SOCKET_ERROR then
+  begin
+    raise Exception.CreateFmt('recv error:%d', [WSAGetLastError]);
+  end;
+  
+
+
 end;
 
 class function TTcpClientTools.sendBuffer(pvSocket: TTcpClient; buf: Pointer;
     len: Cardinal): Integer;
 begin
-  pvSocket.SendBuf(buf^, len);
-  Result := len;
+  Result :=pvSocket.SendBuf(buf^, len);
 end;
 
 class function TTcpClientTools.sendStream(pvSocket: TTcpClient; pvStream:
@@ -53,7 +58,12 @@ begin
     l := pvStream.Read(lvBufBytes[0], SizeOf(lvBufBytes));
     if (l > 0) and pvSocket.Connected then
     begin
-      j:=sendBuffer(pvSocket, @lvBufBytes[0], l);
+      j := sendBuffer(pvSocket, @lvBufBytes[0], l);
+      if j = SOCKET_ERROR then
+      begin
+        raise Exception.CreateFmt('send buffer error:[%d]', [j]);
+      end;
+
       if j <> l then
       begin
         raise Exception.CreateFmt('发送Buffer错误指定发送%d,实际发送:%d', [j, l]);

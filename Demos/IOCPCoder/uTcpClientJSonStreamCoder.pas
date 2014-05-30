@@ -152,8 +152,11 @@ var
   lvBufBytes:array[0..1023] of byte;
 begin
   if pvObject = nil then exit;
+
+  if not pvSocket.Connected then raise Exception.Create('socket disconnected!');
+
   lvJSonStream := TJsonStream(pvObject);
-  
+    
   //ÊÇ·ñÑ¹ËõÁ÷
   if (lvJSonStream.Stream <> nil) then
   begin
