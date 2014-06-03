@@ -3,7 +3,7 @@ unit uJobReceiver;
 interface
 
 uses
-  Classes, zmqapi, OTLObjectQueue, SyncObjs, SysUtils;
+  Classes, zmqapi,  SyncObjs, SysUtils;
 
 type
   TJobReceiver = class(TThread)

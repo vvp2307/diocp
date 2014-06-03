@@ -38,7 +38,8 @@ uses
   uJSonStreamTools in '..\..\..\..\Common\uJSonStreamTools.pas',
   uCRCTools in '..\..\..\..\Common\uCRCTools.pas',
   uJobPushWorker in '..\..\Handler\uJobPushWorker.pas',
-  uJobReceiver in '..\..\Handler\uJobReceiver.pas';
+  uJobReceiver in '..\..\Handler\uJobReceiver.pas',
+  uSimpleQueue in '..\..\..\..\Queue\uSimpleQueue.pas';
 
 {$R *.res}
 

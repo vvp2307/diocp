@@ -3,7 +3,7 @@ unit uWorkDispatcher;
 interface
 
 uses
-  OTLObjectQueue, uIOCPCentre, zmqapi, uJobReceiver, classes,
+  BaseQueue, uIOCPCentre, zmqapi, uJobReceiver, classes,
   SysUtils, uJobPushWorker;
 
 type
@@ -24,7 +24,7 @@ type
 
   TWorkDispatcher = class(TObject)
   private
-    FPushQueue: TOTLObjectQueue;
+    FPushQueue: TBaseQueue;
     FContext:TZMQContext;
     FSender:TZMQSocket;
     FReceiver:TZMQSocket;
@@ -53,7 +53,7 @@ uses
 constructor TWorkDispatcher.Create;
 begin
   inherited Create;
-  FPushQueue := TOTLObjectQueue.Create();
+  FPushQueue := TBaseQueue.Create();
   FContext := TZMQContext.create();
   FSender := FContext.Socket(stPush);
   FReceiver := FContext.Socket(stPull);
@@ -159,8 +159,16 @@ procedure TWorkDispatcher.stop;
 begin
   FJobReceiver.Enabled := false;
   FJobPusher.Enabled := false;
-  FSender.unbind('tcp://*:5557');
-  Freceiver.unbind('tcp://*:5558');
+  try
+    FSender.unbind('tcp://*:5557');
+
+  except
+  end;
+
+  try
+    Freceiver.unbind('tcp://*:5558');
+  except
+  end;
 
 end;
 

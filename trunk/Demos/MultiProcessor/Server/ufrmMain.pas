@@ -43,6 +43,7 @@ type
     tsMoniter: TTabSheet;
     mniRefreshClientINfo: TMenuItem;
     btn1: TButton;
+    Button1: TButton;
     procedure actConfigEditExecute(Sender: TObject);
     procedure actConfigOKExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -54,6 +55,7 @@ type
     procedure btn1Click(Sender: TObject);
     procedure btnDiscountAllClientClick(Sender: TObject);
     procedure btnOpenClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
     { Private declarations }
@@ -127,6 +129,7 @@ destructor TfrmMain.Destroy;
 begin
   FBuffer.Free;
   FIOCPConsole.close;
+  workDispatcher.stop;
   FDecoder.Free;
   FEncoder.Free;
   FreeAndNil(FIOCPConsole);
@@ -272,6 +275,14 @@ begin
 //  begin
 //    BeginThread(nil,0,f,Self,0,tid);
 //  end;
+end;
+
+procedure TfrmMain.Button1Click(Sender: TObject);
+var
+  lvForm:TfrmMain;
+begin
+  //ShowMessage(lvForm.btnService.Caption);
+
 end;
 
 procedure TfrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
