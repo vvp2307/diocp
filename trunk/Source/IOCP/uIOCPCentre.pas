@@ -1043,7 +1043,9 @@ procedure TIOCPClientContext.Initialize4Use;
 begin
   FPostedCloseQuest := false;
   FWaitingGiveBack := false;
+  FCurrentSendBuffer := nil;
   FrecvBuffers.clearBuffer;
+
 end;
 
 procedure TIOCPClientContext.add2Buffer(buf: PAnsiChar; len: Cardinal);
@@ -1207,6 +1209,8 @@ begin
   FPostedCloseQuest := false;
   FWaitingGiveBack := false;
   FrecvBuffers.clearBuffer;
+
+  FCurrentSendBuffer := nil;
 
   //«Â¿Ìª∫¥Ê
   clearSendCache;
