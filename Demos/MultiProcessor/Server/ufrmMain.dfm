@@ -42,6 +42,15 @@ object frmMain: TfrmMain
         TabOrder = 1
         OnClick = btn1Click
       end
+      object Button1: TButton
+        Left = 448
+        Top = 128
+        Width = 75
+        Height = 25
+        Caption = 'Button1'
+        TabOrder = 2
+        OnClick = Button1Click
+      end
     end
     object tsConfig: TTabSheet
       Caption = #22522#26412#37197#32622
@@ -189,7 +198,7 @@ object frmMain: TfrmMain
     Left = 475
     Top = 2
     Bitmap = {
-      494C010101000600740110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010006007C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       00000000000000000000000000000000000000000000000000003E3E3E546868
       6887676767896A6A6AB7818181FF818181FF818181FF818181FF7A7A7AAD6868

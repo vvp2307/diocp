@@ -4,7 +4,7 @@ interface
 
 
 uses
-  Classes,  OTLObjectQueue, zmqapi, SyncObjs, SysUtils;
+  Classes,  BaseQueue, zmqapi, SyncObjs, SysUtils;
 
 type
   TJobPushWorker = class(TThread)
@@ -13,10 +13,10 @@ type
     FEnabled: Boolean;
     FIsBusy: Boolean;
     FPusher: TZMQSocket;
-    FJobQueue: TOtlObjectQueue;
+    FJobQueue: TBaseQueue;
     procedure SetEnabled(const Value: Boolean);
   public
-    constructor Create(aPusher: TZMQSocket; AJobQueue: TOtlObjectQueue);
+    constructor Create(aPusher: TZMQSocket; AJobQueue: TBaseQueue);
     procedure Execute; override;
     property Enabled: Boolean read FEnabled write SetEnabled;
     property IsBusy: Boolean read FIsBusy write FIsBusy;
@@ -32,8 +32,7 @@ implementation
 uses
   JSonStream, uJSonStreamTools, uWorkDispatcher, FileLogger;
 
-constructor TJobPushWorker.Create(aPusher: TZMQSocket; AJobQueue:
-    TOtlObjectQueue);
+constructor TJobPushWorker.Create(aPusher: TZMQSocket; AJobQueue: TBaseQueue);
 begin
   inherited Create(True);
   FEnabled := false;
