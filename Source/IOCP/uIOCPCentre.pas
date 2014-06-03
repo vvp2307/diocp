@@ -290,6 +290,11 @@ type
     /// <param name="pvDataObject"> (TObject) </param>
     procedure writeObject(const pvDataObject:TObject);
 
+    /// <summary>
+    ///   投递Buffer到，待发送的队列
+    /// </summary>
+    procedure postSendBuffer(const buf:Pointer; len:Cardinal);
+
 
 
     destructor Destroy; override;
@@ -1010,6 +1015,40 @@ begin
   //投递关闭事件
   //postWSAClose;
   //shutdown(FSocket, SD_BOTH);
+end;
+
+procedure TIOCPClientContext.postSendBuffer(const buf: Pointer; len: Cardinal);
+var
+  lvOutBuffer:TBufferLink;
+begin
+  //解码
+  lvOutBuffer := TBufferLink.Create;
+  try
+    lvOutBuffer.AddBuffer(PAnsiChar(buf), len);
+  except
+    lvOutBuffer.Free;
+    raise;
+  end;
+
+  FSendCacheLocker.Enter;
+  try
+    //添加到待发送的列表
+    FSendCache.Add(lvOutBuffer);
+
+    if FCurrentSendBuffer = nil then
+    begin
+      FCurrentSendBuffer := lvOutBuffer;
+
+      //准备投递一块数据
+      checkPostWSASendCache;
+    end;
+    //不为nil说明还有需要投递的任务
+
+  finally
+    FSendCacheLocker.Leave;
+  end;
+
+  self.StateINfo := 'TIOCPClientContext.writeObject,投递到发送缓存';
 end;
 
 procedure TIOCPClientContext.dataReceived(const pvDataObject:TObject);
