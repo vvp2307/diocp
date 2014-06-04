@@ -3,7 +3,7 @@ unit uJSonStreamTools;
 interface
 
 uses
-  JSonStream, uCRCTools, SysUtils, Classes, uNetworkTools, Windows, superobject;
+  JSonStream, uCRCTools, SysUtils, Classes, uNetworkTools, Windows, superobject, uMyTypes;
 
 type
   TJSonStreamTools = class(TObject)
@@ -70,7 +70,7 @@ begin
   lvJSonStream := pvObject;
 
   sData := lvJSonStream.JSon.AsJSon(True);
-  lvBytes := TNetworkTools.ansiString2Utf8Bytes(sData);
+  lvBytes :=TBytes(TNetworkTools.ansiString2Utf8Bytes(sData));
   lvJSonLength := Length(lvBytes);
   lvStream := lvJSonStream.Stream;
 
