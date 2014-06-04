@@ -62,7 +62,7 @@ object FMIOCPDebugINfo: TFMIOCPDebugINfo
   end
   object lblRunTimeINfo: TLabel
     Left = 8
-    Top = 280
+    Top = 264
     Width = 72
     Height = 13
     Caption = 'lblRunTimeINfo'
